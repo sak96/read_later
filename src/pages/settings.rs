@@ -1,3 +1,4 @@
+use crate::components::ThemeContext;
 use crate::routes::Route;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
@@ -19,6 +20,7 @@ extern "C" {
 #[function_component(Settings)]
 pub fn settings() -> Html {
     let theme = use_state(|| "system".to_string());
+    let theme_ctx = use_context::<ThemeContext>().expect("ThemeProvider missing");
 
     let theme_clone = theme.clone();
     use_effect_with((), move |_| {
@@ -43,13 +45,15 @@ pub fn settings() -> Html {
         let theme = theme.clone();
         Callback::from(move |value: String| {
             let theme = theme.clone();
+            let theme_ctx = theme_ctx.clone();
             spawn_local(async move {
                 let args = serde_wasm_bindgen::to_value(&serde_json::json!({
                     "name": "theme",
                     "value": value
                 }))
                 .unwrap();
-                theme.set(value);
+                theme.set(value.clone());
+                theme_ctx.set_mode.emit(value);
                 invoke("set_setting", args).await;
             });
         })
