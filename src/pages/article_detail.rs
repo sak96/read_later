@@ -19,14 +19,14 @@ pub struct Props {
 #[function_component(ArticleDetail)]
 pub fn article_detail(props: &Props) -> Html {
     let article = use_state(|| None::<Article>);
-    let rendered_content = use_state(|| String::new());
+    let rendered_content = use_state(String::new);
 
     let article_clone = article.clone();
     let rendered_clone = rendered_content.clone();
     let id = props.id;
 
     use_effect_with(id, move |id| {
-        let id = id.clone();
+        let id = *id;
         spawn_local(async move {
             let args = serde_wasm_bindgen::to_value(&serde_json::json!({"id": id})).unwrap();
             let result = invoke("get_article", args).await;
@@ -49,13 +49,27 @@ pub fn article_detail(props: &Props) -> Html {
         navigator.push(&Route::Home);
     });
 
+    let delete_article = {
+        let go_back = go_back.clone();
+        Callback::from(move |e: _| {
+            let go_back = go_back.clone();
+            spawn_local(async move {
+                let args = serde_wasm_bindgen::to_value(&serde_json::json!({"id": id})).unwrap();
+                invoke("delete_article", args).await;
+                go_back.emit(e);
+            });
+        })
+    };
+
     html! {
         <>
             <nav class="container-fluid">
                 <ul>
-                    <li><button onclick={go_back} class="secondary">
-                        <i class="ti ti-arrow-left"></i>
-                    </button></li>
+                    <li>
+                        <button onclick={go_back} class="secondary">
+                            <i class="ti ti-arrow-left"></i>
+                        </button>
+                    </li>
                     <li><strong>{"Article"}</strong></li>
                 </ul>
             </nav>
@@ -66,6 +80,9 @@ pub fn article_detail(props: &Props) -> Html {
                         <h1>{&article.title}</h1>
                         <p><small>{&article.created_at}</small></p>
                         <hr />
+                        <button type="button" onclick={delete_article} class="secondary">
+                            <i class="ti ti-trash"></i>
+                        </button>
                         <div dangerouslySetInnerHTML={(*rendered_content).clone()} />
                     </article>
                 } else {

@@ -64,6 +64,15 @@ pub async fn add_article(url: String, state: State<'_, AppState>) -> Result<Arti
 }
 
 #[tauri::command]
+pub async fn delete_article(id: i32, state: State<'_, AppState>) -> Result<usize, String> {
+    let app = state.app.lock().unwrap();
+    let mut conn = establish_connection(&app);
+    diesel::delete(articles::table.filter(articles::id.eq(id)))
+        .execute(&mut conn)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub fn render_readable_content(html: String) -> Result<String, String> {
     Ok(html)
 }

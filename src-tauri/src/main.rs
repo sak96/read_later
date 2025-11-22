@@ -20,6 +20,7 @@ pub fn main() {
             article_manager_lib::commands::get_articles,
             article_manager_lib::commands::get_article,
             article_manager_lib::commands::add_article,
+            article_manager_lib::commands::delete_article,
             article_manager_lib::commands::render_readable_content,
             article_manager_lib::commands::get_setting,
             article_manager_lib::commands::set_setting,
