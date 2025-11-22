@@ -1,9 +1,8 @@
+use crate::components::HomeButton;
 use crate::components::ThemeContext;
-use crate::routes::Route;
 use crate::web_utils::{invoke, open_url};
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
-use yew_router::prelude::*;
 
 #[function_component(Settings)]
 pub fn settings() -> Html {
@@ -13,14 +12,8 @@ pub fn settings() -> Html {
     {
         let theme = theme.clone();
         let theme_ctx = theme_ctx.clone();
-        web_sys::console::log_1(&theme_ctx.mode.clone().into());
         use_effect_with(theme, move |theme| theme.set(theme_ctx.mode.clone()));
     }
-
-    let navigator = use_navigator().unwrap();
-    let go_back = Callback::from(move |_| {
-        navigator.push(&Route::Home);
-    });
 
     let on_theme_change = {
         let theme = theme.clone();
@@ -46,65 +39,48 @@ pub fn settings() -> Html {
         });
     });
 
-    web_sys::console::log_1(&(*theme).to_string().into());
     html! {
-        <>
-            <nav class="container-fluid">
-                <ul>
-                    <li><button onclick={go_back} class="secondary">
-                        <i class="ti ti-arrow-left"></i>
-                    </button></li>
-                </ul>
-            </nav>
-
-            <main class="container">
-                <article>
-                    <label>
-                        <h2 class="ti ti-palette"></h2>
-                        <div role="group">
-                            {
-                                for [("light", "ti-sun"), ("dark","ti-moon"), ("system","ti-device-desktop-cog")].iter().map(|(theme_option, theme_icon)| {
-                                    let btn_class = if *theme == *theme_option { "primary" } else { "outline" };
-                                    let theme_value = theme_option.to_string();
-                                    html! {
-                                        <button
-                                            class={classes!(btn_class)}
-                                            onclick={on_theme_change.reform(move |_| theme_value.clone())}
-                                        >
-                                            <i class={classes!("ti", theme_icon.to_owned())}></i>
-                                        </button>
-                                    }
-                                })
-                            }
-                        </div>
-                    </label>
-                </article>
-                <article>
-                    <label>
-                        <h2 class="ti ti-info-circle"></h2>
-                        <div role="group">
-                            {
-                                for [("https://github.com","ti-brand-github"), ("https://github.com","ti-bug")].iter().map(|(url, url_icon)| {
-                                    html! {
-                                        <button
-                                            type="button"
-                                            class="outline"
-                                            onclick={open_external_url.reform(move |_| url.to_string())}
-                                        >
-                                            <i class={classes!("ti", url_icon.to_owned())}></i>
-                                        </button>
-                                    }
-                                })
-                            }
-                        </div>
-                    </label>
-                </article>
-
-                <article>
-                    <div style="display: flex; gap: 8px;">
+        <main class="container">
+            <HomeButton />
+            <article>
+                <label>
+                    <h2 class="ti ti-palette"></h2>
+                    <div role="group">
+                        {
+                            for [("light", "ti-sun"), ("dark","ti-moon"), ("system","ti-device-desktop-cog")].iter().map(|(theme_option, theme_icon)| {
+                                html! {
+                                    <button
+                                        class={if *theme == *theme_option { "primary" } else { "outline" }}
+                                        onclick={on_theme_change.reform(move |_| theme_option.to_string().clone())}
+                                    >
+                                        <i class={classes!("ti", theme_icon.to_owned())}></i>
+                                    </button>
+                                }
+                            })
+                        }
                     </div>
-                </article>
-            </main>
-        </>
+                </label>
+            </article>
+            <article>
+                <label>
+                    <h2 class="ti ti-info-circle"></h2>
+                    <div role="group">
+                        {
+                            for [("https://github.com/sak96/read_later","ti-brand-github"), ("https://github.com/sak96/read_later/issues","ti-bug")].iter().map(|(url, url_icon)| {
+                                html! {
+                                    <button
+                                        type="button"
+                                        class="outline"
+                                        onclick={open_external_url.reform(move |_| url.to_string())}
+                                    >
+                                        <i class={classes!("ti", url_icon.to_owned())}></i>
+                                    </button>
+                                }
+                            })
+                        }
+                    </div>
+                </label>
+            </article>
+        </main>
     }
 }

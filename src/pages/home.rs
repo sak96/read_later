@@ -73,7 +73,7 @@ pub fn home() -> Html {
                         </header>
                     </article>
                 } else {
-                    <div class="article-grid">
+                    <div class="container">
                         { for articles.iter().map(|article| html! {
                             <ArticleCard article={article.clone()} />
                         })}

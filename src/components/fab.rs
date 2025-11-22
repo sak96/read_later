@@ -11,20 +11,22 @@ pub struct FabProps {
 #[function_component(Fab)]
 pub fn fab(props: &FabProps) -> Html {
     html! {
-        <div style="position: absolute; bottom: 1em;">
+        <div style="position: sticky; bottom: 0em; padding: 1em;">
             if props.show_menu {
-                <div class="fab-menu">
-                    <button onclick={props.on_settings.clone()}>
-                        <i class="ti ti-settings"></i>
-                    </button>
-                    <button onclick={props.on_add.clone()}>
-                        <i class="ti ti-plus"></i>
-                    </button>
-                </div>
+                <button onclick={props.on_add.clone()}>
+                    <i class="ti ti-plus"></i>
+                </button>
             }
-            <button onclick={props.on_toggle.clone()}>
-                <i class="ti ti-menu-2"></i>
-            </button>
+            <div>
+                <button onclick={props.on_toggle.clone()}>
+                    <i class="ti ti-menu-2"></i>
+                </button>
+                if props.show_menu {
+                    <button onclick={props.on_settings.clone()}>
+                        <i class="ti ti-settings-filled"></i>
+                    </button>
+                }
+            </div>
         </div>
     }
 }

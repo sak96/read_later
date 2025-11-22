@@ -1,3 +1,4 @@
+use crate::components::HomeButton;
 use crate::pages::Article;
 use crate::routes::Route;
 use crate::web_utils::invoke;
@@ -26,7 +27,6 @@ pub fn article_detail(props: &Props) -> Html {
                 let args = serde_wasm_bindgen::to_value(&serde_json::json!({"id": id})).unwrap();
                 let result = invoke("get_article", args).await;
                 if let Ok(data) = serde_wasm_bindgen::from_value::<Article>(result) {
-                    web_sys::console::log_1(&format!("{:?}", &data.body).into());
                     rendered_content.set(data.body.clone());
                     article_clone.set(Some(data));
                 }
@@ -34,50 +34,33 @@ pub fn article_detail(props: &Props) -> Html {
         });
     }
 
-    let navigator = use_navigator().unwrap();
-    let go_back = Callback::from(move |_| {
-        navigator.push(&Route::Home);
-    });
-
     let delete_article = {
-        let go_back = go_back.clone();
-        Callback::from(move |e: _| {
-            let go_back = go_back.clone();
+        let navigator = use_navigator().unwrap();
+        Callback::from(move |_| {
+            let navigator = navigator.clone();
             spawn_local(async move {
                 let args = serde_wasm_bindgen::to_value(&serde_json::json!({"id": id})).unwrap();
                 invoke("delete_article", args).await;
-                go_back.emit(e);
+                navigator.push(&Route::Home);
             });
         })
     };
     html! {
-        <>
-            <nav class="container-fluid">
-                <ul>
-                    <li>
-                        <button onclick={go_back} class="secondary">
-                            <i class="ti ti-arrow-left"></i>
-                        </button>
-                    </li>
-                    <li><strong>{"Article"}</strong></li>
-                </ul>
-            </nav>
-
-            <main class="container">
-                if let Some(article) = article.as_ref() {
-                    <article>
-                        <h1>{&article.title}</h1>
-                        <p><small>{&article.created_at}</small></p>
-                        <hr />
-                        <button type="button" onclick={delete_article} class="secondary">
-                            <i class="ti ti-trash"></i>
-                        </button>
-                        {Html::from_html_unchecked(((*rendered_content).clone()).into())}
-                    </article>
-                } else {
-                    <article aria-busy="true">{"Loading..."}</article>
-                }
-            </main>
-        </>
+        <main class="container">
+            <HomeButton />
+            if let Some(article) = article.as_ref() {
+                <article>
+                    <h1>{&article.title}</h1>
+                    <p><small>{&article.created_at}</small></p>
+                    <hr />
+                    <button type="button" onclick={delete_article} class="secondary">
+                        <i class="ti ti-trash"></i>
+                    </button>
+                    {Html::from_html_unchecked(((*rendered_content).clone()).into())}
+                </article>
+            } else {
+                <article aria-busy="true">{"Loading..."}</article>
+            }
+        </main>
     }
 }
