@@ -5,6 +5,7 @@ use diesel::prelude::*;
 use readability_rust::Readability;
 use std::sync::Mutex;
 use tauri::State;
+use tauri_plugin_clipboard_manager::ClipboardExt;
 
 pub struct AppState {
     pub app: Mutex<tauri::AppHandle>,
@@ -87,6 +88,12 @@ pub fn get_setting(name: String, state: State<AppState>) -> Result<String, Strin
         .select(settings::value)
         .first(&mut conn)
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn read_clipboard(state: State<AppState>) -> Result<String, String> {
+    let app = state.app.lock().unwrap();
+    app.clipboard().read_text().map_err(|e| e.to_string())
 }
 
 #[tauri::command]

@@ -5,6 +5,7 @@ pub fn main() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
             let app_handle = app.handle().clone();
             let mut conn = article_manager_lib::db::establish_connection(&app_handle);
@@ -21,6 +22,7 @@ pub fn main() {
             article_manager_lib::commands::get_article,
             article_manager_lib::commands::add_article,
             article_manager_lib::commands::delete_article,
+            article_manager_lib::commands::read_clipboard,
             article_manager_lib::commands::render_readable_content,
             article_manager_lib::commands::get_setting,
             article_manager_lib::commands::set_setting,

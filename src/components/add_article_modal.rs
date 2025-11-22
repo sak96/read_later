@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::window;
+
 use yew::prelude::*;
 
 #[wasm_bindgen]
@@ -17,7 +17,7 @@ pub struct ModalProps {
 
 #[function_component(AddArticleModal)]
 pub fn add_article_modal(props: &ModalProps) -> Html {
-    let url_input = use_state(|| String::new());
+    let url_input = use_state(String::new);
 
     let on_url_change = {
         let url_input = url_input.clone();
@@ -32,12 +32,9 @@ pub fn add_article_modal(props: &ModalProps) -> Html {
         Callback::from(move |_| {
             let url_input = url_input.clone();
             spawn_local(async move {
-                if let Some(window) = window() {
-                    let promise = window.navigator().clipboard().read_text();
-                    let result = wasm_bindgen_futures::JsFuture::from(promise).await;
-                    if let Ok(text) = result {
-                        url_input.set(text.as_string().unwrap_or_default());
-                    }
+                let result = invoke("read_clipboard", JsValue::NULL).await;
+                if let Ok(text) = serde_wasm_bindgen::from_value::<String>(result) {
+                    url_input.set(text.as_str().to_string());
                 }
             });
         })
@@ -59,20 +56,14 @@ pub fn add_article_modal(props: &ModalProps) -> Html {
         })
     };
 
-    let on_overlay_click = {
-        let on_close = props.on_close.clone();
-        Callback::from(move |_| on_close.emit(()))
-    };
-
-    let stop_propagation = Callback::from(|e: MouseEvent| e.stop_propagation());
-
     html! {
         <dialog open={props.open}>
-            <div class="modal-content" onclick={stop_propagation}>
-                <h2>{"Add New Article"}</h2>
-                <form onsubmit={on_submit}>
-                    <label>
-                        {"Article URL"}
+            <article>
+                <h2>
+                    <button aria-label="Close" rel="prev" onclick={props.on_close.reform(|_| ())}></button>
+                </h2>
+                <div>
+                    <form onsubmit={on_submit}>
                         <input
                             type="url"
                             value={(*url_input).clone()}
@@ -80,20 +71,17 @@ pub fn add_article_modal(props: &ModalProps) -> Html {
                             placeholder="https://example.com/article"
                             required=true
                         />
-                    </label>
-
-                    <button type="button" onclick={paste_from_clipboard} class="secondary">
-                        <i class="ti ti-clipboard"></i> {" Paste from Clipboard"}
-                    </button>
-
-                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                        <button type="submit">{"Add Article"}</button>
-                        <button type="button" onclick={props.on_close.reform(|_| ())} class="secondary">
-                            {"Cancel"}
-                        </button>
-                    </div>
-                </form>
-            </div>
+                        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                            <button type="button" onclick={paste_from_clipboard} class="secondary">
+                                <i class="ti ti-clipboard"></i>
+                            </button>
+                            <button type="submit">
+                                <i class="ti ti-check"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </article>
         </dialog>
     }
 }

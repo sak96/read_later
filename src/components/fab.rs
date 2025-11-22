@@ -11,7 +11,7 @@ pub struct FabProps {
 #[function_component(Fab)]
 pub fn fab(props: &FabProps) -> Html {
     html! {
-        <div class="fab">
+        <div style="position: absolute; bottom: 1em;">
             if props.show_menu {
                 <div class="fab-menu">
                     <button onclick={props.on_settings.clone()}>
