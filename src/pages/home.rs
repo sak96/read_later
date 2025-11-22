@@ -69,11 +69,13 @@ pub fn home() -> Html {
     html! {
         <>
             <main class="container">
-                <h2>{"My Articles"}</h2>
-
                 if articles.is_empty() {
-                    <article>
-                        <p>{"No articles yet. Add your first article!"}</p>
+                    <article >
+                        <header>
+                            <button type="submit" onclick={open_add_modal.clone()}>
+                                <i class="ti ti-table-plus"></i>
+                            </button>
+                        </header>
                     </article>
                 } else {
                     <div class="article-grid">
