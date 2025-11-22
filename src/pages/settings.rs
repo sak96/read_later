@@ -22,19 +22,12 @@ pub fn settings() -> Html {
     let theme = use_state(|| "system".to_string());
     let theme_ctx = use_context::<ThemeContext>().expect("ThemeProvider missing");
 
-    let theme_clone = theme.clone();
-    use_effect_with((), move |_| {
-        spawn_local(async move {
-            let result = invoke(
-                "get_setting",
-                serde_wasm_bindgen::to_value(&serde_json::json!({"name": "theme"})).unwrap(),
-            )
-            .await;
-            if let Ok(value) = serde_wasm_bindgen::from_value::<String>(result) {
-                theme_clone.set(value);
-            }
-        });
-    });
+    {
+        let theme = theme.clone();
+        let theme_ctx = theme_ctx.clone();
+        web_sys::console::log_1(&theme_ctx.mode.clone().into());
+        use_effect_with(theme, move |theme| theme.set(theme_ctx.mode.clone()));
+    }
 
     let navigator = use_navigator().unwrap();
     let go_back = Callback::from(move |_| {
