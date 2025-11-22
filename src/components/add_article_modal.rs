@@ -7,6 +7,12 @@ use yew::prelude::*;
 extern "C" {
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "core"])]
     async fn invoke(cmd: &str, args: JsValue) -> JsValue;
+
+    #[wasm_bindgen(
+        js_namespace = ["window", "__TAURI__", "clipboardManager"],
+        js_name = readText
+    )]
+    async fn read_clipboard() -> JsValue;
 }
 
 #[derive(Properties, PartialEq)]
@@ -40,7 +46,7 @@ pub fn add_article_modal(props: &ModalProps) -> Html {
         Callback::from(move |_| {
             let url_input = url_input.clone();
             spawn_local(async move {
-                let result = invoke("read_clipboard", JsValue::NULL).await;
+                let result = read_clipboard().await;
                 if let Ok(text) = serde_wasm_bindgen::from_value::<String>(result) {
                     url_input.set(text.as_str().to_string());
                 }

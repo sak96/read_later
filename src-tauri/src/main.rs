@@ -22,7 +22,6 @@ pub fn main() {
             article_manager_lib::commands::get_article,
             article_manager_lib::commands::add_article,
             article_manager_lib::commands::delete_article,
-            article_manager_lib::commands::read_clipboard,
             article_manager_lib::commands::get_setting,
             article_manager_lib::commands::set_setting,
         ])
