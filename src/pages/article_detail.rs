@@ -1,15 +1,9 @@
 use crate::pages::Article;
 use crate::routes::Route;
-use wasm_bindgen::prelude::*;
+use crate::web_utils::invoke;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
-
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "core"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-}
 
 #[derive(Properties, PartialEq)]
 pub struct Props {

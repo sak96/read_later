@@ -1,16 +1,11 @@
 use crate::components::{AddArticleModal, ArticleCard, Fab};
 use crate::routes::Route;
+use crate::web_utils::invoke;
 use serde::{Deserialize, Serialize};
-use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
-
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "core"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-}
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct Article {

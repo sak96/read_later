@@ -1,19 +1,7 @@
-use wasm_bindgen::prelude::*;
+use crate::web_utils::{invoke, read_clipboard};
 use wasm_bindgen_futures::spawn_local;
 
 use yew::prelude::*;
-
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "core"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-
-    #[wasm_bindgen(
-        js_namespace = ["window", "__TAURI__", "clipboardManager"],
-        js_name = readText
-    )]
-    async fn read_clipboard() -> JsValue;
-}
 
 #[derive(Properties, PartialEq)]
 pub struct ModalProps {

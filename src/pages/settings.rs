@@ -1,21 +1,9 @@
 use crate::components::ThemeContext;
 use crate::routes::Route;
-use wasm_bindgen::prelude::*;
+use crate::web_utils::{invoke, open_url};
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
-
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "core"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-
-    #[wasm_bindgen(
-        js_namespace = ["window", "__TAURI__", "opener"],
-        js_name = openUrl
-    )]
-    async fn open_url(url: JsValue) -> JsValue;
-}
 
 #[function_component(Settings)]
 pub fn settings() -> Html {
