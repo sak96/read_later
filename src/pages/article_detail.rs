@@ -22,27 +22,23 @@ pub fn article_detail(props: &Props) -> Html {
     let rendered_content = use_state(String::new);
 
     let article_clone = article.clone();
-    let rendered_clone = rendered_content.clone();
     let id = props.id;
 
-    use_effect_with(id, move |id| {
-        let id = *id;
-        spawn_local(async move {
-            let args = serde_wasm_bindgen::to_value(&serde_json::json!({"id": id})).unwrap();
-            let result = invoke("get_article", args).await;
-
-            if let Ok(data) = serde_wasm_bindgen::from_value::<Article>(result) {
-                let body_args =
-                    serde_wasm_bindgen::to_value(&serde_json::json!({"html": data.body})).unwrap();
-                let rendered = invoke("render_readable_content", body_args).await;
-
-                if let Ok(content) = serde_wasm_bindgen::from_value::<String>(rendered) {
-                    rendered_clone.set(content);
+    {
+        let rendered_content = rendered_content.clone();
+        use_effect_with(id, move |id| {
+            let id = *id;
+            spawn_local(async move {
+                let args = serde_wasm_bindgen::to_value(&serde_json::json!({"id": id})).unwrap();
+                let result = invoke("get_article", args).await;
+                if let Ok(data) = serde_wasm_bindgen::from_value::<Article>(result) {
+                    web_sys::console::log_1(&format!("{:?}", &data.body).into());
+                    rendered_content.set(data.body.clone());
+                    article_clone.set(Some(data));
                 }
-                article_clone.set(Some(data));
-            }
+            });
         });
-    });
+    }
 
     let navigator = use_navigator().unwrap();
     let go_back = Callback::from(move |_| {
@@ -60,7 +56,6 @@ pub fn article_detail(props: &Props) -> Html {
             });
         })
     };
-
     html! {
         <>
             <nav class="container-fluid">
@@ -83,7 +78,7 @@ pub fn article_detail(props: &Props) -> Html {
                         <button type="button" onclick={delete_article} class="secondary">
                             <i class="ti ti-trash"></i>
                         </button>
-                        <div dangerouslySetInnerHTML={(*rendered_content).clone()} />
+                        {Html::from_html_unchecked(((*rendered_content).clone()).into())}
                     </article>
                 } else {
                     <article aria-busy="true">{"Loading..."}</article>

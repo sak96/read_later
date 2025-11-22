@@ -74,11 +74,6 @@ pub async fn delete_article(id: i32, state: State<'_, AppState>) -> Result<usize
 }
 
 #[tauri::command]
-pub fn render_readable_content(html: String) -> Result<String, String> {
-    Ok(html)
-}
-
-#[tauri::command]
 pub fn get_setting(name: String, state: State<AppState>) -> Result<String, String> {
     let app = state.app.lock().unwrap();
     let mut conn = establish_connection(&app);
