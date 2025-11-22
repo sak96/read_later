@@ -26,6 +26,14 @@ pub fn add_article_modal(props: &ModalProps) -> Html {
             url_input.set(target.value());
         })
     };
+    let on_close = {
+        let url_input = url_input.clone();
+        let on_close = props.on_close.clone();
+        Callback::from(move |_: ()| {
+            url_input.set(String::new());
+            on_close.emit(());
+        })
+    };
 
     let paste_from_clipboard = {
         let url_input = url_input.clone();
@@ -42,7 +50,7 @@ pub fn add_article_modal(props: &ModalProps) -> Html {
 
     let on_submit = {
         let url_input = url_input.clone();
-        let on_close = props.on_close.clone();
+        let on_close = on_close.clone();
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default();
             let url = (*url_input).clone();
@@ -59,10 +67,10 @@ pub fn add_article_modal(props: &ModalProps) -> Html {
     html! {
         <dialog open={props.open}>
             <article>
-                <h2>
-                    <button aria-label="Close" rel="prev" onclick={props.on_close.reform(|_| ())}></button>
-                </h2>
-                <div>
+                <header>
+                    <button aria-label="Close" rel="prev" onclick={on_close.reform(|_| ())}></button>
+                </header>
+                <footer>
                     <form onsubmit={on_submit}>
                         <input
                             type="url"
@@ -72,6 +80,7 @@ pub fn add_article_modal(props: &ModalProps) -> Html {
                             required=true
                         />
                         <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+
                             <button type="button" onclick={paste_from_clipboard} class="secondary">
                                 <i class="ti ti-clipboard"></i>
                             </button>
@@ -80,7 +89,7 @@ pub fn add_article_modal(props: &ModalProps) -> Html {
                             </button>
                         </div>
                     </form>
-                </div>
+                </footer>
             </article>
         </dialog>
     }

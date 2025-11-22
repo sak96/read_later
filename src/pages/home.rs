@@ -25,16 +25,19 @@ pub fn home() -> Html {
     let articles = use_state(Vec::<Article>::new);
     let show_modal = use_state(|| false);
     let show_fab_menu = use_state(|| false);
+    let refreshed = use_state(|| false);
 
     let articles_clone = articles.clone();
-    use_effect_with((), move |_| {
+    if !*refreshed {
+        let refreshed = refreshed.clone();
         spawn_local(async move {
             let result = invoke("get_articles", JsValue::NULL).await;
             if let Ok(data) = serde_wasm_bindgen::from_value::<Vec<Article>>(result) {
                 articles_clone.set(data);
+                refreshed.set(true);
             }
         });
-    });
+    }
 
     let toggle_fab_menu = {
         let show_fab_menu = show_fab_menu.clone();
@@ -52,7 +55,10 @@ pub fn home() -> Html {
 
     let close_modal = {
         let show_modal = show_modal.clone();
-        Callback::from(move |_| show_modal.set(false))
+        Callback::from(move |_| {
+            refreshed.set(false);
+            show_modal.set(false);
+        })
     };
 
     let navigate_settings = use_navigator().unwrap();
@@ -62,10 +68,6 @@ pub fn home() -> Html {
 
     html! {
         <>
-            <nav class="container-fluid">
-                <ul><li><strong>{"📚 Article Manager"}</strong></li></ul>
-            </nav>
-
             <main class="container">
                 <h2>{"My Articles"}</h2>
 
