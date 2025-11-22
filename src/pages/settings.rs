@@ -8,6 +8,12 @@ use yew_router::prelude::*;
 extern "C" {
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "core"])]
     async fn invoke(cmd: &str, args: JsValue) -> JsValue;
+
+    #[wasm_bindgen(
+        js_namespace = ["window", "__TAURI__", "opener"],
+        js_name = openUrl
+    )]
+    async fn open_url(url: JsValue) -> JsValue;
 }
 
 #[function_component(Settings)]
@@ -35,22 +41,27 @@ pub fn settings() -> Html {
 
     let on_theme_change = {
         let theme = theme.clone();
-        Callback::from(move |e: Event| {
-            let target: web_sys::HtmlSelectElement = e.target_unchecked_into();
-            let value = target.value();
-            theme.set(value.clone());
-
+        Callback::from(move |value: String| {
+            let theme = theme.clone();
             spawn_local(async move {
                 let args = serde_wasm_bindgen::to_value(&serde_json::json!({
                     "name": "theme",
                     "value": value
                 }))
                 .unwrap();
+                theme.set(value);
                 invoke("set_setting", args).await;
             });
         })
     };
 
+    let open_external_url = Callback::from(move |url: String| {
+        spawn_local(async move {
+            open_url(url.into()).await;
+        });
+    });
+
+    web_sys::console::log_1(&(*theme).to_string().into());
     html! {
         <>
             <nav class="container-fluid">
@@ -58,31 +69,55 @@ pub fn settings() -> Html {
                     <li><button onclick={go_back} class="secondary">
                         <i class="ti ti-arrow-left"></i>
                     </button></li>
-                    <li><strong>{"⚙️ Settings"}</strong></li>
                 </ul>
             </nav>
 
             <main class="container">
                 <article>
-                    <h2>{"Appearance"}</h2>
-
                     <label>
-                        {"Theme"}
-                        <select value={(*theme).clone()} onchange={on_theme_change}>
-                            <option value="light">{"Light"}</option>
-                            <option value="dark">{"Dark"}</option>
-                            <option value="system">{"System"}</option>
-                        </select>
+                        <h2 class="ti ti-palette"></h2>
+                        <div role="group">
+                            {
+                                for [("light", "ti-sun"), ("dark","ti-moon"), ("system","ti-device-desktop-cog")].iter().map(|(theme_option, theme_icon)| {
+                                    let btn_class = if *theme == *theme_option { "primary" } else { "outline" };
+                                    let theme_value = theme_option.to_string();
+                                    html! {
+                                        <button
+                                            class={classes!(btn_class)}
+                                            onclick={on_theme_change.reform(move |_| theme_value.clone())}
+                                        >
+                                            <i class={classes!("ti", theme_icon.to_owned())}></i>
+                                        </button>
+                                    }
+                                })
+                            }
+                        </div>
+                    </label>
+                </article>
+                <article>
+                    <label>
+                        <h2 class="ti ti-info-circle"></h2>
+                        <div role="group">
+                            {
+                                for [("https://github.com","ti-brand-github"), ("https://github.com","ti-bug")].iter().map(|(url, url_icon)| {
+                                    html! {
+                                        <button
+                                            type="button"
+                                            class="outline"
+                                            onclick={open_external_url.reform(move |_| url.to_string())}
+                                        >
+                                            <i class={classes!("ti", url_icon.to_owned())}></i>
+                                        </button>
+                                    }
+                                })
+                            }
+                        </div>
                     </label>
                 </article>
 
                 <article>
-                    <h2>{"About"}</h2>
-                    <p>
-                        <a href="https://github.com" target="_blank">
-                            <i class="ti ti-brand-github"></i> {" View on GitHub"}
-                        </a>
-                    </p>
+                    <div style="display: flex; gap: 8px;">
+                    </div>
                 </article>
             </main>
         </>
