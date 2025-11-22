@@ -11,6 +11,7 @@ extern "C" {
 
 #[derive(Properties, PartialEq)]
 pub struct ModalProps {
+    pub open: bool,
     pub on_close: Callback<()>,
 }
 
@@ -66,7 +67,7 @@ pub fn add_article_modal(props: &ModalProps) -> Html {
     let stop_propagation = Callback::from(|e: MouseEvent| e.stop_propagation());
 
     html! {
-        <div class="modal-overlay" onclick={on_overlay_click}>
+        <dialog open={props.open}>
             <div class="modal-content" onclick={stop_propagation}>
                 <h2>{"Add New Article"}</h2>
                 <form onsubmit={on_submit}>
@@ -93,6 +94,6 @@ pub fn add_article_modal(props: &ModalProps) -> Html {
                     </div>
                 </form>
             </div>
-        </div>
+        </dialog>
     }
 }

@@ -90,9 +90,7 @@ pub fn home() -> Html {
                 on_settings={go_to_settings}
             />
 
-            if *show_modal {
-                <AddArticleModal on_close={close_modal} />
-            }
+           <AddArticleModal open={*show_modal} on_close={close_modal} />
         </>
     }
 }
