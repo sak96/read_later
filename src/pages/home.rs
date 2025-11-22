@@ -22,7 +22,7 @@ pub struct Article {
 
 #[function_component(Home)]
 pub fn home() -> Html {
-    let articles = use_state(|| Vec::<Article>::new());
+    let articles = use_state(Vec::<Article>::new);
     let show_modal = use_state(|| false);
     let show_fab_menu = use_state(|| false);
 
@@ -50,7 +50,6 @@ pub fn home() -> Html {
         })
     };
 
-    let articles_clone = articles.clone();
     let close_modal = {
         let show_modal = show_modal.clone();
         Callback::from(move |_| show_modal.set(false))
@@ -67,7 +66,7 @@ pub fn home() -> Html {
                 <ul><li><strong>{"📚 Article Manager"}</strong></li></ul>
             </nav>
 
-            <main class="container" style="min-width: 100vh;">
+            <main class="container">
                 <h2>{"My Articles"}</h2>
 
                 if articles.is_empty() {
