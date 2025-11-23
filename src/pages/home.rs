@@ -63,7 +63,7 @@ pub fn home() -> Html {
 
     html! {
         <>
-            <main class="container">
+            <main class="container"  style="min-height: 100vh">
                 if articles.is_empty() {
                     <article >
                         <header>
