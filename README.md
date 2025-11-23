@@ -20,3 +20,23 @@ cargo tauri dev
 ```bash
 cargo tauri build
 ```
+
+## Android
+
+Setup environment as per [tauri](https://v2.tauri.app/start/prerequisites/#android).
+
+- `JAVA_HOME`: can point to jbr folder from android studio.
+- `ANDROID_HOME`: Possibly in `~/Android/Sdk`.
+- `NDK_HOME`: Extracted NDK package folder. (e.g.: `android-ndk-r27d`)
+
+To develop use:
+
+```bash
+cargo tauri android dev
+```
+
+To build use:
+
+```bash
+cargo tauri android apk
+```
