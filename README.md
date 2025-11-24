@@ -46,3 +46,8 @@ cargo tauri android apk
 |![home](screenshots/home.png)|![settings](screenshots/settings.png)|
 |---|---|
 |![light](screenshots/light.png)|![dark](screenshots/dark.png)|
+
+## Acknowledgment
+
+- [Pico Css](https://picocss.com/)
+- [Tabler icons](https://tabler.io/icons)
