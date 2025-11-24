@@ -41,7 +41,6 @@ pub fn settings() -> Html {
 
     html! {
         <main class="container">
-            <HomeButton />
             <article>
                 <label>
                     <h2 class="ti ti-palette"></h2>
@@ -81,6 +80,9 @@ pub fn settings() -> Html {
                     </div>
                 </label>
             </article>
+            <div role="group">
+                <HomeButton />
+            </div>
         </main>
     }
 }

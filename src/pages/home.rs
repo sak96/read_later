@@ -1,11 +1,10 @@
-use crate::components::{AddArticleModal, ArticleCard, Fab};
-use crate::routes::Route;
+use crate::components::{AddArticleModal, ArticleCard, SettingsButton};
+use crate::layouts::Fab;
 use crate::web_utils::invoke;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
-use yew_router::prelude::*;
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct Article {
@@ -34,11 +33,6 @@ pub fn home() -> Html {
         });
     }
 
-    let toggle_fab_menu = {
-        let show_fab_menu = show_fab_menu.clone();
-        Callback::from(move |_| show_fab_menu.set(!*show_fab_menu))
-    };
-
     let open_add_modal = {
         let show_modal = show_modal.clone();
         let show_fab_menu = show_fab_menu.clone();
@@ -55,11 +49,6 @@ pub fn home() -> Html {
             show_modal.set(false);
         })
     };
-
-    let navigate_settings = use_navigator().unwrap();
-    let go_to_settings = Callback::from(move |_| {
-        navigate_settings.push(&Route::Settings);
-    });
 
     html! {
         <>
@@ -81,12 +70,16 @@ pub fn home() -> Html {
                 }
             </main>
 
-            <Fab
-                show_menu={*show_fab_menu}
-                on_toggle={toggle_fab_menu}
-                on_add={open_add_modal}
-                on_settings={go_to_settings}
-            />
+            <Fab>
+                <div>
+                    <button onclick={open_add_modal}>
+                        <i class="ti ti-plus"></i>
+                    </button>
+                </div>
+                <div>
+                    <SettingsButton />
+                </div>
+            </Fab>
 
            <AddArticleModal open={*show_modal} on_close={close_modal} />
         </>

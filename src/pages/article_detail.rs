@@ -1,4 +1,5 @@
 use crate::components::HomeButton;
+use crate::layouts::Fab;
 use crate::pages::Article;
 use crate::routes::Route;
 use crate::web_utils::invoke;
@@ -47,7 +48,6 @@ pub fn article_detail(props: &Props) -> Html {
     };
     html! {
         <main class="container">
-            <HomeButton />
             if let Some(article) = article.as_ref() {
                 <article>
                     <h1>{&article.title}</h1>
@@ -61,6 +61,9 @@ pub fn article_detail(props: &Props) -> Html {
             } else {
                 <article aria-busy="true">{"Loading..."}</article>
             }
+            <Fab>
+                <HomeButton />
+            </Fab>
         </main>
     }
 }
