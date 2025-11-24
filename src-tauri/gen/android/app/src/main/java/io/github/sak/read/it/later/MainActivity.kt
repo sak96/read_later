@@ -1,4 +1,4 @@
-package com.tauri.dev
+package io.github.sak.read.it.later
 
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
