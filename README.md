@@ -40,3 +40,9 @@ To build use:
 ```bash
 cargo tauri android apk
 ```
+
+## Screenshots
+
+|![home](screenshots/home.png)|![settings](screenshots/settings.png)|
+|---|---|
+|![light](screenshots/light.png)|![dark](screenshots/dark.png)|
