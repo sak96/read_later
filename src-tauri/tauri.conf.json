@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "io.github.sak.read.it.later",
   "build": {
-    "frontendDist": ".",
+    "frontendDist": "../dist",
     "devUrl": "http://localhost:8080",
     "beforeDevCommand": "trunk serve",
     "beforeBuildCommand": "trunk build"
