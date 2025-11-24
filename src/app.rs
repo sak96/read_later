@@ -1,4 +1,4 @@
-use crate::components::ThemeProvider;
+use crate::layouts::ThemeProvider;
 use crate::routes::{Route, switch};
 use yew::prelude::*;
 use yew_router::prelude::*;
