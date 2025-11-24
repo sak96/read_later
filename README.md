@@ -29,7 +29,7 @@ Setup environment as per [tauri](https://v2.tauri.app/start/prerequisites/#andro
 - `ANDROID_HOME`: Possibly in `~/Android/Sdk`.
 - `NDK_HOME`: Extracted NDK package folder. (e.g.: `android-ndk-r27d`)
 
-To develop use:
+To develop use (needs to be in same network):
 
 ```bash
 cargo tauri android dev
