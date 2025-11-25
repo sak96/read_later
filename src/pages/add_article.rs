@@ -1,0 +1,85 @@
+use crate::components::HomeButton;
+use crate::routes::Route;
+use crate::web_utils::{invoke, read_clipboard};
+use wasm_bindgen_futures::spawn_local;
+use yew_router::prelude::*;
+
+use yew::prelude::*;
+
+#[function_component(AddArticle)]
+pub fn add_article() -> Html {
+    let url_input = use_state(String::new);
+    let progress_bar = use_state(|| false);
+
+    let on_url_change = {
+        let url_input = url_input.clone();
+        Callback::from(move |e: InputEvent| {
+            let target: web_sys::HtmlInputElement = e.target_unchecked_into();
+            url_input.set(target.value());
+        })
+    };
+
+    let paste_from_clipboard = {
+        let url_input = url_input.clone();
+        Callback::from(move |_| {
+            let url_input = url_input.clone();
+            spawn_local(async move {
+                let result = read_clipboard().await;
+                if let Ok(text) = serde_wasm_bindgen::from_value::<String>(result) {
+                    url_input.set(text.as_str().to_string());
+                }
+            });
+        })
+    };
+
+    let navigator = use_navigator().unwrap();
+    let on_submit = {
+        let url_input = url_input.clone();
+        let progress_bar = progress_bar.clone();
+        Callback::from(move |e: SubmitEvent| {
+            e.prevent_default();
+            let url = (*url_input).clone();
+            let navigator = navigator.clone();
+            let progress_bar = progress_bar.clone();
+
+            spawn_local(async move {
+                progress_bar.set(true);
+                let args = serde_wasm_bindgen::to_value(&serde_json::json!({"url": url})).unwrap();
+                invoke("add_article", args).await;
+                navigator.push(&Route::Home);
+            });
+        })
+    };
+
+    html! {
+        <article>
+            if *progress_bar  {
+                <blockquote>
+                    {(*url_input).clone()}
+                </blockquote>
+                <progress />
+            } else {
+                <form onsubmit={on_submit}>
+                    <input
+                        type="url"
+                        value={(*url_input).clone()}
+                        oninput={on_url_change}
+                        placeholder="https://example.com/article"
+                        required=true
+                    />
+                    <div role="group">
+                        <button class="outline" type="button" onclick={paste_from_clipboard} >
+                            <i class="ti ti-clipboard"></i>
+                        </button>
+                        <HomeButton outline={true} />
+                        <div role="group">
+                            <button type="submit">
+                                <i class="ti ti-check"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            }
+        </article>
+    }
+}

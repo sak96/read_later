@@ -1,4 +1,4 @@
-use crate::pages::{ArticleDetail, Home, Settings};
+use crate::pages::{AddArticle, ArticleDetail, Home, Settings};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -10,6 +10,8 @@ pub enum Route {
     Article { id: i32 },
     #[at("/settings")]
     Settings,
+    #[at("/add_article/")]
+    AddArticle,
 }
 
 pub fn switch(routes: Route) -> Html {
@@ -17,6 +19,6 @@ pub fn switch(routes: Route) -> Html {
         Route::Home => html! { <Home /> },
         Route::Article { id } => html! { <ArticleDetail {id} /> },
         Route::Settings => html! { <Settings /> },
+        Route::AddArticle => html! { <AddArticle /> },
     }
 }
-
