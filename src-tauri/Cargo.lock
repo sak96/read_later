@@ -147,6 +147,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-clipboard-manager",
  "tauri-plugin-opener",
+ "tauri-plugin-sharetarget",
 ]
 
 [[package]]
@@ -4592,6 +4593,19 @@ dependencies = [
  "url",
  "windows",
  "zbus",
+]
+
+[[package]]
+name = "tauri-plugin-sharetarget"
+version = "0.1.6"
+source = "git+https://github.com/sak96/tauri-plugin-sharetarget#8a1ffb8b904f91c4d27459527f4acf1a344ba7a7"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin",
+ "thiserror 1.0.69",
 ]
 
 [[package]]

@@ -8,6 +8,7 @@
   "permissions": [
     "core:default",
     "clipboard-manager:allow-read-text",
+    "sharetarget:default",
     "opener:default"
   ]
 }

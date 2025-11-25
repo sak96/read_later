@@ -1,3 +1,4 @@
+use crate::layouts::ShareHandler;
 use crate::pages::{AddArticle, ArticleDetail, Home, Settings};
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -15,10 +16,16 @@ pub enum Route {
 }
 
 pub fn switch(routes: Route) -> Html {
-    match routes {
-        Route::Home => html! { <Home /> },
-        Route::Article { id } => html! { <ArticleDetail {id} /> },
-        Route::Settings => html! { <Settings /> },
-        Route::AddArticle => html! { <AddArticle /> },
+    html! {
+        <ShareHandler>
+        {
+            match routes {
+                Route::Home => html! { <Home /> },
+                Route::Article { id } => html! { <ArticleDetail {id} /> },
+                Route::Settings => html! { <Settings /> },
+                Route::AddArticle => html! { <AddArticle /> },
+            }
+        }
+        </ShareHandler>
     }
 }
