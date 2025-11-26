@@ -10,7 +10,7 @@
     "beforeBuildCommand": "trunk build"
   },
   "app": {
-    "withGlobalTauri": true,
+    "withGlobalTauri": false,
     "windows": [
       {
         "title": "Read Later",

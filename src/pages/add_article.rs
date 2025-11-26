@@ -24,9 +24,8 @@ pub fn add_article() -> Html {
         Callback::from(move |_| {
             let url_input = url_input.clone();
             spawn_local(async move {
-                let result = read_clipboard().await;
-                if let Ok(text) = serde_wasm_bindgen::from_value::<String>(result) {
-                    url_input.set(text.as_str().to_string());
+                if let Some(text) = read_clipboard().await {
+                    url_input.set(text)
                 }
             });
         })
