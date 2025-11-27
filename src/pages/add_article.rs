@@ -4,12 +4,29 @@ use crate::web_utils::{invoke, read_clipboard};
 use wasm_bindgen_futures::spawn_local;
 use yew_router::prelude::*;
 
+use serde::Deserialize;
 use yew::prelude::*;
+
+#[derive(Deserialize, Default)]
+struct ShareParams {
+    input: Option<String>,
+}
 
 #[function_component(AddArticle)]
 pub fn add_article() -> Html {
     let url_input = use_state(String::new);
+    let location = use_location().expect("no location");
     let progress_bar = use_state(|| false);
+    {
+        let url_input = url_input.clone();
+        use_effect_with(location, move |location| {
+            let location = location.clone();
+            spawn_local(async move {
+                let query: ShareParams = location.query::<ShareParams>().unwrap_or_default();
+                url_input.set(query.input.unwrap_or_default());
+            })
+        })
+    };
 
     let on_url_change = {
         let url_input = url_input.clone();

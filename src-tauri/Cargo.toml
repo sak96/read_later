@@ -18,6 +18,7 @@ reqwest = { version = "0.11", features = ["blocking", "rustls-tls"],  default-fe
 tauri-plugin-opener = "2.5.2"
 tauri-plugin-clipboard-manager = "2"
 rusqlite = { version= "0.37", features= ["bundled"] }
+tauri-plugin-sharetarget = { git = "https://github.com/sak96/tauri-plugin-sharetarget" }
 
 [lib]
 name = "article_manager_lib"
