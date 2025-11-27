@@ -35,7 +35,7 @@ pub fn settings() -> Html {
 
     let open_external_url = Callback::from(move |url: String| {
         spawn_local(async move {
-            open_url(url.into()).await;
+            open_url(url).await;
         });
     });
 
