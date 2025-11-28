@@ -1,2 +1,0 @@
-DROP TABLE IF EXISTS articles;
-DROP TABLE IF EXISTS settings;

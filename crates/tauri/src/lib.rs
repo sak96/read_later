@@ -1,30 +1,21 @@
 pub mod commands;
 pub mod db;
 pub mod models;
-pub mod schema;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    use std::sync::Mutex;
-    use tauri::Manager;
-
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_sharetarget::init())
-        .setup(|app| {
-            let app_handle = app.handle().clone();
-            let mut conn = crate::db::establish_connection(&app_handle);
-            crate::db::run_migrations(&mut conn);
-
-            app.manage(crate::commands::AppState {
-                app: Mutex::new(app_handle),
-            });
-
-            Ok(())
-        })
+        .plugin(
+            tauri_plugin_sql::Builder::default()
+                .add_migrations(db::DB_URL, db::get_migrations())
+                .build(),
+        )
+        .setup(|_app| Ok(()))
         .invoke_handler(tauri::generate_handler![
             crate::commands::get_articles,
             crate::commands::get_article,

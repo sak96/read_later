@@ -1,26 +1,12 @@
-use diesel::prelude::*;
-use diesel::sqlite::SqliteConnection;
-use tauri::AppHandle;
-use tauri::Manager;
+use tauri_plugin_sql::{Migration, MigrationKind};
 
-pub fn establish_connection(app: &AppHandle) -> SqliteConnection {
-    let app_dir = app
-        .path()
-        .app_data_dir()
-        .expect("Failed to get app data dir");
-    std::fs::create_dir_all(&app_dir).expect("Failed to create app data dir");
+pub const DB_URL: &str = "sqlite:article_manager.db";
 
-    let db_path = app_dir.join("article_manager.db");
-    let database_url = db_path.to_str().expect("Failed to convert path to string");
-
-    SqliteConnection::establish(database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
-}
-
-pub fn run_migrations(conn: &mut SqliteConnection) {
-    use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-
-    const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
-    conn.run_pending_migrations(MIGRATIONS)
-        .expect("Failed to run migrations");
+pub fn get_migrations() -> Vec<Migration> {
+    vec![Migration {
+        version: 1,
+        description: "create_initial_tables",
+        sql: include_str!("../migrations/2025-11-22-000000_create_initial_tables.sql"),
+        kind: MigrationKind::Up,
+    }]
 }
