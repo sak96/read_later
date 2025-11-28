@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "identifier": "io.github.sak.read.it.later",
   "build": {
-    "frontendDist": "../dist",
+    "frontendDist": "../frontend/dist",
     "devUrl": "http://localhost:8080",
-    "beforeDevCommand": "trunk serve",
-    "beforeBuildCommand": "trunk build"
+    "beforeDevCommand": "cd frontend && trunk serve",
+    "beforeBuildCommand": "cd frontend && trunk build"
   },
   "app": {
     "withGlobalTauri": false,

@@ -1,6 +1,6 @@
 # Read It Later
 
-Read it later app done using Tauri.
+Read it later app done using Tauri. Mainly for android.
 
 ## Setup
 
