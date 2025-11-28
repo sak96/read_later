@@ -5,6 +5,7 @@ use diesel::prelude::*;
 use readability_rust::Readability;
 use std::sync::Mutex;
 use tauri::State;
+use tauri_plugin_http::reqwest;
 
 pub struct AppState {
     pub app: Mutex<tauri::AppHandle>,

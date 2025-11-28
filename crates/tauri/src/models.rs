@@ -1,6 +1,6 @@
+use crate::schema::{articles, settings};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use crate::schema::{articles, settings};
 
 #[derive(Queryable, Selectable, Serialize, Deserialize, Clone)]
 #[diesel(table_name = articles)]

@@ -6,9 +6,22 @@
     "main"
   ],
   "permissions": [
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "http://*"
+        },
+        {
+          "url": "https://*"
+        }
+      ]
+    },
     "core:default",
     "clipboard-manager:allow-read-text",
     "sharetarget:default",
-    "opener:default"
+    "os:allow-os-type",
+    "opener:default",
+    "http:default"
   ]
 }

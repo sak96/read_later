@@ -23,6 +23,12 @@ pub async fn open_url(url: String) {
     let args = serde_wasm_bindgen::to_value(&serde_json::json!({"url": url})).unwrap();
     invoke("plugin:opener|open_url", args).await;
 }
+#[wasm_bindgen(
+    inline_js = r#"export function ostype() { return window.__TAURI_OS_PLUGIN_INTERNALS__.os_type}"#
+)]
+extern "C" {
+    pub fn ostype() -> String;
+}
 
 #[wasm_bindgen]
 extern "C" {

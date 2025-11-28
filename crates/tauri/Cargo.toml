@@ -14,11 +14,15 @@ diesel = { version = "2.1", features = ["sqlite", "returning_clauses_for_sqlite_
 diesel_migrations = { version = "2.1", features = ["sqlite"] }
 chrono = { version = "0.4", features = ["serde"] }
 readability-rust = "0.1"
-reqwest = { version = "0.11", features = ["blocking", "rustls-tls"],  default-features = false }
 tauri-plugin-opener = "2.0.0"
 tauri-plugin-clipboard-manager = "2.0.0"
-rusqlite = { version= "0.37", features= ["bundled"] }
+tauri-plugin-os = "2.0.0"
 tauri-plugin-sharetarget = { git = "https://github.com/sak96/tauri-plugin-sharetarget" }
+tauri-plugin-http = "2"
+
+[target.'cfg(target_os = "android")'.dependencies]
+# TODO: use sqlx instead diesel and use https://tauri.app/plugin/sql/
+rusqlite = { version= "0.37", features= ["bundled"] }
 
 [lib]
 name = "article_manager_lib"
