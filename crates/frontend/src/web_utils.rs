@@ -89,16 +89,18 @@ pub async fn remove_share_listener(id: u32) {
     invoke("plugin:sharetarget|remove_listener", args).await;
 }
 
-pub fn extract_text(id: &str) -> Option<String> {
+pub fn extract_text(id: usize) -> Option<String> {
     let window = window()?;
     let document = window.document()?;
-    document.get_element_by_id(id)?.text_content()
+    document
+        .get_element_by_id(&format!("para_{}", id))?
+        .text_content()
 }
 
-pub fn scroll_to_element(element_id: &str) {
+pub fn scroll_to_element(element_id: usize) {
     if let Some(window) = window()
         && let Some(document) = window.document()
-        && let Some(element) = document.get_element_by_id(element_id)
+        && let Some(element) = document.get_element_by_id(&format!("para_{}", element_id))
     {
         element.scroll_into_view();
     }
