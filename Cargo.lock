@@ -161,6 +161,7 @@ dependencies = [
  "tauri-plugin-os",
  "tauri-plugin-sharetarget",
  "tauri-plugin-sql",
+ "tauri-plugin-tts",
 ]
 
 [[package]]
@@ -5838,6 +5839,18 @@ dependencies = [
  "thiserror 2.0.17",
  "time",
  "tokio",
+]
+
+[[package]]
+name = "tauri-plugin-tts"
+version = "0.2.0"
+source = "git+https://github.com/sak96/tauri-plugin-tts#90360c9665a1c1337ed658fcdeccc87053cb1dda"
+dependencies = [
+ "serde",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin",
+ "thiserror 2.0.17",
 ]
 
 [[package]]

@@ -22,6 +22,8 @@
     "sharetarget:default",
     "os:allow-os-type",
     "opener:default",
+    "tts:allow-speak",
+    "tts:allow-stop",
     "http:default"
   ]
 }

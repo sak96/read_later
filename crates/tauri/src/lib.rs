@@ -11,6 +11,7 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_sharetarget::init())
+        .plugin(tauri_plugin_tts::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations(db::DB_URL, db::get_migrations())

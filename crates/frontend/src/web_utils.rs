@@ -9,6 +9,9 @@ extern "C" {
     #[wasm_bindgen(js_namespace = ["window", "__TAURI_INTERNALS__"])]
     pub async fn invoke(cmd: &str, args: JsValue) -> JsValue;
 
+    #[wasm_bindgen(js_namespace = ["window", "__TAURI_INTERNALS__"], js_name="invoke", catch)]
+    pub async fn invoke_catch(cmd: &str, args: JsValue) -> Result<JsValue, JsValue>;
+
     #[wasm_bindgen(js_namespace = ["window", "__TAURI_INTERNALS__"], js_name = "transformCallback")]
     pub fn transform_callback(handler: &js_sys::Function, once: bool) -> u32;
 
@@ -101,21 +104,16 @@ pub fn scroll_to_element(element_id: &str) {
     }
 }
 
-pub async fn speak(text: String, rate: f32, language: String) {
-    let length = text.chars().count();
-    web_sys::console::log_3(&language.into(), &rate.into(), &text.into());
-    // mock speak by sleeping
-    let promise = web_sys::js_sys::Promise::new(&mut |yes, _| {
-        let win = window().unwrap();
-        win.set_timeout_with_callback_and_timeout_and_arguments_0(&yes, length as i32 * 60)
-            .unwrap();
-    });
-    let js_fut = wasm_bindgen_futures::JsFuture::from(promise);
-    let _ = js_fut.await;
+pub async fn speak(text: String, _rate: f32, _language: String) {
+    // TODO: handle _language and _rate
+    let args = serde_wasm_bindgen::to_value(&serde_json::json!({"text": text})).unwrap();
+    if let Err(error) = invoke_catch("plugin:tts|speak", args).await {
+        web_sys::console::error_2(&"speech issue".into(), &error);
+    }
 }
 
 pub async fn stop_speak() {
-    web_sys::console::log_1(&"stopped_speaking".into());
+    invoke("plugin:tts|stop", JsValue::NULL).await;
 }
 
 pub fn find_visible_para_id() -> usize {
