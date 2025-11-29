@@ -91,6 +91,7 @@ pub struct ReadViewerProps {
 #[function_component(ReadViewer)]
 pub fn read_viewer(props: &ReadViewerProps) -> Html {
     // States
+    let loading = use_state(|| true);
     let article_id = use_state(|| props.id);
     let title = use_state(String::new);
     let html_content = use_state(String::new);
@@ -104,6 +105,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
         let title = title.clone();
         let html_content = html_content.clone();
         let article_id = article_id.clone();
+        let loading = loading.clone();
 
         use_effect_with(article_id, move |article_id| {
             spawn_local({
@@ -119,6 +121,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                     if let Ok(article) = serde_wasm_bindgen::from_value::<Article>(result) {
                         title.set(article.title);
                         html_content.set(article.body);
+                        loading.set(false);
                     }
                 }
             });
@@ -213,12 +216,17 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
             }
         })
     };
+    // <article aria-busy="true"></article>
     html! {
         <div class="container">
-                <article>
-                    <h1>{&*title}</h1>
-                    {Html::from_html_unchecked(((*html_content).clone()).into())}
-                </article>
+                    if *loading {
+                        <article aria-busy="true"/>
+                    } else {
+                        <article >
+                            <h1>{&*title}</h1>
+                            {Html::from_html_unchecked(((*html_content).clone()).into())}
+                        </article>
+                    }
                 if ostype().eq(&"android") {
                     <style>{{
                         let current_para = *checkpoint;

@@ -73,7 +73,7 @@ pub fn add_article() -> Html {
                 <blockquote>
                     {(*url_input).clone()}
                 </blockquote>
-                <progress />
+                <article aria-busy="true"/>
             } else {
                 <form onsubmit={on_submit}>
                     <input
