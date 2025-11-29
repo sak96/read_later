@@ -1,4 +1,3 @@
-use crate::db::DB_URL;
 use crate::models::*;
 use crate::parse::process_html;
 use readability_rust::Readability;

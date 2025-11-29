@@ -1,5 +1,4 @@
 pub mod commands;
-pub mod db;
 pub mod models;
 pub mod parse;
 
@@ -14,7 +13,7 @@ pub fn run() {
         .plugin(tauri_plugin_tts::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
-                .add_migrations(db::DB_URL, db::get_migrations())
+                .add_migrations(models::DB_URL, models::get_migrations())
                 .build(),
         )
         .setup(|_app| Ok(()))
