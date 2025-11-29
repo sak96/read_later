@@ -14,6 +14,7 @@ pub struct Article {
     pub title: String,
     pub body: String,
     pub created_at: String,
+    pub url: String,
 }
 
 #[function_component(Home)]

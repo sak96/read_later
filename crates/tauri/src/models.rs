@@ -5,12 +5,20 @@ use tauri_plugin_sql::{Migration, MigrationKind};
 pub const DB_URL: &str = "sqlite:article_manager.db";
 
 pub fn get_migrations() -> Vec<Migration> {
-    vec![Migration {
-        version: 1,
-        description: "create_initial_tables",
-        sql: include_str!("../migrations/2025-11-22-000000_create_initial_tables.sql"),
-        kind: MigrationKind::Up,
-    }]
+    vec![
+        Migration {
+            version: 1,
+            description: "create_initial_tables",
+            sql: include_str!("../migrations/2025-11-22-000000_create_initial_tables.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 2,
+            description: "add_article_url",
+            sql: include_str!("../migrations/2025-11-29-000000_add_article_url.sql"),
+            kind: MigrationKind::Up,
+        },
+    ]
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
@@ -19,6 +27,7 @@ pub struct Article {
     pub title: String,
     pub body: String,
     pub created_at: String,
+    pub url: String,
 }
 
 // We don't strictly need a separate struct for Insert if we pass args directly,

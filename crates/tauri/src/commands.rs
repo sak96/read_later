@@ -13,7 +13,7 @@ pub async fn get_articles(db_instances: State<'_, DbInstances>) -> Result<Vec<Ar
     match db {
         // TODO: Paginate
         tauri_plugin_sql::DbPool::Sqlite(pool) => query_as::<_, Article>(
-            "SELECT id, title, body, created_at FROM articles ORDER BY created_at DESC",
+            "SELECT id, title, body, created_at, url FROM articles ORDER BY created_at DESC",
         )
         .fetch_all(pool)
         .await
@@ -28,7 +28,7 @@ pub async fn get_article(id: i32, db_instances: State<'_, DbInstances>) -> Resul
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
             let mut article = query_as::<_, Article>(
-                "SELECT id, title, body, created_at FROM articles WHERE id = ?",
+                "SELECT id, title, body, created_at, url FROM articles WHERE id = ?",
             )
             .bind(id)
             .fetch_one(pool)
@@ -67,10 +67,11 @@ pub async fn add_article(
             let body = article_data.content.unwrap_or_default();
 
             let article = query_as::<_, Article>(
-                "INSERT INTO articles (title, body) VALUES (?, ?) RETURNING id, title, body, created_at",
+                "INSERT INTO articles (title, body, url) VALUES (?, ?, ?) RETURNING id, title, body, created_at, url",
             )
             .bind(title)
             .bind(body)
+            .bind(url)
             .fetch_one(pool)
             .await
             .map_err(|e| e.to_string())?;
