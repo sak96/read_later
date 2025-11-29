@@ -1,7 +1,9 @@
 use crate::components::HomeButton;
 use crate::pages::Article;
 use crate::routes::Route;
-use crate::web_utils::{extract_text, find_visible_para_id, scroll_to_element, speak, stop_speak};
+use crate::web_utils::{
+    extract_text, find_visible_para_id, scroll_to_center, scroll_to_top, speak, stop_speak,
+};
 use crate::web_utils::{invoke, ostype};
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
@@ -133,6 +135,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                 spawn_local(stop_speak());
                 mode.set(ViewMode::View);
             } else {
+                scroll_to_top(*checkpoint);
                 let id = find_visible_para_id();
                 checkpoint.set(id);
                 mode.set(ViewMode::Reader);
@@ -156,7 +159,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                 spawn_local(async move {
                     if *mode == ViewMode::Reader {
                         if let Some(para_text) = extract_text(*checkpoint) {
-                            scroll_to_element(*checkpoint);
+                            scroll_to_center(*checkpoint);
                             speak(
                                 para_text.clone(),
                                 rate.as_f32(),
@@ -191,7 +194,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     let scroll_to_checkpoint = {
         let checkpoint = checkpoint.clone();
         Callback::from(move |_| {
-            scroll_to_element(*checkpoint);
+            scroll_to_top(*checkpoint);
         })
     };
 
