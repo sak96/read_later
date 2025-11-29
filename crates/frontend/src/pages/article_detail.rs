@@ -225,10 +225,11 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                 }
 
                 // Action area
-                <nav style="position: sticky; bottom: 0;">
+                <aside style="position: sticky; bottom: 0;">
+                <nav>
                     if *mode == ViewMode::View {
-                        <div role="group">
-                            if ostype().eq(&"android") {
+                        if ostype().eq(&"android") {
+                            <div role="group">
                                 <button class="icon-btn" onclick={on_mode_switch.clone()}>
                                     <i class="ti ti-player-play"></i>
                                 </button>
@@ -245,7 +246,9 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                                     }).collect::<Html>()}
                                 </select>
                                 <button onclick={scroll_to_checkpoint}><i class="ti ti-arrow-up"></i></button>
-                            }
+                            </div>
+                        }
+                        <div role="group">
                             <HomeButton />
                             <button class="secondary" onclick={delete_article}><i class="ti ti-trash"></i></button>
                         </div>
@@ -276,6 +279,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                         </div>
                     }
                 </nav>
+                </aside>
         </div>
     }
 }
