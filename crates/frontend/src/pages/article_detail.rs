@@ -133,7 +133,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                 spawn_local(stop_speak());
                 mode.set(ViewMode::View);
             } else {
-                let id = find_visible_para_id().unwrap_or(0);
+                let id = find_visible_para_id();
                 checkpoint.set(id);
                 mode.set(ViewMode::Reader);
             }

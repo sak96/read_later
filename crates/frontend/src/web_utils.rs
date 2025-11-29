@@ -1,8 +1,7 @@
 use gloo_utils::format::JsValueSerdeExt;
 use serde::{Deserialize, Serialize};
-use std::collections::VecDeque;
 use wasm_bindgen::prelude::*;
-use web_sys::{HtmlCollection, js_sys, window};
+use web_sys::{js_sys, window};
 use yew::prelude::*;
 
 #[wasm_bindgen]
@@ -119,29 +118,17 @@ pub async fn stop_speak() {
     web_sys::console::log_1(&"stopped_speaking".into());
 }
 
-pub fn find_visible_para_id() -> Option<usize> {
+pub fn find_visible_para_id() -> usize {
     let window = window().expect("no global `window` exists");
     let document = window.document().expect("should have a document on window");
-    let x = window.inner_width().ok()?.as_f64()? / 2.0;
-    let y = 10.0;
-    let top_element = document.element_from_point(x as f32, y as f32)?;
-    let mut queue = VecDeque::new();
-    queue.push_back(top_element);
-    while let Some(current) = queue.pop_front() {
-        let id = current.id();
-        if id.starts_with("para_") {
-            return id
-                .strip_prefix("para_")
-                .and_then(|s| s.parse::<usize>().ok());
+    let window_height = window.inner_height().unwrap().as_f64().unwrap_or(0.0);
+    let mut id = 0;
+    while let Some(element) = document.get_element_by_id(&format!("para_{}", id)) {
+        let rect = element.get_bounding_client_rect();
+        if rect.bottom() >= 0.0 && rect.bottom() <= window_height {
+            return id;
         }
-        let children: HtmlCollection = current.children();
-        let length = children.length();
-
-        for i in 0..length {
-            if let Some(child) = children.item(i) {
-                queue.push_back(child);
-            }
-        }
+        id += 1;
     }
-    None
+    id - 1
 }
