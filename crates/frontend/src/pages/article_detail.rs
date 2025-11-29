@@ -2,7 +2,8 @@ use crate::components::HomeButton;
 use crate::pages::Article;
 use crate::routes::Route;
 use crate::web_utils::{
-    extract_text, find_visible_para_id, scroll_to_center, scroll_to_top, speak, stop_speak,
+    extract_text, find_visible_para_id, open_url, scroll_to_center, scroll_to_top, speak,
+    stop_speak,
 };
 use crate::web_utils::{invoke, ostype};
 use wasm_bindgen::JsCast;
@@ -95,6 +96,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     let article_id = use_state(|| props.id);
     let title = use_state(String::new);
     let html_content = use_state(String::new);
+    let url = use_state(String::new);
     let mode = use_state(|| ViewMode::View);
     let checkpoint = use_state(|| 0);
     let rate = use_state(|| SpeechRate::Normal);
@@ -106,13 +108,11 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
         let html_content = html_content.clone();
         let article_id = article_id.clone();
         let loading = loading.clone();
+        let url = url.clone();
 
         use_effect_with(article_id, move |article_id| {
             spawn_local({
-                let title = title.clone();
-                let html_content = html_content.clone();
                 let article_id = article_id.clone();
-
                 async move {
                     let args =
                         serde_wasm_bindgen::to_value(&serde_json::json!({"id": *article_id}))
@@ -121,6 +121,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                     if let Ok(article) = serde_wasm_bindgen::from_value::<Article>(result) {
                         title.set(article.title);
                         html_content.set(article.body);
+                        url.set(article.url);
                         loading.set(false);
                     }
                 }
@@ -180,6 +181,13 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
         });
     }
 
+    let open_web_url = Callback::from(move |_| {
+        let url = url.clone();
+        spawn_local(async move {
+            open_url((*url).to_owned()).await;
+        });
+    });
+
     let delete_article = {
         let navigator = use_navigator().unwrap();
         Callback::from(move |_| {
@@ -216,7 +224,6 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
             }
         })
     };
-    // <article aria-busy="true"></article>
     html! {
         <div class="container">
                     if *loading {
@@ -260,6 +267,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                         }
                         <div role="group">
                             <HomeButton />
+                            <button onclick={open_web_url}><i class="ti ti-world-www"></i></button>
                             <button class="secondary" onclick={delete_article}><i class="ti ti-trash"></i></button>
                         </div>
                     } else {
