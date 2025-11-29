@@ -1,7 +1,7 @@
 [package]
 name = "article-manager"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -19,6 +19,7 @@ tauri-plugin-sharetarget = { git = "https://github.com/sak96/tauri-plugin-sharet
 tauri-plugin-http = "2"
 tauri-plugin-sql = { version = "2.3.1", features = ["sqlite"] }
 sqlx = "0.8.0"
+kuchiki = "0.8"
 
 [lib]
 name = "article_manager_lib"

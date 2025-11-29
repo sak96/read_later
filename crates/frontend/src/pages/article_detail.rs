@@ -1,37 +1,177 @@
 use crate::components::HomeButton;
-use crate::layouts::Fab;
 use crate::pages::Article;
 use crate::routes::Route;
-use crate::web_utils::invoke;
+use crate::web_utils::{invoke, ostype};
+use crate::web_utils::{extract_text, find_visible_para_id, scroll_to_element, speak, stop_speak};
+use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-#[derive(Properties, PartialEq)]
-pub struct Props {
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum ViewMode {
+    View,
+    Reader,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum SpeechRate {
+    Quarter, // 0.25
+    Half,    // 0.5
+    Normal,  // 1.0
+    Double,  // 2.0
+    Quad,    // 4.0
+}
+
+impl SpeechRate {
+    fn as_f32(&self) -> f32 {
+        match self {
+            SpeechRate::Quarter => 0.25,
+            SpeechRate::Half => 0.5,
+            SpeechRate::Normal => 1.0,
+            SpeechRate::Double => 2.0,
+            SpeechRate::Quad => 4.0,
+        }
+    }
+
+    fn all() -> Vec<Self> {
+        vec![
+            SpeechRate::Quarter,
+            SpeechRate::Half,
+            SpeechRate::Normal,
+            SpeechRate::Double,
+            SpeechRate::Quad,
+        ]
+    }
+
+    fn label(&self) -> &str {
+        match self {
+            SpeechRate::Quarter => "0.25x",
+            SpeechRate::Half => "0.50x",
+            SpeechRate::Normal => "1.00x",
+            SpeechRate::Double => "2.00x",
+            SpeechRate::Quad => "4.00x",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Language {
+    EnUS,
+    EnGB,
+}
+
+impl Language {
+    fn as_str(&self) -> &str {
+        match self {
+            Language::EnUS => "en_US",
+            Language::EnGB => "en_GB",
+        }
+    }
+
+    fn all() -> Vec<Self> {
+        vec![Language::EnUS, Language::EnGB]
+    }
+
+    fn label(&self) -> &str {
+        match self {
+            Language::EnUS => "English (US)",
+            Language::EnGB => "English (UK)",
+        }
+    }
+}
+
+#[derive(Properties, PartialEq, Clone)]
+pub struct ReadViewerProps {
     pub id: i32,
 }
 
-#[function_component(ArticleDetail)]
-pub fn article_detail(props: &Props) -> Html {
-    let article = use_state(|| None::<Article>);
-    let rendered_content = use_state(String::new);
+#[function_component(ReadViewer)]
+pub fn read_viewer(props: &ReadViewerProps) -> Html {
+    // States
+    let article_id = use_state(|| props.id);
+    let title = use_state(String::new);
+    let html_content = use_state(String::new);
+    let mode = use_state(|| ViewMode::View);
+    let checkpoint = use_state(|| 0);
+    let rate = use_state(|| SpeechRate::Normal);
+    let language = use_state(|| Language::EnUS);
 
-    let article_clone = article.clone();
-    let id = props.id;
-
+    // Load article on mount
     {
-        let rendered_content = rendered_content.clone();
-        use_effect_with(id, move |id| {
-            let id = *id;
-            spawn_local(async move {
-                let args = serde_wasm_bindgen::to_value(&serde_json::json!({"id": id})).unwrap();
-                let result = invoke("get_article", args).await;
-                if let Ok(data) = serde_wasm_bindgen::from_value::<Article>(result) {
-                    rendered_content.set(data.body.clone());
-                    article_clone.set(Some(data));
+        let title = title.clone();
+        let html_content = html_content.clone();
+        let article_id = article_id.clone();
+
+        use_effect_with(article_id, move |article_id| {
+            spawn_local({
+                let title = title.clone();
+                let html_content = html_content.clone();
+                let article_id = article_id.clone();
+
+                async move {
+                    let args =
+                        serde_wasm_bindgen::to_value(&serde_json::json!({"id": *article_id}))
+                            .unwrap();
+                    let result = invoke("get_article", args).await;
+                    if let Ok(article) = serde_wasm_bindgen::from_value::<Article>(result) {
+                        title.set(article.title);
+                        html_content.set(article.body);
+                    }
                 }
             });
+            || ()
+        });
+    }
+
+    // Handle mode transitions
+    let on_mode_switch = {
+        let mode = mode.clone();
+        let checkpoint = checkpoint.clone();
+        Callback::from(move |_| {
+            if *mode == ViewMode::Reader {
+                spawn_local(stop_speak());
+                mode.set(ViewMode::View);
+            } else {
+                let id = find_visible_para_id().unwrap_or(0);
+                checkpoint.set(id);
+                mode.set(ViewMode::Reader);
+            }
+        })
+    };
+
+    // Reader background task
+    {
+        let mode = mode.clone();
+        let checkpoint = checkpoint.clone();
+        let rate = rate.clone();
+        let language = language.clone();
+
+        use_effect_with((*mode, checkpoint), move |(reader_mode, checkpoint)| {
+            if *reader_mode == ViewMode::Reader {
+                let mode = mode.clone();
+                let checkpoint = checkpoint.clone();
+                let rate = rate.clone();
+                let language = language.clone();
+                spawn_local(async move {
+                    if *mode == ViewMode::Reader {
+                        let para_id = format!("para_{}", *checkpoint);
+                        if let Some(para_text) = extract_text(&para_id) {
+                            scroll_to_element(&para_id);
+                            speak(
+                                para_text.clone(),
+                                rate.as_f32(),
+                                language.as_str().to_string(),
+                            )
+                            .await;
+                            checkpoint.set(*checkpoint + 1);
+                        } else {
+                            mode.set(ViewMode::View);
+                        }
+                    }
+                });
+            }
+            || ()
         });
     }
 
@@ -39,31 +179,103 @@ pub fn article_detail(props: &Props) -> Html {
         let navigator = use_navigator().unwrap();
         Callback::from(move |_| {
             let navigator = navigator.clone();
+            let article_id = article_id.clone();
             spawn_local(async move {
-                let args = serde_wasm_bindgen::to_value(&serde_json::json!({"id": id})).unwrap();
+                let args =
+                    serde_wasm_bindgen::to_value(&serde_json::json!({"id": *article_id})).unwrap();
                 invoke("delete_article", args).await;
                 navigator.push(&Route::Home);
             });
         })
     };
-    html! {
-        <main class="container">
-            if let Some(article) = article.as_ref() {
-                <article>
-                    <h1>{&article.title}</h1>
-                    <p><small>{&article.created_at}</small></p>
-                    <hr />
-                    <button type="button" onclick={delete_article} class="secondary">
-                        <i class="ti ti-trash"></i>
-                    </button>
-                    {Html::from_html_unchecked(((*rendered_content).clone()).into())}
-                </article>
-            } else {
-                <article aria-busy="true">{"Loading..."}</article>
+
+    let scroll_to_checkpoint = {
+        let checkpoint = checkpoint.clone();
+        Callback::from(move |_| {
+            scroll_to_element(&format!("para_{}", *checkpoint));
+        })
+    };
+
+    let on_language_change = {
+        let language = language.clone();
+        Callback::from(move |e: Event| {
+            if let Some(input) = e
+                .target()
+                .and_then(|t| t.dyn_into::<web_sys::HtmlSelectElement>().ok())
+            {
+                match input.value().as_str() {
+                    "en_US" => language.set(Language::EnUS),
+                    "en_GB" => language.set(Language::EnGB),
+                    _ => {}
+                }
             }
-            <Fab>
-                <HomeButton />
-            </Fab>
-        </main>
+        })
+    };
+    html! {
+        <div class="container">
+                <article>
+                    <h1>{&*title}</h1>
+                    {Html::from_html_unchecked(((*html_content).clone()).into())}
+                </article>
+                if ostype().eq(&"android") {
+                    <style>{{
+                        let current_para = *checkpoint;
+                        format!("#para_{current_para} {{border: var(--pico-border-width) solid var(--pico-primary-hover);border-radius: var(--pico-border-radius)}}")
+                    }}</style>
+                }
+
+                // Action area
+                <nav style="position: sticky; bottom: 0;">
+                    if *mode == ViewMode::View {
+                        <div role="group">
+                            if ostype().eq(&"android") {
+                                <button class="icon-btn" onclick={on_mode_switch.clone()}>
+                                    <i class="ti ti-player-play"></i>
+                                </button>
+                                <select onchange={on_language_change} role="button" >
+                                    {Language::all().into_iter().map(|lang| {
+                                        html! {
+                                            <option
+                                                value={lang.as_str().to_owned()}
+                                                selected={*language == lang}
+                                            >
+                                                {lang.label()}
+                                            </option>
+                                        }
+                                    }).collect::<Html>()}
+                                </select>
+                                <button onclick={scroll_to_checkpoint}><i class="ti ti-arrow-up"></i></button>
+                            }
+                            <HomeButton />
+                            <button class="secondary" onclick={delete_article}><i class="ti ti-trash"></i></button>
+                        </div>
+                    } else {
+                        <div role="group">
+                            <button class="icon-btn pause-btn" onclick={on_mode_switch}>
+                                <i class="ti ti-player-pause"></i>
+                            </button>
+                            <div role="group">
+                                <label role="button">
+                                    <b>{rate.label()}</b>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max={SpeechRate::all().len().saturating_sub(1).to_string()}
+                                        value={SpeechRate::all().iter().position(|r| r == &*rate).unwrap_or(2).to_string()}
+                                        onchange={
+                                            let rate = rate.clone();
+                                            Callback::from(move |e: Event| {
+                                                if let Some(input) = e.target().and_then(|t| t.dyn_into::<web_sys::HtmlInputElement>().ok()) && let Ok(idx) = input.value().parse::<usize>()  && let Some(new_rate) = SpeechRate::all().get(idx) {
+                                                            rate.set(*new_rate);
+                                                    }
+                                            })
+                                        }
+                                    />
+                                </label>
+                            </div>
+                        </div>
+                    }
+                </nav>
+        </div>
     }
 }

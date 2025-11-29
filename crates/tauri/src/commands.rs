@@ -1,5 +1,6 @@
 use crate::db::DB_URL;
 use crate::models::*;
+use crate::parse::process_html;
 use readability_rust::Readability;
 use sqlx::{query, query_as};
 use tauri::State;
@@ -27,11 +28,15 @@ pub async fn get_article(id: i32, db_instances: State<'_, DbInstances>) -> Resul
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            query_as::<_, Article>("SELECT id, title, body, created_at FROM articles WHERE id = ?")
-                .bind(id)
-                .fetch_one(pool)
-                .await
-                .map_err(|e| e.to_string())
+            let mut article = query_as::<_, Article>(
+                "SELECT id, title, body, created_at FROM articles WHERE id = ?",
+            )
+            .bind(id)
+            .fetch_one(pool)
+            .await
+            .map_err(|e| e.to_string())?;
+            article.body = process_html(&article.body, 1000, &mut 0);
+            Ok(article)
         }
     }
 }

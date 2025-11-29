@@ -1,7 +1,8 @@
 use gloo_utils::format::JsValueSerdeExt;
 use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 use wasm_bindgen::prelude::*;
-use web_sys::js_sys;
+use web_sys::{HtmlCollection, js_sys, window};
 use yew::prelude::*;
 
 #[wasm_bindgen]
@@ -84,4 +85,63 @@ pub async fn remove_share_listener(id: u32) {
     let args = serde_wasm_bindgen::to_value(&serde_json::json!({"event":"share", "channelId": id}))
         .unwrap();
     invoke("plugin:sharetarget|remove_listener", args).await;
+}
+
+pub fn extract_text(id: &str) -> Option<String> {
+    let window = window()?;
+    let document = window.document()?;
+    document.get_element_by_id(id)?.text_content()
+}
+
+pub fn scroll_to_element(element_id: &str) {
+    if let Some(window) = window()
+        && let Some(document) = window.document()
+        && let Some(element) = document.get_element_by_id(element_id)
+    {
+        element.scroll_into_view();
+    }
+}
+
+pub async fn speak(text: String, rate: f32, language: String) {
+    let length = text.chars().count();
+    web_sys::console::log_3(&language.into(), &rate.into(), &text.into());
+    // mock speak by sleeping
+    let promise = web_sys::js_sys::Promise::new(&mut |yes, _| {
+        let win = window().unwrap();
+        win.set_timeout_with_callback_and_timeout_and_arguments_0(&yes, length as i32 * 60)
+            .unwrap();
+    });
+    let js_fut = wasm_bindgen_futures::JsFuture::from(promise);
+    let _ = js_fut.await;
+}
+
+pub async fn stop_speak() {
+    web_sys::console::log_1(&"stopped_speaking".into());
+}
+
+pub fn find_visible_para_id() -> Option<usize> {
+    let window = window().expect("no global `window` exists");
+    let document = window.document().expect("should have a document on window");
+    let x = window.inner_width().ok()?.as_f64()? / 2.0;
+    let y = 10.0;
+    let top_element = document.element_from_point(x as f32, y as f32)?;
+    let mut queue = VecDeque::new();
+    queue.push_back(top_element);
+    while let Some(current) = queue.pop_front() {
+        let id = current.id();
+        if id.starts_with("para_") {
+            return id
+                .strip_prefix("para_")
+                .and_then(|s| s.parse::<usize>().ok());
+        }
+        let children: HtmlCollection = current.children();
+        let length = children.length();
+
+        for i in 0..length {
+            if let Some(child) = children.item(i) {
+                queue.push_back(child);
+            }
+        }
+    }
+    None
 }
