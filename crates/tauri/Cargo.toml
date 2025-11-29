@@ -24,3 +24,12 @@ kuchiki = "0.8"
 [lib]
 name = "article_manager_lib"
 crate-type = ["staticlib", "cdylib", "lib"]
+
+[profile.dev]
+incremental = true
+opt-level = 0
+debug = true
+
+[profile.dev.package."*"]
+opt-level = 1
+debug = false
