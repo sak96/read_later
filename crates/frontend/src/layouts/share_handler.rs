@@ -28,7 +28,6 @@ pub fn share_handler(props: &ShareHandlerProps) -> Html {
                                         .into_owned();
                                     let mut query = HashMap::new();
                                     query.insert("input", url.to_string());
-                                    web_sys::console::log_1(&format!("URL got:{:?}", url).into());
                                     navigator
                                         .push_with_query(&Route::AddArticle, &query)
                                         .unwrap();
