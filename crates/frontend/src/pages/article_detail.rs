@@ -244,7 +244,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                                         }
                                     }).collect::<Html>()}
                                 </select>
-                                <button onclick={scroll_to_checkpoint}><i class="ti ti-arrow-up"></i></button>
+                                <button onclick={scroll_to_checkpoint}><i class="ti ti-restore"></i></button>
                             </div>
                         }
                         <div role="group">
