@@ -1,5 +1,5 @@
 use crate::components::{HomeButton, SettingsButton};
-use crate::layouts::Fab;
+use crate::layouts::{AlertContext, AlertStatus, Fab};
 use crate::routes::Route;
 use crate::web_utils::{invoke_no_parse, read_clipboard};
 use wasm_bindgen_futures::spawn_local;
@@ -50,6 +50,7 @@ pub fn add_article() -> Html {
     };
 
     let navigator = use_navigator().unwrap();
+    let alert_ctx = use_context::<AlertContext>().expect("AlertContext missing");
     let on_submit = {
         let url_input = url_input.clone();
         let progress_bar = progress_bar.clone();
@@ -58,13 +59,23 @@ pub fn add_article() -> Html {
             let url = (*url_input).clone();
             let navigator = navigator.clone();
             let progress_bar = progress_bar.clone();
+            let alert_ctx = alert_ctx.clone();
 
             spawn_local(async move {
                 progress_bar.set(true);
                 match invoke_no_parse("add_article", &Some(serde_json::json!({"url": url}))).await {
-                    Ok(_) => navigator.push(&Route::Home),
-                    // TODO: Add alert!
-                    Err(_) => progress_bar.set(false),
+                    Ok(_) => {
+                        alert_ctx
+                            .alert
+                            .emit(("Added Article".into(), AlertStatus::Success));
+                        navigator.push(&Route::Home)
+                    }
+                    Err(err) => {
+                        alert_ctx
+                            .alert
+                            .emit((format!("Failed to add article: {err}"), AlertStatus::Error));
+                        progress_bar.set(false)
+                    }
                 }
             });
         })

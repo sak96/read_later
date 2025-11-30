@@ -1,4 +1,5 @@
 use crate::components::HomeButton;
+use crate::layouts::{AlertContext, AlertStatus};
 use crate::pages::Article;
 use crate::routes::Route;
 use crate::web_utils::{
@@ -110,24 +111,31 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
         let loading = loading.clone();
         let url = url.clone();
         let navigator = navigator.clone();
+        let alert_ctx = use_context::<AlertContext>().expect("AlertContext missing");
         use_effect_with(article_id, move |article_id| {
             spawn_local({
                 let article_id = article_id.clone();
                 let navigator = navigator.clone();
                 async move {
-                    if let Ok(article) = invoke_parse::<Article>(
+                    match invoke_parse::<Article>(
                         "get_article",
                         &Some(serde_json::json!({"id": *article_id})),
                     )
                     .await
                     {
-                        title.set(article.title);
-                        html_content.set(article.body);
-                        url.set(article.url);
-                        loading.set(false);
-                    } else {
-                        // TODO: Add alert
-                        navigator.push(&Route::Home);
+                        Ok(article) => {
+                            title.set(article.title);
+                            html_content.set(article.body);
+                            url.set(article.url);
+                            loading.set(false);
+                        }
+                        Err(err) => {
+                            alert_ctx.alert.emit((
+                                format!("Failed to fetc article: {err}"),
+                                AlertStatus::Error,
+                            ));
+                            navigator.push(&Route::Home);
+                        }
                     }
                 }
             });
