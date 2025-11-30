@@ -5925,7 +5925,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-tts"
 version = "0.2.0"
-source = "git+https://github.com/sak96/tauri-plugin-tts#90360c9665a1c1337ed658fcdeccc87053cb1dda"
+source = "git+https://github.com/sak96/tauri-plugin-tts#e4c2d3b2f36b08c0c2e48df188180741c8cac300"
 dependencies = [
  "serde",
  "tauri",

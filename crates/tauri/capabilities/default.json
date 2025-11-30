@@ -24,6 +24,8 @@
     "opener:default",
     "tts:allow-speak",
     "tts:allow-stop",
+    "tts:allow-set-voice",
+    "tts:allow-get-all-voices",
     "http:default"
   ]
 }

@@ -7,7 +7,7 @@ use yew::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = ["window", "__TAURI_INTERNALS__"], catch)]
-    pub async fn invoke(cmd: &str, args: JsValue) -> Result<JsValue, JsValue>;
+    async fn invoke(cmd: &str, args: JsValue) -> Result<JsValue, JsValue>;
 
     #[wasm_bindgen(js_namespace = ["window", "__TAURI_INTERNALS__"], js_name = "transformCallback")]
     pub fn transform_callback(handler: &js_sys::Function, once: bool) -> u32;
@@ -67,6 +67,16 @@ where
     serde_wasm_bindgen::from_value::<T>(result).map_err(|e| e.to_string())
 }
 
+pub async fn invoke_parse_log_error<T>(cmd: &str, args: &Option<serde_json::Value>) -> Option<T>
+where
+    T: serde::de::DeserializeOwned,
+{
+    invoke_parse(cmd, args)
+        .await
+        .map_err(|err| error(&format!("`{cmd}` failed with error: {err}")))
+        .ok()
+}
+
 pub async fn read_clipboard() -> Option<String> {
     invoke_parse::<String>("plugin:clipboard-manager|read_text", &None)
         .await
@@ -120,9 +130,13 @@ fn scroll_to_element(element_id: usize, position: web_sys::ScrollLogicalPosition
 }
 
 // TTS plugin connectors
-pub async fn speak(text: String, _rate: f32, _language: String) {
+pub async fn speak(text: String, rate: f32) {
     // TODO: handle _language and _rate
-    invoke_no_parse_log_error("plugin:tts|speak", &Some(serde_json::json!({"text": text}))).await;
+    invoke_no_parse_log_error(
+        "plugin:tts|speak",
+        &Some(serde_json::json!({"args": {"text": text, "rate": rate}})),
+    )
+    .await;
 }
 
 pub async fn stop_speak() {

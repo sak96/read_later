@@ -3,9 +3,11 @@ use crate::layouts::{AlertContext, AlertStatus};
 use crate::pages::Article;
 use crate::routes::Route;
 use crate::web_utils::{
-    extract_text, find_visible_para_id, invoke_no_parse_log_error, invoke_parse, is_android,
-    open_url, scroll_to_center, scroll_to_top, speak, stop_speak,
+    extract_text, find_visible_para_id, invoke_no_parse, invoke_no_parse_log_error, invoke_parse,
+    invoke_parse_log_error, is_android, open_url, scroll_to_center, scroll_to_top, speak,
+    stop_speak,
 };
+use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
@@ -58,30 +60,26 @@ impl SpeechRate {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Language {
-    EnUS,
-    EnGB,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TTSVoice {
+    pub id: String,
+    pub name: String,
+    pub lang: String,
+    #[serde(default)]
+    pub disabled: bool,
 }
 
-impl Language {
-    fn as_str(&self) -> &str {
-        match self {
-            Language::EnUS => "en_US",
-            Language::EnGB => "en_GB",
-        }
+impl TTSVoice {
+    fn label(&self) -> String {
+        format!("{}_{}", self.name, self.lang)
     }
+}
 
-    fn all() -> Vec<Self> {
-        vec![Language::EnUS, Language::EnGB]
-    }
-
-    fn label(&self) -> &str {
-        match self {
-            Language::EnUS => "English (US)",
-            Language::EnGB => "English (UK)",
-        }
-    }
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetVoicesResponse {
+    pub voices: Vec<TTSVoice>,
 }
 
 #[derive(Properties, PartialEq, Clone)]
@@ -100,8 +98,24 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     let mode = use_state(|| ViewMode::View);
     let checkpoint = use_state(|| 0);
     let rate = use_state(|| SpeechRate::Normal);
-    let language = use_state(|| Language::EnUS);
+    let language = use_state(Option::<usize>::default);
+    let languages = use_state(Vec::<TTSVoice>::new);
     let navigator = use_navigator().unwrap();
+
+    // load language on mount
+    {
+        let languages = languages.clone();
+        use_effect_with((), move |_| {
+            spawn_local(async move {
+                if let Some(voices) =
+                    invoke_parse_log_error::<GetVoicesResponse>("plugin:tts|get_all_voices", &None)
+                        .await
+                {
+                    languages.set(voices.voices.into_iter().collect());
+                }
+            })
+        });
+    }
 
     // Load article on mount
     {
@@ -165,24 +179,16 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
         let mode = mode.clone();
         let checkpoint = checkpoint.clone();
         let rate = rate.clone();
-        let language = language.clone();
-
         use_effect_with((*mode, checkpoint), move |(reader_mode, checkpoint)| {
             if *reader_mode == ViewMode::Reader {
                 let mode = mode.clone();
                 let checkpoint = checkpoint.clone();
                 let rate = rate.clone();
-                let language = language.clone();
                 spawn_local(async move {
                     if *mode == ViewMode::Reader {
                         if let Some(para_text) = extract_text(*checkpoint) {
                             scroll_to_center(*checkpoint);
-                            speak(
-                                para_text.clone(),
-                                rate.as_f32(),
-                                language.as_str().to_string(),
-                            )
-                            .await;
+                            speak(para_text.clone(), rate.as_f32()).await;
                             checkpoint.set(*checkpoint + 1);
                         } else {
                             mode.set(ViewMode::View);
@@ -224,16 +230,29 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     };
 
     let on_language_change = {
+        let languages = languages.clone();
         let language = language.clone();
         Callback::from(move |e: Event| {
             if let Some(input) = e
                 .target()
                 .and_then(|t| t.dyn_into::<web_sys::HtmlSelectElement>().ok())
             {
-                match input.value().as_str() {
-                    "en_US" => language.set(Language::EnUS),
-                    "en_GB" => language.set(Language::EnGB),
-                    _ => {}
+                let language = language.clone();
+                if let Ok(num) = input.value().as_str().parse::<usize>()
+                    && let Some(voice) = (*languages).get(num)
+                {
+                    let id = voice.id.clone();
+                    spawn_local(async move {
+                        if invoke_no_parse(
+                            "plugin:tts|set_voice",
+                            &Some(serde_json::json!({"voice": id})),
+                        )
+                        .await
+                        .is_ok()
+                        {
+                            language.set(Some(num));
+                        }
+                    });
                 }
             }
         })
@@ -263,13 +282,11 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                                 <button class="icon-btn" onclick={on_mode_switch.clone()}>
                                     <i class="ti ti-player-play"></i>
                                 </button>
-                                <select disabled=true onchange={on_language_change} role="button" >
-                                    {Language::all().into_iter().map(|lang| {
+                                <select disabled={languages.is_empty()} onchange={on_language_change} role="button" >
+                                    <option selected={language.is_none()} disabled={true} >{" 🔡"}</option>
+                                    {languages.iter().enumerate().map(|(idx, lang)| {
                                         html! {
-                                            <option
-                                                value={lang.as_str().to_owned()}
-                                                selected={*language == lang}
-                                            >
+                                            <option value={idx.to_string()} selected={*language == Some(idx)}>
                                                 {lang.label()}
                                             </option>
                                         }
@@ -292,7 +309,6 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                                 <label role="button">
                                     <b>{rate.label()}</b>
                                     <input
-                                        disabled=true
                                         type="range"
                                         min="0"
                                         max={SpeechRate::all().len().saturating_sub(1).to_string()}
@@ -301,8 +317,8 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                                             let rate = rate.clone();
                                             Callback::from(move |e: Event| {
                                                 if let Some(input) = e.target().and_then(|t| t.dyn_into::<web_sys::HtmlInputElement>().ok()) && let Ok(idx) = input.value().parse::<usize>()  && let Some(new_rate) = SpeechRate::all().get(idx) {
-                                                            rate.set(*new_rate);
-                                                    }
+                                                    rate.set(*new_rate);
+                                                }
                                             })
                                         }
                                     />
