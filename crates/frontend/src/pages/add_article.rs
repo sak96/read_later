@@ -1,4 +1,5 @@
-use crate::components::HomeButton;
+use crate::components::{HomeButton, SettingsButton};
+use crate::layouts::Fab;
 use crate::routes::Route;
 use crate::web_utils::{invoke, read_clipboard};
 use wasm_bindgen_futures::spawn_local;
@@ -87,7 +88,6 @@ pub fn add_article() -> Html {
                         <button class="outline" type="button" onclick={paste_from_clipboard} >
                             <i class="ti ti-clipboard"></i>
                         </button>
-                        <HomeButton outline={true} />
                         <div role="group">
                             <button type="submit">
                                 <i class="ti ti-check"></i>
@@ -96,6 +96,10 @@ pub fn add_article() -> Html {
                     </div>
                 </form>
             }
+            <Fab>
+                <HomeButton />
+                <SettingsButton />
+            </Fab>
         </article>
     }
 }
