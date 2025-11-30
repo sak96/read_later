@@ -1,6 +1,6 @@
 use crate::models::*;
 use crate::parse::process_html;
-use readability_rust::Readability;
+use readabilityrs::Readability;
 use sqlx::{query, query_as};
 use tauri::State;
 use tauri_plugin_http::reqwest;
@@ -58,9 +58,10 @@ pub async fn add_article(
 
             // Readability is not send.
             let article_data = {
-                let mut parser = Readability::new(&html, None)
-                    .map_err(|e| format!("Failed to parse: {:?}", e))?;
-                parser.parse().ok_or("Failed to extract article")?
+                Readability::new(&html, Some(&url), None)
+                    .map_err(|e| format!("Failed to parse: {:?}", e))?
+                    .parse()
+                    .ok_or("Failed to extract article")?
             };
 
             let title = article_data.title.unwrap_or_else(|| "Untitled".to_string());
