@@ -47,7 +47,17 @@ cargo tauri android apk
 |---|---|
 |![light](screenshots/light.png)|![dark](screenshots/dark.png)|
 
+## Features to be implemented
+
+- Language selection for text to speech.
+- Speech rate.
+
 ## Acknowledgment
 
 - [Pico Css](https://picocss.com/)
 - [Tabler icons](https://tabler.io/icons)
+- [Readability Library](https://github.com/theiskaa/readabilityrs)
+
+## Works well with
+
+- [SherpaTTS](f-droid.org/packages/org.woheller69.ttsengine/)
