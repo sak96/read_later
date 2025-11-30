@@ -37,8 +37,10 @@ cargo tauri android dev
 
 To build use:
 
+Follow code signing as per [here](https://tauri.app/distribute/sign/android/).
+
 ```bash
-cargo tauri android apk
+cargo tauri android build
 ```
 
 ## Screenshots
@@ -47,10 +49,10 @@ cargo tauri android apk
 |---|---|
 |![light](screenshots/light.png)|![dark](screenshots/dark.png)|
 
-## Features to be implemented
+## Roadmap
 
-- Language selection for text to speech.
-- Speech rate.
+- Feature: Import and Export of URLs.
+- Chore: Move model to command place to access by Tauri and Yew.
 
 ## Acknowledgment
 
