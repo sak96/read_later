@@ -250,7 +250,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                                 <button class="icon-btn" onclick={on_mode_switch.clone()}>
                                     <i class="ti ti-player-play"></i>
                                 </button>
-                                <select onchange={on_language_change} role="button" >
+                                <select disabled=true onchange={on_language_change} role="button" >
                                     {Language::all().into_iter().map(|lang| {
                                         html! {
                                             <option
@@ -279,6 +279,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                                 <label role="button">
                                     <b>{rate.label()}</b>
                                     <input
+                                        disabled=true
                                         type="range"
                                         min="0"
                                         max={SpeechRate::all().len().saturating_sub(1).to_string()}
