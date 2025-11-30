@@ -1,5 +1,5 @@
 use crate::routes::Route;
-use crate::web_utils::{ShareEvent, add_share_listener, ostype, remove_share_listener};
+use crate::web_utils::{ShareEvent, add_share_listener, is_android, remove_share_listener};
 use std::collections::HashMap;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -16,7 +16,7 @@ pub fn share_handler(props: &ShareHandlerProps) -> Html {
         let navigator = use_navigator().unwrap();
         let handler = handler.clone();
         use_effect(move || {
-            if ostype().eq(&"android") {
+            if is_android() {
                 let callback = {
                     Callback::from(move |e: ShareEvent| {
                         for part in e.uri.split(';') {

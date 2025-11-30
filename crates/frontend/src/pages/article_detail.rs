@@ -2,10 +2,9 @@ use crate::components::HomeButton;
 use crate::pages::Article;
 use crate::routes::Route;
 use crate::web_utils::{
-    extract_text, find_visible_para_id, open_url, scroll_to_center, scroll_to_top, speak,
-    stop_speak,
+    extract_text, find_visible_para_id, invoke_no_parse_log_error, invoke_parse, is_android,
+    open_url, scroll_to_center, scroll_to_top, speak, stop_speak,
 };
-use crate::web_utils::{invoke, ostype};
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
@@ -101,6 +100,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     let checkpoint = use_state(|| 0);
     let rate = use_state(|| SpeechRate::Normal);
     let language = use_state(|| Language::EnUS);
+    let navigator = use_navigator().unwrap();
 
     // Load article on mount
     {
@@ -109,20 +109,25 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
         let article_id = article_id.clone();
         let loading = loading.clone();
         let url = url.clone();
-
+        let navigator = navigator.clone();
         use_effect_with(article_id, move |article_id| {
             spawn_local({
                 let article_id = article_id.clone();
+                let navigator = navigator.clone();
                 async move {
-                    let args =
-                        serde_wasm_bindgen::to_value(&serde_json::json!({"id": *article_id}))
-                            .unwrap();
-                    let result = invoke("get_article", args).await;
-                    if let Ok(article) = serde_wasm_bindgen::from_value::<Article>(result) {
+                    if let Ok(article) = invoke_parse::<Article>(
+                        "get_article",
+                        &Some(serde_json::json!({"id": *article_id})),
+                    )
+                    .await
+                    {
                         title.set(article.title);
                         html_content.set(article.body);
                         url.set(article.url);
                         loading.set(false);
+                    } else {
+                        // TODO: Add alert
+                        navigator.push(&Route::Home);
                     }
                 }
             });
@@ -189,14 +194,15 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     });
 
     let delete_article = {
-        let navigator = use_navigator().unwrap();
         Callback::from(move |_| {
             let navigator = navigator.clone();
             let article_id = article_id.clone();
             spawn_local(async move {
-                let args =
-                    serde_wasm_bindgen::to_value(&serde_json::json!({"id": *article_id})).unwrap();
-                invoke("delete_article", args).await;
+                invoke_no_parse_log_error(
+                    "delete_article",
+                    &Some(serde_json::json!({"id": *article_id})),
+                )
+                .await;
                 navigator.push(&Route::Home);
             });
         })
@@ -226,26 +232,25 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     };
     html! {
         <div class="container">
-                    if *loading {
-                        <article aria-busy="true"/>
-                    } else {
-                        <article >
-                            <h1>{&*title}</h1>
-                            {Html::from_html_unchecked(((*html_content).clone()).into())}
-                        </article>
-                    }
-                if ostype().eq(&"android") {
-                    <style>{{
-                        let current_para = *checkpoint;
-                        format!("#para_{current_para} {{border: var(--pico-border-width) solid var(--pico-primary-hover);border-radius: var(--pico-border-radius)}}")
-                    }}</style>
-                }
-
-                // Action area
-                <aside style="position: sticky; bottom: 0;">
+            if *loading {
+                <article aria-busy="true"/>
+            } else {
+                <article >
+                    <h1>{&*title}</h1>
+                    {Html::from_html_unchecked(((*html_content).clone()).into())}
+                </article>
+            }
+            if is_android() {
+                <style>{{
+                    let current_para = *checkpoint;
+                    format!("#para_{current_para} {{border: var(--pico-border-width) solid var(--pico-primary-hover);border-radius: var(--pico-border-radius)}}")
+                }}</style>
+            }
+            // Action area
+            <aside style="position: sticky; bottom: 0;">
                 <nav>
                     if *mode == ViewMode::View {
-                        if ostype().eq(&"android") {
+                        if is_android() {
                             <div role="group">
                                 <button class="icon-btn" onclick={on_mode_switch.clone()}>
                                     <i class="ti ti-player-play"></i>
@@ -298,7 +303,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                         </div>
                     }
                 </nav>
-                </aside>
+            </aside>
         </div>
     }
 }

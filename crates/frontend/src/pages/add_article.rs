@@ -1,7 +1,7 @@
 use crate::components::{HomeButton, SettingsButton};
 use crate::layouts::Fab;
 use crate::routes::Route;
-use crate::web_utils::{invoke, read_clipboard};
+use crate::web_utils::{invoke_no_parse, read_clipboard};
 use wasm_bindgen_futures::spawn_local;
 use yew_router::prelude::*;
 
@@ -61,9 +61,11 @@ pub fn add_article() -> Html {
 
             spawn_local(async move {
                 progress_bar.set(true);
-                let args = serde_wasm_bindgen::to_value(&serde_json::json!({"url": url})).unwrap();
-                invoke("add_article", args).await;
-                navigator.push(&Route::Home);
+                match invoke_no_parse("add_article", &Some(serde_json::json!({"url": url}))).await {
+                    Ok(_) => navigator.push(&Route::Home),
+                    // TODO: Add alert!
+                    Err(_) => progress_bar.set(false),
+                }
             });
         })
     };

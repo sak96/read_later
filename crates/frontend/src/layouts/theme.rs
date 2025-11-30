@@ -1,4 +1,4 @@
-use crate::web_utils::invoke;
+use crate::web_utils::invoke_parse;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
@@ -20,12 +20,12 @@ pub fn theme_provider(props: &Props) -> Html {
         let mode = mode.clone();
         use_effect(move || {
             spawn_local(async move {
-                let result = invoke(
+                if let Ok(value) = invoke_parse::<String>(
                     "get_setting",
-                    serde_wasm_bindgen::to_value(&serde_json::json!({"name": "theme"})).unwrap(),
+                    &Some(serde_json::json!({"name": "theme"})),
                 )
-                .await;
-                if let Ok(value) = serde_wasm_bindgen::from_value::<String>(result) {
+                .await
+                {
                     mode.set(value);
                 }
             });

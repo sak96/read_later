@@ -1,9 +1,8 @@
 use crate::components::{ArticleCard, SettingsButton};
 use crate::layouts::Fab;
 use crate::routes::Route;
-use crate::web_utils::invoke;
+use crate::web_utils::invoke_parse;
 use serde::{Deserialize, Serialize};
-use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -34,8 +33,8 @@ pub fn home() -> Html {
     if !*refreshed {
         let refreshed = refreshed.clone();
         spawn_local(async move {
-            let result = invoke("get_articles", JsValue::NULL).await;
-            if let Ok(data) = serde_wasm_bindgen::from_value::<Vec<Article>>(result) {
+            // TODO: paginate and query partial
+            if let Ok(data) = invoke_parse::<Vec<Article>>("get_articles", &None).await {
                 if data.is_empty() {
                     navigator.push(&Route::AddArticle);
                 }
