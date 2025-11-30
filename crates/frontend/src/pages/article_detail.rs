@@ -164,9 +164,9 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
         Callback::from(move |_| {
             if *mode == ViewMode::Reader {
                 spawn_local(stop_speak());
+                scroll_to_top(*checkpoint);
                 mode.set(ViewMode::View);
             } else {
-                scroll_to_top(*checkpoint);
                 let id = find_visible_para_id();
                 checkpoint.set(id);
                 mode.set(ViewMode::Reader);
