@@ -1,6 +1,6 @@
 use crate::components::HomeButton;
-use crate::layouts::ThemeContext;
-use crate::web_utils::{invoke_no_parse_log_error, open_url};
+use crate::layouts::{Fab, ThemeContext};
+use crate::web_utils::{get_version, invoke_no_parse_log_error, open_url};
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
@@ -8,11 +8,23 @@ use yew::prelude::*;
 pub fn settings() -> Html {
     let theme = use_state(|| "system".to_string());
     let theme_ctx = use_context::<ThemeContext>().expect("ThemeProvider missing");
+    let version = use_state(|| "N/A".to_string());
 
     {
         let theme = theme.clone();
         let theme_ctx = theme_ctx.clone();
         use_effect_with(theme, move |theme| theme.set(theme_ctx.mode.clone()));
+    }
+
+    {
+        let version = version.clone();
+        use_effect_with((), move |_| {
+            spawn_local(async move {
+                if let Some(v) = get_version().await {
+                    version.set(v)
+                }
+            })
+        })
     }
 
     let on_theme_change = {
@@ -79,9 +91,13 @@ pub fn settings() -> Html {
                     </div>
                 </label>
             </article>
-            <div role="group">
+            <article>
+                <header>{"Version"}</header>
+                <strong>{(*version).to_owned()}</strong>
+            </article>
+            <Fab>
                 <HomeButton />
-            </div>
+            </Fab>
         </main>
     }
 }

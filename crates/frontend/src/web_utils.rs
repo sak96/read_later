@@ -219,3 +219,7 @@ pub fn set_callback_to_link(div: &NodeRef, on_click: Callback<String>, url: Stri
         }
     }
 }
+
+pub async fn get_version() -> Option<String> {
+    invoke_parse_log_error::<String>("plugin:app|version", &None).await
+}
