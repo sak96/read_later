@@ -36,11 +36,14 @@
     [aria-hidden="true"] {
       display: none !important;
     }
-    code, pre {
-      white-space: pre-wrap;
-    }
     code:has(*) {
-        width: 100%
+      display: block;
+      min-width: 100%;
+      overflow-x: scroll;
+    }
+    pre, code, code > code {
+      white-space: pre;
+      max-width: 100%;
     }
     </style>
 
