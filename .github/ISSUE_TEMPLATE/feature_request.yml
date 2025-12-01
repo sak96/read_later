@@ -1,0 +1,47 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for the app.
+title: "[Feature Request] "
+labels: [enhancement, feature]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please provide detailed information about the feature you would like to request.
+
+  - type: input
+    id: feature_title
+    attributes:
+      label: Feature Title
+      description: A short title or summary for the feature request.
+      placeholder: Short descriptive title
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature_description
+    attributes:
+      label: Feature Description
+      description: Describe the feature you want to be added or improved.
+      placeholder: Detailed description of the feature
+    validations:
+      required: true
+
+  - type: textarea
+    id: benefit
+    attributes:
+      label: Benefit
+      description: Explain how this feature will benefit users or improve the app.
+      placeholder: Benefits or use cases
+    validations:
+      required: false
+
+  - type: textarea
+    id: related_urls
+    attributes:
+      label: Related URLs
+      description: Links to relevant resources, designs, or references. Separate multiple URLs with commas or new lines.
+      placeholder: https://example.com/resource1, https://example.com/resource2
+    validations:
+      required: false

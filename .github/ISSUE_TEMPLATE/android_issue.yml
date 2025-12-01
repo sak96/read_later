@@ -1,0 +1,84 @@
+name: Android App Issue
+description: Report an issue with the Android app including platform, version, reproduction steps, and more.
+title: "[ISSUE] "
+labels: [bug, android]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please provide the following details for your Android app issue.
+
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      description: Specify the Android device model and OS version (e.g., Pixel 6, Android 12).
+      placeholder: Android device and OS version
+    validations:
+      required: true
+
+  - type: input
+    id: app_version
+    attributes:
+      label: App Version
+      description: The version number of the app installed (e.g., 1.2.3).
+      placeholder: App version
+    validations:
+      required: true
+
+  - type: input
+    id: article_url
+    attributes:
+      label: Article URL
+      description: URL of the related article or page, if applicable.
+      placeholder: https://example.com/article
+    validations:
+      required: false
+
+  - type: textarea
+    id: repro_steps
+    attributes:
+      label: Reproduction Steps
+      description: Detailed steps to reproduce the issue.
+      placeholder: 1. Step one\n2. Step two\n3. Step three
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Describe expected outcome
+    validations:
+      required: false
+
+  - type: textarea
+    id: actual_behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Describe actual outcome
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_details
+    attributes:
+      label: Additional Details
+      description: Any other details such as network conditions, error messages, or device info.
+      placeholder: Add anything else that might help
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot URL or Description
+      description: Provide a URL to a screenshot or describe the issue visually.
+      placeholder: https://example.com/screenshot.png or description
+    validations:
+      required: false
+
