@@ -1,13 +1,11 @@
-use crate::components::{HomeButton, LinkPopup};
+use crate::components::{HomeButton, LanguageSelection, LinkPopup};
 use crate::layouts::{AlertContext, AlertStatus};
 use crate::pages::Article;
 use crate::routes::Route;
 use crate::web_utils::{
-    extract_text, find_visible_para_id, invoke_no_parse, invoke_no_parse_log_error, invoke_parse,
-    invoke_parse_log_error, is_android, open_url, scroll_to_center, scroll_to_top,
-    set_callback_to_link, speak, stop_speak,
+    extract_text, find_visible_para_id, invoke_no_parse_log_error, invoke_parse, is_android,
+    open_url, scroll_to_center, scroll_to_top, set_callback_to_link, speak, stop_speak,
 };
-use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
@@ -60,28 +58,6 @@ impl SpeechRate {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TTSVoice {
-    pub id: String,
-    pub name: String,
-    pub lang: String,
-    #[serde(default)]
-    pub disabled: bool,
-}
-
-impl TTSVoice {
-    fn label(&self) -> String {
-        format!("{}_{}", self.name, self.lang)
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetVoicesResponse {
-    pub voices: Vec<TTSVoice>,
-}
-
 #[derive(Properties, PartialEq, Clone)]
 pub struct ReadViewerProps {
     pub id: i32,
@@ -98,8 +74,6 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     let mode = use_state(|| ViewMode::View);
     let checkpoint = use_state(|| 0);
     let rate = use_state(|| SpeechRate::Normal);
-    let language = use_state(Option::<usize>::default);
-    let languages = use_state(Vec::<TTSVoice>::new);
     let navigator = use_navigator().unwrap();
     let div_ref = use_node_ref();
     let external_url = use_state(|| None::<String>);
@@ -116,24 +90,6 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
             external_url.set(None);
         })
     };
-
-    // load language on mount
-    {
-        let languages = languages.clone();
-        use_effect_with((), move |_| {
-            spawn_local(async move {
-                if let Some(voices) =
-                    invoke_parse_log_error::<GetVoicesResponse>("plugin:tts|get_all_voices", &None)
-                        .await
-                {
-                    languages.set(voices.voices.into_iter().collect());
-                }
-            });
-            || {
-                spawn_local(stop_speak());
-            }
-        });
-    }
 
     // handle external link
     {
@@ -259,34 +215,6 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
         })
     };
 
-    let on_language_change = {
-        let languages = languages.clone();
-        let language = language.clone();
-        Callback::from(move |e: Event| {
-            if let Some(input) = e
-                .target()
-                .and_then(|t| t.dyn_into::<web_sys::HtmlSelectElement>().ok())
-            {
-                let language = language.clone();
-                if let Ok(num) = input.value().as_str().parse::<usize>()
-                    && let Some(voice) = (*languages).get(num)
-                {
-                    let id = voice.id.clone();
-                    spawn_local(async move {
-                        if invoke_no_parse(
-                            "plugin:tts|set_voice",
-                            &Some(serde_json::json!({"voice": id})),
-                        )
-                        .await
-                        .is_ok()
-                        {
-                            language.set(Some(num));
-                        }
-                    });
-                }
-            }
-        })
-    };
     html! {
         <div class="container">
             if *loading {
@@ -314,16 +242,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                                 <button class="icon-btn" onclick={on_mode_switch.clone()}>
                                     <i class="ti ti-player-play"></i>
                                 </button>
-                                <select disabled={languages.is_empty()} onchange={on_language_change} role="button" >
-                                    <option selected={language.is_none()} disabled={true} >{" 🔡"}</option>
-                                    {languages.iter().enumerate().map(|(idx, lang)| {
-                                        html! {
-                                            <option value={idx.to_string()} selected={*language == Some(idx)}>
-                                                {lang.label()}
-                                            </option>
-                                        }
-                                    }).collect::<Html>()}
-                                </select>
+                                <LanguageSelection />
                                 <button onclick={scroll_to_checkpoint}><i class="ti ti-restore"></i></button>
                             </div>
                         }
