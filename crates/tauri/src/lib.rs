@@ -6,6 +6,7 @@ pub mod parse;
 pub fn run() {
     let mut builder = tauri::Builder::default();
     builder = builder
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -31,6 +32,8 @@ pub fn run() {
             crate::commands::delete_article,
             crate::commands::get_setting,
             crate::commands::set_setting,
+            crate::commands::pick_import_file,
+            crate::commands::pick_export_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

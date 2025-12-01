@@ -3,7 +3,10 @@ use crate::parse::process_html;
 use readabilityrs::Readability;
 use shared::models::*;
 use sqlx::{query, query_as};
+use std::fs::File;
+use std::io::{BufReader, BufWriter};
 use tauri::State;
+use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_http::reqwest;
 use tauri_plugin_sql::DbInstances;
 
@@ -160,5 +163,39 @@ pub async fn set_setting(
                 .map(|_| ())
                 .map_err(|e| e.to_string())
         }
+    }
+}
+
+#[tauri::command]
+pub async fn pick_import_file(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(file_path) = app.dialog().file().blocking_pick_file() {
+        let path = file_path.as_path().ok_or("could not get a path")?;
+        let file = File::open(path).map_err(|e| format!("Failed to open file: {e}"))?;
+        let reader = BufReader::new(file);
+        let url_list: UrlList =
+            serde_json::from_reader(reader).map_err(|e| format!("Failed to parse file: {e}"))?;
+        println!("{url_list:?}");
+        Ok(())
+    } else {
+        Err("No file selected".into())
+    }
+}
+
+#[tauri::command]
+pub async fn pick_export_file(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(file_path) = app
+        .dialog()
+        .file()
+        .add_filter("JSON Files", &["json"])
+        .blocking_save_file()
+    {
+        let path = file_path.as_path().ok_or("could not get a path")?;
+        let file = File::create(path).map_err(|e| format!("could not create path: {e}"))?;
+        let writer = BufWriter::new(file);
+        serde_json::to_writer(writer, &UrlList { urls: vec![] })
+            .map_err(|e| format!("Failed to write to file: {e}"))?;
+        Ok(())
+    } else {
+        Err("No save location selected".into())
     }
 }

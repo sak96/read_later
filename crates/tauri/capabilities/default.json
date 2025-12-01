@@ -21,6 +21,7 @@
     "clipboard-manager:allow-read-text",
     "os:allow-os-type",
     "opener:default",
+    "dialog:default",
     "http:default"
   ]
 }

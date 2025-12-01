@@ -27,6 +27,7 @@
     "tts:allow-set-voice",
     "tts:allow-get-all-voices",
     "safe-area-insets-css:default",
+    "dialog:default",
     "http:default"
   ],
   "platforms": ["android", "iOS"]

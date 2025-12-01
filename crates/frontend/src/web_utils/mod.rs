@@ -1,6 +1,7 @@
 use web_sys::{js_sys, window};
 mod core;
 mod dom;
+mod import_export;
 mod insets;
 mod scroll;
 mod settings;

@@ -1,4 +1,4 @@
-use crate::components::{HomeButton, SpeakRate};
+use crate::components::{ExportButton, HomeButton, ImportButton, SpeakRate};
 use crate::layouts::{Fab, ThemeContext};
 use crate::web_utils::{get_setting, get_version, is_android, open_url, set_setting};
 use wasm_bindgen_futures::spawn_local;
@@ -96,6 +96,15 @@ pub fn settings() -> Html {
                         </div>
                     </fieldset>
                 }
+                <fieldset>
+                    <label>
+                        <h2 class="ti ti-database"></h2>
+                        <div role="group">
+                            <ImportButton />
+                            <ExportButton />
+                        </div>
+                    </label>
+                </fieldset>
                 <fieldset>
                     <label>
                         <h2 class="ti ti-info-circle">{"\u{eac5}"}</h2>

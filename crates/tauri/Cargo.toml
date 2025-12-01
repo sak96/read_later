@@ -14,6 +14,7 @@ chrono = { version = "0.4", features = ["serde"] }
 readabilityrs = "0.1.0"
 tauri-plugin-opener = "2.0.0"
 tauri-plugin-clipboard-manager = "2.0.0"
+tauri-plugin-dialog = "2"
 tauri-plugin-os = "2"
 tauri-plugin-http = "2"
 tauri-plugin-sql = { version = "2.3.1", features = ["sqlite"] }

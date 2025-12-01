@@ -29,3 +29,8 @@ pub struct Setting {
     pub value: String,
     pub default_value: String,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UrlList {
+    pub urls: Vec<String>,
+}
