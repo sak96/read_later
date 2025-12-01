@@ -1,11 +1,11 @@
-use crate::components::HomeButton;
+use crate::components::{HomeButton, LinkPopup};
 use crate::layouts::{AlertContext, AlertStatus};
 use crate::pages::Article;
 use crate::routes::Route;
 use crate::web_utils::{
     extract_text, find_visible_para_id, invoke_no_parse, invoke_no_parse_log_error, invoke_parse,
-    invoke_parse_log_error, is_android, open_url, scroll_to_center, scroll_to_top, speak,
-    stop_speak,
+    invoke_parse_log_error, is_android, open_url, scroll_to_center, scroll_to_top,
+    set_callback_to_link, speak, stop_speak,
 };
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsCast;
@@ -101,6 +101,21 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     let language = use_state(Option::<usize>::default);
     let languages = use_state(Vec::<TTSVoice>::new);
     let navigator = use_navigator().unwrap();
+    let div_ref = use_node_ref();
+    let external_url = use_state(|| None::<String>);
+
+    let on_link = {
+        let external_url = external_url.clone();
+        Callback::from(move |href: String| {
+            external_url.set(Some(href));
+        })
+    };
+    let on_link_close = {
+        let external_url = external_url.clone();
+        Callback::from(move |_| {
+            external_url.set(None);
+        })
+    };
 
     // load language on mount
     {
@@ -118,6 +133,18 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                 spawn_local(stop_speak());
             }
         });
+    }
+
+    // handle external link
+    {
+        let div_ref = div_ref.clone();
+        let on_click = on_link.clone();
+        use_effect_with(
+            (div_ref, html_content.clone(), url.clone()),
+            move |(div_ref, _, url)| {
+                set_callback_to_link(div_ref, on_click, (*url).to_string());
+            },
+        )
     }
 
     // Load article on mount
@@ -263,9 +290,9 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     html! {
         <div class="container">
             if *loading {
-                <article aria-busy="true"/>
+                <article ref={div_ref}aria-busy="true"/>
             } else {
-                <article >
+                <article ref={div_ref} >
                     <h1>{&*title}</h1>
                     {Html::from_html_unchecked(((*html_content).clone()).into())}
                 </article>
@@ -276,6 +303,8 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                     format!("#para_{current_para} {{border: var(--pico-border-width) solid var(--pico-primary-hover);border-radius: var(--pico-border-radius)}}")
                 }}</style>
             }
+            // External Link handling
+            <LinkPopup url={(*external_url).clone()} on_close={on_link_close} />
             // Action area
             <aside style="position: sticky; bottom: 0;">
                 <nav>

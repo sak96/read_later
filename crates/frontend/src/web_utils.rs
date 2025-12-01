@@ -1,7 +1,7 @@
 use gloo_utils::format::JsValueSerdeExt;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
-use web_sys::{js_sys, window};
+use web_sys::{Element, HtmlAnchorElement, js_sys, window};
 use yew::prelude::*;
 
 #[wasm_bindgen]
@@ -131,7 +131,6 @@ fn scroll_to_element(element_id: usize, position: web_sys::ScrollLogicalPosition
 
 // TTS plugin connectors
 pub async fn speak(text: String, rate: f32) {
-    // TODO: handle _language and _rate
     invoke_no_parse_log_error(
         "plugin:tts|speak",
         &Some(serde_json::json!({"args": {"text": text, "rate": rate}})),
@@ -195,4 +194,28 @@ pub async fn remove_share_listener(id: u32) {
         &Some(serde_json::json!({"event":"share", "channelId": id})),
     )
     .await
+}
+
+pub fn set_callback_to_link(div: &NodeRef, on_click: Callback<String>, url: String) {
+    if let Some(div) = div.cast::<Element>() {
+        let anchors = div.query_selector_all("a").unwrap();
+        for i in 0..anchors.length() {
+            if let Some(anchor) = anchors.item(i) {
+                let anchor = anchor.dyn_into::<HtmlAnchorElement>().unwrap();
+                let mut href = anchor.href();
+                if href.starts_with('#') {
+                    href = format!("{url}{href}");
+                }
+                let on_click = on_click.clone();
+                let closure = Closure::wrap(Box::new(move || {
+                    on_click.emit(href.clone());
+                }) as Box<dyn FnMut()>);
+                anchor
+                    .add_event_listener_with_callback("click", closure.as_ref().unchecked_ref())
+                    .unwrap();
+                closure.forget();
+                anchor.set_href("javascript:void(0)");
+            }
+        }
+    }
 }
