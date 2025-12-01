@@ -240,10 +240,10 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                         if is_android() {
                             <div role="group">
                                 <button class="icon-btn" onclick={on_mode_switch.clone()}>
-                                    <i class="ti ti-player-play"></i>
+                                    <i class="ti ti-volume"></i>
                                 </button>
                                 <LanguageSelection />
-                                <button onclick={scroll_to_checkpoint}><i class="ti ti-restore"></i></button>
+                                <button onclick={scroll_to_checkpoint}><i class="ti ti-arrow-back-up"></i></button>
                             </div>
                         }
                         <div role="group">

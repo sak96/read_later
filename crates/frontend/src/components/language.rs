@@ -76,15 +76,24 @@ pub fn language_selection() -> Html {
         })
     };
     html! {
-        <select disabled={languages.is_empty()} onchange={on_language_change} role="button" >
-            <option selected={language.is_none()} disabled={true} >{" 🔡"}</option>
-            {languages.iter().enumerate().map(|(idx, lang)| {
-                html! {
-                    <option value={idx.to_string()} selected={*language == Some(idx)}>
-                        {lang.label()}
-                    </option>
-                }
-            }).collect::<Html>()}
-        </select>
+        <>
+            if languages.is_empty() {
+                <> </>
+            } else{
+                <label role="button"><i class="ti ti-language"></i></label>
+                <div role="group">
+                    <select onchange={on_language_change} role="button" >
+                        <option selected={language.is_none()} disabled={true} >{"---"}</option>
+                        {languages.iter().enumerate().map(|(idx, lang)| {
+                            html! {
+                                <option value={idx.to_string()} selected={*language == Some(idx)}>
+                                    {lang.label()}
+                                </option>
+                            }
+                        }).collect::<Html>()}
+                    </select>
+                </div>
+            }
+        </>
     }
 }

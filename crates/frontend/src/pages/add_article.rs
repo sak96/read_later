@@ -103,7 +103,7 @@ pub fn add_article() -> Html {
                         </button>
                         <div role="group">
                             <button type="submit">
-                                <i class="ti ti-check"></i>
+                                <i class="ti ti-device-floppy"></i>
                             </button>
                         </div>
                     </div>
