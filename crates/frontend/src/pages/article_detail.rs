@@ -113,7 +113,10 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                 {
                     languages.set(voices.voices.into_iter().collect());
                 }
-            })
+            });
+            || {
+                spawn_local(stop_speak());
+            }
         });
     }
 
