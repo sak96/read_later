@@ -217,14 +217,10 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
 
     html! {
         <div class="container">
-            if *loading {
-                <article ref={div_ref}aria-busy="true"/>
-            } else {
-                <article ref={div_ref} >
-                    <h1>{&*title}</h1>
-                    {Html::from_html_unchecked(((*html_content).clone()).into())}
-                </article>
-            }
+            <article ref={div_ref} style="min-height: 100vh" aria-busy={(*loading).to_string()}>
+                <h1>{&*title}</h1>
+                {Html::from_html_unchecked(((*html_content).clone()).into())}
+            </article>
             if is_android() {
                 <style>{{
                     let current_para = *checkpoint;
