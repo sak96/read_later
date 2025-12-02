@@ -238,13 +238,13 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                 <nav>
                     if *mode == ViewMode::View {
                         if is_android() {
-                            <div role="group">
+                            <fieldset role="group">
                                 <button class="icon-btn" onclick={on_mode_switch.clone()}>
                                     <i class="ti ti-volume"></i>
                                 </button>
                                 <LanguageSelection />
                                 <button onclick={scroll_to_checkpoint}><i class="ti ti-arrow-back-up"></i></button>
-                            </div>
+                            </fieldset>
                         }
                         <div role="group">
                             <HomeButton />
