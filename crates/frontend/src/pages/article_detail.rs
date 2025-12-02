@@ -253,7 +253,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                     if *mode == ViewMode::View {
                         if is_android() {
                             <fieldset role="group">
-                                <button class="icon-btn" onclick={on_mode_switch.clone()}>
+                                <button onclick={on_mode_switch.clone()}>
                                     <i class="ti ti-volume"></i>
                                 </button>
                                 <LanguageSelection />
