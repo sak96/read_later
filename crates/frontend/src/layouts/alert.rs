@@ -30,7 +30,7 @@ pub fn theme_provider(props: &Props) -> Html {
             status.set(new_status);
             message.set(Some(new_message));
             wasm_bindgen_futures::spawn_local(async move {
-                sleep(1500).await;
+                sleep(2500).await;
                 message.set(None);
             })
         })
