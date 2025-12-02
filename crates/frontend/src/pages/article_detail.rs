@@ -239,7 +239,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                                     <i class="ti ti-volume"></i>
                                 </button>
                                 <LanguageSelection />
-                                <button onclick={scroll_to_checkpoint}><i class="ti ti-arrow-back-up"></i></button>
+                                <button onclick={scroll_to_checkpoint}><i class="ti ti-player-skip-back"></i></button>
                             </fieldset>
                         }
                         <div role="group">
