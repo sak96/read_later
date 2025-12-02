@@ -76,6 +76,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     let rate = use_state(|| SpeechRate::Normal);
     let navigator = use_navigator().unwrap();
     let div_ref = use_node_ref();
+    let delete_modal = use_state(|| false);
     let external_url = use_state(|| None::<String>);
 
     let on_link = {
@@ -208,6 +209,13 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
         })
     };
 
+    let delete_dialog_toggle = {
+        let delete_modal = delete_modal.clone();
+        Callback::from(move |_| {
+            delete_modal.set(!*delete_modal);
+        })
+    };
+
     let scroll_to_checkpoint = {
         let checkpoint = checkpoint.clone();
         Callback::from(move |_| {
@@ -229,6 +237,16 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
             }
             // External Link handling
             <LinkPopup url={(*external_url).clone()} on_close={on_link_close} />
+            // Delete modal
+            <dialog open={*delete_modal}>
+              <article>
+                <h2><i class="ti ti-trash" /><strong>{format!(": {}", &*title)}</strong></h2>
+                <footer>
+                  <button class="secondary" onclick={delete_dialog_toggle.clone()}><i class="ti ti-x"></i></button>
+                  <button onclick={delete_article}><i class="ti ti-check"></i></button>
+                </footer>
+              </article>
+            </dialog>
             // Action area
             <aside style="position: sticky; bottom: 0;">
                 <nav>
@@ -245,7 +263,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                         <div role="group">
                             <HomeButton />
                             <button onclick={open_web_url}><i class="ti ti-world-www"></i></button>
-                            <button class="secondary" onclick={delete_article}><i class="ti ti-trash"></i></button>
+                            <button class="secondary" onclick={delete_dialog_toggle}><i class="ti ti-trash"></i></button>
                         </div>
                     } else {
                         <div role="group">
