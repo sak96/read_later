@@ -6,18 +6,8 @@ use yew::prelude::*;
 
 #[function_component(Settings)]
 pub fn settings() -> Html {
-    let theme = use_state(|| "system".to_string());
     let theme_ctx = use_context::<ThemeContext>().expect("ThemeProvider missing");
     let version = use_state(|| "N/A".to_string());
-
-    {
-        let theme = theme.clone();
-        let theme_ctx = theme_ctx.clone();
-        use_effect_with(theme_ctx, move |theme_ctx| {
-            theme.set(theme_ctx.mode.clone())
-        });
-    }
-
     {
         let version = version.clone();
         use_effect_with((), move |_| {
@@ -30,9 +20,8 @@ pub fn settings() -> Html {
     }
 
     let on_theme_change = {
-        let theme = theme.clone();
+        let theme_ctx = theme_ctx.clone();
         Callback::from(move |value: String| {
-            let theme = theme.clone();
             let theme_ctx = theme_ctx.clone();
             spawn_local(async move {
                 invoke_no_parse_log_error(
@@ -40,7 +29,6 @@ pub fn settings() -> Html {
                     &Some(serde_json::json!({ "name": "theme", "value": value })),
                 )
                 .await;
-                theme.set(value.clone());
                 theme_ctx.set_mode.emit(value);
             });
         })
@@ -63,7 +51,7 @@ pub fn settings() -> Html {
                                 for [("light", "ti-sun"), ("dark","ti-moon"), ("system","ti-device-desktop-cog")].iter().map(|(theme_option, theme_icon)| {
                                     html! {
                                         <button
-                                            class={if *theme == *theme_option { "primary" } else { "outline" }}
+                                            class={if theme_ctx.mode.eq(theme_option) { "primary" } else { "outline" }}
                                             onclick={on_theme_change.reform(move |_| theme_option.to_string().clone())}
                                         >
                                             <i class={classes!("ti", theme_icon.to_owned())}></i>
