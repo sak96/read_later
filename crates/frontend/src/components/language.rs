@@ -81,22 +81,24 @@ pub fn language_selection() -> Html {
     let voice = format!(": {}", (*voice).as_ref().map_or("", |v| v.as_str()));
     html! {
         <>
-            if languages.is_empty() {
+            if languages.is_empty() && false {
                 <> </>
             } else{
-                <details ref={details_ref.clone()} class="dropdown" >
-                    <summary role="button"><i class="ti ti-language"></i>{voice}</summary>
-                    <ul>
-                        {
-                            languages.iter().enumerate().map(|(idx, lang)| {
-                            html! {
-                                <li onclick={on_language_change.clone().reform(move |_| idx)}>
-                                    {lang.label()}
-                                </li>
-                            }
-                        }).collect::<Html>()}
-                    </ul>
-                </details>
+                <feildset>
+                    <details ref={details_ref.clone()} class="dropdown" >
+                        <summary role="button"><i class="ti ti-language"></i>{voice}</summary>
+                        <ul>
+                            {
+                                languages.iter().enumerate().map(|(idx, lang)| {
+                                html! {
+                                    <li onclick={on_language_change.clone().reform(move |_| idx)}>
+                                        {lang.label()}
+                                    </li>
+                                }
+                            }).collect::<Html>()}
+                        </ul>
+                    </details>
+                </feildset>
             }
         </>
     }
