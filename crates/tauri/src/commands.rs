@@ -1,12 +1,11 @@
 use crate::models::DB_URL;
 use crate::parse::process_html;
+pub use import_export::*;
 use readabilityrs::Readability;
 use shared::models::*;
 use sqlx::{query, query_as};
-use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use tauri::State;
-use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_http::reqwest;
 use tauri_plugin_sql::DbInstances;
 
@@ -166,36 +165,87 @@ pub async fn set_setting(
     }
 }
 
-#[tauri::command]
-pub async fn pick_import_file(app: tauri::AppHandle) -> Result<(), String> {
-    if let Some(file_path) = app.dialog().file().blocking_pick_file() {
-        let path = file_path.as_path().ok_or("could not get a path")?;
-        let file = File::open(path).map_err(|e| format!("Failed to open file: {e}"))?;
-        let reader = BufReader::new(file);
-        let url_list: UrlList =
-            serde_json::from_reader(reader).map_err(|e| format!("Failed to parse file: {e}"))?;
-        println!("{url_list:?}");
-        Ok(())
-    } else {
-        Err("No file selected".into())
+#[cfg(not(target_os = "android"))]
+mod import_export {
+    use super::*;
+    use std::fs::File;
+    use tauri_plugin_dialog::DialogExt;
+    #[tauri::command]
+    pub async fn pick_import_file(app: tauri::AppHandle) -> Result<(), String> {
+        if let Some(file_path) = app.dialog().file().blocking_pick_file() {
+            let path = file_path.as_path().ok_or("could not get a path")?;
+            let file = File::open(path).map_err(|e| format!("Failed to open file: {e}"))?;
+            let reader = BufReader::new(file);
+            let url_list: UrlList = serde_json::from_reader(reader)
+                .map_err(|e| format!("Failed to parse file: {e}"))?;
+            println!("{url_list:?}");
+            Ok(())
+        } else {
+            Err("No file selected".into())
+        }
+    }
+    #[tauri::command]
+    pub async fn pick_export_file(app: tauri::AppHandle) -> Result<(), String> {
+        if let Some(file_path) = app
+            .dialog()
+            .file()
+            .add_filter("JSON Files", &["json"])
+            .blocking_save_file()
+        {
+            let path = file_path.as_path().ok_or("could not get a path")?;
+            let file = File::create(path).map_err(|e| format!("could not create path: {e}"))?;
+            let writer = BufWriter::new(file);
+            serde_json::to_writer(writer, &UrlList { urls: vec![] })
+                .map_err(|e| format!("Failed to write to file: {e}"))?;
+            Ok(())
+        } else {
+            Err("No save location selected".into())
+        }
     }
 }
 
-#[tauri::command]
-pub async fn pick_export_file(app: tauri::AppHandle) -> Result<(), String> {
-    if let Some(file_path) = app
-        .dialog()
-        .file()
-        .add_filter("JSON Files", &["json"])
-        .blocking_save_file()
-    {
-        let path = file_path.as_path().ok_or("could not get a path")?;
-        let file = File::create(path).map_err(|e| format!("could not create path: {e}"))?;
-        let writer = BufWriter::new(file);
-        serde_json::to_writer(writer, &UrlList { urls: vec![] })
-            .map_err(|e| format!("Failed to write to file: {e}"))?;
-        Ok(())
-    } else {
-        Err("No save location selected".into())
+#[cfg(target_os = "android")]
+mod import_export {
+    use super::*;
+    use tauri_plugin_android_fs::AndroidFsExt;
+    #[tauri::command]
+    pub async fn pick_import_file(app: tauri::AppHandle) -> Result<(), String> {
+        let api = app.android_fs();
+        if let Ok(Some(file_path)) =
+            app.android_fs()
+                .file_picker()
+                .pick_file(None, &["application/json"], true)
+        {
+            let file: std::fs::File = api
+                .open_file_readable(&file_path)
+                .map_err(|err| err.to_string())?;
+            let reader = BufReader::new(file);
+            let url_list: UrlList = serde_json::from_reader(reader)
+                .map_err(|e| format!("Failed to parse file: {e}"))?;
+            println!("{url_list:?}");
+            Ok(())
+        } else {
+            Err("No file selected".into())
+        }
+    }
+    #[tauri::command]
+    pub async fn pick_export_file(app: tauri::AppHandle) -> Result<(), String> {
+        let api = app.android_fs();
+        if let Ok(Some(file_path)) = app.android_fs().file_picker().save_file(
+            None,
+            "read_later.json",
+            Some("application/json"),
+            true,
+        ) {
+            let file: std::fs::File = api
+                .open_file_writable(&file_path)
+                .map_err(|err| err.to_string())?;
+            let writer = BufWriter::new(file);
+            serde_json::to_writer(writer, &UrlList { urls: vec![] })
+                .map_err(|e| format!("Failed to write to file: {e}"))?;
+            Ok(())
+        } else {
+            Err("No save location selected".into())
+        }
     }
 }
