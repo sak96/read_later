@@ -1,0 +1,49 @@
+use wasm_bindgen::prelude::*;
+use web_sys::{Element, HtmlAnchorElement, window};
+use yew::prelude::*;
+pub fn extract_text(id: usize) -> Option<String> {
+    let window = window()?;
+    let document = window.document()?;
+    document
+        .get_element_by_id(&format!("para_{}", id))?
+        .text_content()
+}
+
+pub fn find_visible_para_id() -> usize {
+    let window = window().expect("no global `window` exists");
+    let document = window.document().expect("should have a document on window");
+    let window_height = window.inner_height().unwrap().as_f64().unwrap_or(0.0);
+    let mut id = 0;
+    while let Some(element) = document.get_element_by_id(&format!("para_{}", id)) {
+        let rect = element.get_bounding_client_rect();
+        if rect.bottom() >= 0.0 && rect.bottom() <= window_height {
+            return id;
+        }
+        id += 1;
+    }
+    id - 1
+}
+
+pub fn set_callback_to_link(div: &NodeRef, on_click: Callback<String>, url: String) {
+    if let Some(div) = div.cast::<Element>() {
+        let anchors = div.query_selector_all("a").unwrap();
+        for i in 0..anchors.length() {
+            if let Some(anchor) = anchors.item(i) {
+                let anchor = anchor.dyn_into::<HtmlAnchorElement>().unwrap();
+                let mut href = anchor.href();
+                if href.starts_with('#') {
+                    href = format!("{url}{href}");
+                }
+                let on_click = on_click.clone();
+                let closure = Closure::wrap(Box::new(move || {
+                    on_click.emit(href.clone());
+                }) as Box<dyn FnMut()>);
+                anchor
+                    .add_event_listener_with_callback("click", closure.as_ref().unchecked_ref())
+                    .unwrap();
+                closure.forget();
+                anchor.set_href("javascript:void(0)");
+            }
+        }
+    }
+}
