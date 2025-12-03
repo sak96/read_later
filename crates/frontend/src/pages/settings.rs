@@ -1,6 +1,6 @@
 use crate::components::HomeButton;
 use crate::layouts::{Fab, ThemeContext};
-use crate::web_utils::{get_version, invoke_no_parse_log_error, open_url};
+use crate::web_utils::{get_version, open_url, set_setting};
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
@@ -24,11 +24,7 @@ pub fn settings() -> Html {
         Callback::from(move |value: String| {
             let theme_ctx = theme_ctx.clone();
             spawn_local(async move {
-                invoke_no_parse_log_error(
-                    "set_setting",
-                    &Some(serde_json::json!({ "name": "theme", "value": value })),
-                )
-                .await;
+                set_setting("theme", &value).await;
                 theme_ctx.set_mode.emit(value);
             });
         })

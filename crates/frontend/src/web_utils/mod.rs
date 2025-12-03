@@ -2,6 +2,7 @@ use web_sys::{js_sys, window};
 mod core;
 mod dom;
 mod scroll;
+mod settings;
 mod share;
 mod speak;
 
@@ -12,6 +13,7 @@ pub use crate::web_utils::core::{
 };
 pub use crate::web_utils::dom::*;
 pub use crate::web_utils::scroll::*;
+pub use crate::web_utils::settings::*;
 pub use crate::web_utils::share::*;
 pub use crate::web_utils::speak::*;
 

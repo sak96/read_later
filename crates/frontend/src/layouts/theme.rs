@@ -1,4 +1,4 @@
-use crate::web_utils::invoke_parse;
+use crate::web_utils::{get_setting, set_setting};
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
@@ -13,6 +13,8 @@ pub struct Props {
     pub children: Html,
 }
 
+const THEME: [&str; 3] = ["dark", "light", "system"];
+
 #[function_component(ThemeProvider)]
 pub fn theme_provider(props: &Props) -> Html {
     let mode = use_state(|| "system".to_string());
@@ -20,13 +22,12 @@ pub fn theme_provider(props: &Props) -> Html {
         let mode = mode.clone();
         use_effect_with((), move |_| {
             spawn_local(async move {
-                if let Ok(value) = invoke_parse::<String>(
-                    "get_setting",
-                    &Some(serde_json::json!({"name": "theme"})),
-                )
-                .await
+                if let Some(value) = get_setting("theme").await
+                    && THEME.contains(&value.as_str())
                 {
                     mode.set(value);
+                } else {
+                    set_setting("theme", "system").await;
                 }
             });
         });
