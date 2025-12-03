@@ -5,6 +5,8 @@ use yew::prelude::*;
 #[derive(Properties, PartialEq, Clone)]
 pub struct SpeakRateProps {
     pub on_rate_change: Callback<f32>,
+    #[prop_or_default]
+    pub outline: bool,
 }
 
 const RATE: [f32; 4] = [0.5, 1.0, 1.5, 2.0];
@@ -54,7 +56,7 @@ pub fn speak_rate(props: &SpeakRateProps) -> Html {
 
     html! {
         <div role="group">
-            <label role="button">
+            <label role="button" class={classes!(props.outline.then_some("outline"))}>
                 <b>{&format!("{:0.1}x", *rate)}</b>
                 <input type="range" min="0.5" step="0.5" max="2" value={rate.to_string()} onchange={on_change} />
             </label>

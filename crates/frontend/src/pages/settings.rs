@@ -1,6 +1,6 @@
-use crate::components::HomeButton;
+use crate::components::{HomeButton, SpeakRate};
 use crate::layouts::{Fab, ThemeContext};
-use crate::web_utils::{get_version, open_url, set_setting};
+use crate::web_utils::{get_setting, get_version, is_android, open_url, set_setting};
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
@@ -36,6 +36,33 @@ pub fn settings() -> Html {
         });
     });
 
+    let tts_enabled = use_state(|| true);
+    {
+        let tts_enabled = tts_enabled.clone();
+        use_effect_with((), move |_| {
+            spawn_local(async move {
+                if let Some(value) = get_setting("tts").await
+                    && let Ok(value) = value.parse::<bool>()
+                {
+                    tts_enabled.set(value);
+                } else {
+                    set_setting("tts", &is_android().to_string()).await;
+                }
+            });
+        });
+    }
+    let tts_toggled = {
+        let tts_enabled = tts_enabled.clone();
+        Callback::from(move |_| {
+            let tts_enabled = tts_enabled.clone();
+            spawn_local(async move {
+                let new_state = !*tts_enabled;
+                set_setting("tts", &new_state.to_string()).await;
+                tts_enabled.set(new_state);
+            })
+        })
+    };
+
     html! {
         <article class="container">
             <form class="container">
@@ -58,6 +85,17 @@ pub fn settings() -> Html {
                         </div>
                     </label>
                 </fieldset>
+                if is_android() {
+                    <fieldset>
+                        <tr>
+                            <th><h2 class="ti ti-volume"/></th>
+                            <td><input name="terms" type="checkbox" role="switch" onclick={tts_toggled} checked={*tts_enabled} /></td>
+                        </tr>
+                        <div role="group">
+                            <SpeakRate on_rate_change={Callback::from(|_| {})} outline={true}/>
+                        </div>
+                    </fieldset>
+                }
                 <fieldset>
                     <label>
                         <h2 class="ti ti-info-circle"></h2>

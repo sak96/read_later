@@ -1,7 +1,7 @@
 use crate::{
     components::{LanguageSelection, SpeakRate},
     web_utils::{
-        extract_text, find_visible_para_id, scroll_to_center, scroll_to_top, speak, stop_speak,
+        extract_text, find_visible_para_id, get_setting, is_android, scroll_to_center, scroll_to_top, set_setting, speak, stop_speak
     },
 };
 use wasm_bindgen_futures::spawn_local;
@@ -24,6 +24,22 @@ pub fn speak_bar(props: &SpeakBarProps) -> Html {
     let checkpoint = use_state(|| 0);
     let mode = use_state(|| ViewMode::View);
     let rate = use_state(|| 1.0);
+    let tts_enabled = use_state(|| true);
+    // TTS Enabled
+    {
+        let tts_enabled = tts_enabled.clone();
+        use_effect_with((), move |_| {
+            spawn_local(async move {
+                if let Some(value) = get_setting("tts").await
+                    && let Ok(value) = value.parse::<bool>()
+                {
+                    tts_enabled.set(value);
+                } else {
+                    set_setting("tts", &is_android().to_string()).await;
+                }
+            });
+        });
+    }
     // Rate change
     let on_rate_change = {
         let rate = rate.clone();
@@ -86,25 +102,27 @@ pub fn speak_bar(props: &SpeakBarProps) -> Html {
     };
     html! {
         <>
-            <style>{{
-                let current_para = *checkpoint;
-                format!("#para_{current_para} {{border: var(--pico-border-width) solid var(--pico-primary-hover);border-radius: var(--pico-border-radius)}}")
-            }}</style>
-            if *mode == ViewMode::View {
-                <fieldset role="group">
-                    <button onclick={on_mode_switch.clone()}>
-                        <i class="ti ti-volume"></i>
-                    </button>
-                    <LanguageSelection />
-                    <button onclick={scroll_to_checkpoint}><i class="ti ti-player-skip-back"></i></button>
-                </fieldset>
-            } else {
-                <fieldset role="group">
-                    <button class="icon-btn pause-btn" onclick={on_mode_switch}>
-                        <i class="ti ti-player-pause"></i>
-                    </button>
-                    <SpeakRate {on_rate_change} />
-                </fieldset>
+            if is_android() && * tts_enabled{
+                <style>{{
+                    let current_para = *checkpoint;
+                    format!("#para_{current_para} {{border: var(--pico-border-width) solid var(--pico-primary-hover);border-radius: var(--pico-border-radius)}}")
+                }}</style>
+                if *mode == ViewMode::View {
+                    <fieldset role="group">
+                        <button onclick={on_mode_switch.clone()}>
+                            <i class="ti ti-volume"></i>
+                        </button>
+                        <LanguageSelection />
+                        <button onclick={scroll_to_checkpoint}><i class="ti ti-player-skip-back"></i></button>
+                    </fieldset>
+                } else {
+                    <fieldset role="group">
+                        <button class="icon-btn pause-btn" onclick={on_mode_switch}>
+                            <i class="ti ti-player-pause"></i>
+                        </button>
+                        <SpeakRate {on_rate_change} />
+                    </fieldset>
+                }
             }
         </>
     }
