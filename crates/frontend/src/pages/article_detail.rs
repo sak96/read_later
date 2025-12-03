@@ -147,11 +147,12 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     // Handle mode transitions
     let on_mode_switch = {
         let mode = mode.clone();
+        let div_ref = div_ref.clone();
         let checkpoint = checkpoint.clone();
         Callback::from(move |_| {
             if *mode == ViewMode::Reader {
                 spawn_local(stop_speak());
-                scroll_to_top(*checkpoint);
+                scroll_to_top(&div_ref, *checkpoint);
                 mode.set(ViewMode::View);
             } else {
                 let id = find_visible_para_id();
@@ -166,15 +167,18 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
         let mode = mode.clone();
         let checkpoint = checkpoint.clone();
         let rate = rate.clone();
+        let div_ref = div_ref.clone();
         use_effect_with((*mode, checkpoint), move |(reader_mode, checkpoint)| {
             if *reader_mode == ViewMode::Reader {
                 let mode = mode.clone();
                 let checkpoint = checkpoint.clone();
                 let rate = rate.clone();
+                let div_ref = div_ref.clone();
                 spawn_local(async move {
                     if *mode == ViewMode::Reader {
                         if let Some(para_text) = extract_text(*checkpoint) {
-                            scroll_to_center(*checkpoint);
+                            let div_ref = div_ref.clone();
+                            scroll_to_center(&div_ref, *checkpoint);
                             speak(para_text.clone(), rate.as_f32()).await;
                             checkpoint.set(*checkpoint + 1);
                         } else {
@@ -217,9 +221,10 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     };
 
     let scroll_to_checkpoint = {
+        let div_ref = div_ref.clone();
         let checkpoint = checkpoint.clone();
         Callback::from(move |_| {
-            scroll_to_top(*checkpoint);
+            scroll_to_top(&div_ref, *checkpoint);
         })
     };
 
