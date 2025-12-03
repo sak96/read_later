@@ -81,10 +81,10 @@ pub fn language_selection() -> Html {
     let voice = format!(": {}", (*voice).as_ref().map_or("", |v| v.as_str()));
     html! {
         <>
-            if languages.is_empty() && false {
+            if languages.is_empty() {
                 <> </>
             } else{
-                <feildset>
+                <div role="button">
                     <details ref={details_ref.clone()} class="dropdown" >
                         <summary role="button"><i class="ti ti-language"></i>{voice}</summary>
                         <ul>
@@ -98,7 +98,7 @@ pub fn language_selection() -> Html {
                             }).collect::<Html>()}
                         </ul>
                     </details>
-                </feildset>
+                </div>
             }
         </>
     }
