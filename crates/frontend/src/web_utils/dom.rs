@@ -1,12 +1,15 @@
 use wasm_bindgen::prelude::*;
 use web_sys::{Element, HtmlAnchorElement, window};
 use yew::prelude::*;
-pub fn extract_text(id: usize) -> Option<String> {
-    let window = window()?;
-    let document = window.document()?;
-    document
-        .get_element_by_id(&format!("para_{}", id))?
-        .text_content()
+
+pub fn extract_text(div: &NodeRef, id: usize) -> Option<String> {
+    if let Some(div) = div.cast::<Element>()
+        && let Ok(Some(element)) = div.query_selector(&format!("#para_{}", id))
+    {
+        element.text_content()
+    } else {
+        None
+    }
 }
 
 pub fn find_visible_para_id() -> usize {

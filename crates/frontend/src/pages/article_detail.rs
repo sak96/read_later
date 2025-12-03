@@ -176,7 +176,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                 let div_ref = div_ref.clone();
                 spawn_local(async move {
                     if *mode == ViewMode::Reader {
-                        if let Some(para_text) = extract_text(*checkpoint) {
+                        if let Some(para_text) = extract_text(&div_ref, *checkpoint) {
                             let div_ref = div_ref.clone();
                             scroll_to_center(&div_ref, *checkpoint);
                             speak(para_text.clone(), rate.as_f32()).await;
