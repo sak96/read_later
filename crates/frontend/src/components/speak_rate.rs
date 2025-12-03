@@ -24,7 +24,10 @@ pub fn speak_rate(props: &SpeakRateProps) -> Html {
                     rate.set(value);
                     props.on_rate_change.emit(value);
                 } else {
-                    set_setting("rate", "1.0").await;
+                    let value = 1.0;
+                    set_setting("rate", &value.to_string()).await;
+                    rate.set(value);
+                    props.on_rate_change.emit(*rate);
                 }
             });
         });
@@ -38,8 +41,13 @@ pub fn speak_rate(props: &SpeakRateProps) -> Html {
                 .and_then(|t| t.dyn_into::<web_sys::HtmlInputElement>().ok())
                 && let Ok(new_rate) = input.value().parse::<f32>()
             {
-                rate.set(new_rate);
-                props.on_rate_change.emit(new_rate);
+                let rate = rate.clone();
+                let props = props.clone();
+                wasm_bindgen_futures::spawn_local(async move {
+                    set_setting("rate", &new_rate.to_string()).await;
+                    rate.set(new_rate);
+                    props.on_rate_change.emit(new_rate);
+                });
             }
         })
     };

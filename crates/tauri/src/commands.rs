@@ -129,9 +129,9 @@ pub async fn set_setting(
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            query("UPDATE settings SET value = ? WHERE name = ?")
-                .bind(value)
+            query("INSERT into settings (name, value, default_value) values($1, $2, '') ON CONFLICT(name) do update SET value = $2, default_value = ''")
                 .bind(name)
+                .bind(value)
                 .execute(pool)
                 .await
                 .map(|_| ())
