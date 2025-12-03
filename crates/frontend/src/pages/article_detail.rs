@@ -1,4 +1,4 @@
-use crate::components::{HomeButton, LanguageSelection, LinkPopup};
+use crate::components::{HomeButton, LanguageSelection, LinkPopup, SpeakRate};
 use crate::layouts::{AlertContext, AlertStatus};
 use crate::pages::Article;
 use crate::routes::Route;
@@ -6,7 +6,6 @@ use crate::web_utils::{
     extract_text, find_visible_para_id, invoke_no_parse_log_error, invoke_parse, is_android,
     open_url, scroll_to_center, scroll_to_top, set_callback_to_link, speak, stop_speak,
 };
-use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -15,47 +14,6 @@ use yew_router::prelude::*;
 pub enum ViewMode {
     View,
     Reader,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum SpeechRate {
-    Quarter, // 0.25
-    Half,    // 0.5
-    Normal,  // 1.0
-    Double,  // 2.0
-    Quad,    // 4.0
-}
-
-impl SpeechRate {
-    fn as_f32(&self) -> f32 {
-        match self {
-            SpeechRate::Quarter => 0.25,
-            SpeechRate::Half => 0.5,
-            SpeechRate::Normal => 1.0,
-            SpeechRate::Double => 2.0,
-            SpeechRate::Quad => 4.0,
-        }
-    }
-
-    fn all() -> Vec<Self> {
-        vec![
-            SpeechRate::Quarter,
-            SpeechRate::Half,
-            SpeechRate::Normal,
-            SpeechRate::Double,
-            SpeechRate::Quad,
-        ]
-    }
-
-    fn label(&self) -> &str {
-        match self {
-            SpeechRate::Quarter => "0.25x",
-            SpeechRate::Half => "0.50x",
-            SpeechRate::Normal => "1.00x",
-            SpeechRate::Double => "2.00x",
-            SpeechRate::Quad => "4.00x",
-        }
-    }
 }
 
 #[derive(Properties, PartialEq, Clone)]
@@ -73,7 +31,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     let url = use_state(String::new);
     let mode = use_state(|| ViewMode::View);
     let checkpoint = use_state(|| 0);
-    let rate = use_state(|| SpeechRate::Normal);
+    let rate = use_state(|| 1.0);
     let navigator = use_navigator().unwrap();
     let div_ref = use_node_ref();
     let delete_modal = use_state(|| false);
@@ -90,6 +48,10 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
         Callback::from(move |_| {
             external_url.set(None);
         })
+    };
+    let on_rate_change = {
+        let rate = rate.clone();
+        Callback::from(move |new_rate| rate.set(new_rate))
     };
 
     // handle external link
@@ -179,7 +141,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                         if let Some(para_text) = extract_text(&div_ref, *checkpoint) {
                             let div_ref = div_ref.clone();
                             scroll_to_center(&div_ref, *checkpoint);
-                            speak(para_text.clone(), rate.as_f32()).await;
+                            speak(para_text.clone(), *rate).await;
                             checkpoint.set(*checkpoint + 1);
                         } else {
                             mode.set(ViewMode::View);
@@ -275,25 +237,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                             <button class="icon-btn pause-btn" onclick={on_mode_switch}>
                                 <i class="ti ti-player-pause"></i>
                             </button>
-                            <div role="group">
-                                <label role="button">
-                                    <b>{rate.label()}</b>
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max={SpeechRate::all().len().saturating_sub(1).to_string()}
-                                        value={SpeechRate::all().iter().position(|r| r == &*rate).unwrap_or(2).to_string()}
-                                        onchange={
-                                            let rate = rate.clone();
-                                            Callback::from(move |e: Event| {
-                                                if let Some(input) = e.target().and_then(|t| t.dyn_into::<web_sys::HtmlInputElement>().ok()) && let Ok(idx) = input.value().parse::<usize>()  && let Some(new_rate) = SpeechRate::all().get(idx) {
-                                                    rate.set(*new_rate);
-                                                }
-                                            })
-                                        }
-                                    />
-                                </label>
-                            </div>
+                            <SpeakRate rate={*rate} {on_rate_change} />
                         </div>
                     }
                 </nav>
