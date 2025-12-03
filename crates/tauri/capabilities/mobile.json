@@ -1,6 +1,6 @@
 {
-  "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "default",
+  "$schema": "../gen/schemas/mobile-schema.json",
+  "identifier": "mobile",
   "description": "enables the default permissions",
   "windows": [
     "main"
@@ -17,10 +17,16 @@
         }
       ]
     },
+    "mobile-sharetarget:default",
     "core:default",
     "clipboard-manager:allow-read-text",
     "os:allow-os-type",
     "opener:default",
+    "tts:allow-speak",
+    "tts:allow-stop",
+    "tts:allow-set-voice",
+    "tts:allow-get-all-voices",
     "http:default"
-  ]
+  ],
+  "platforms": ["android", "iOS"]
 }

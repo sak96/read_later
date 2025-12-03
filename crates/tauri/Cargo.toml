@@ -15,12 +15,15 @@ readabilityrs = "0.1.0"
 tauri-plugin-opener = "2.0.0"
 tauri-plugin-clipboard-manager = "2.0.0"
 tauri-plugin-os = "2"
-tauri-plugin-sharetarget = { git = "https://github.com/sak96/tauri-plugin-sharetarget" }
-tauri-plugin-tts = { git = "https://github.com/sak96/tauri-plugin-tts" }
 tauri-plugin-http = "2"
 tauri-plugin-sql = { version = "2.3.1", features = ["sqlite"] }
 sqlx = "0.8.0"
 kuchiki = "0.8"
+
+
+[target."cfg(any(target_os = \"android\", target_os = \"ios\"))".dependencies]
+tauri-plugin-mobile-sharetarget = { git = "https://github.com/sak96/tauri-plugin-mobile-sharetarget" }
+tauri-plugin-tts = { git = "https://github.com/sak96/tauri-plugin-tts" }
 
 [lib]
 name = "article_manager_lib"

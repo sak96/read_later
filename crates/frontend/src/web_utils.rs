@@ -1,5 +1,3 @@
-use gloo_utils::format::JsValueSerdeExt;
-use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 use web_sys::{Element, HtmlAnchorElement, js_sys, window};
 use yew::prelude::*;
@@ -91,17 +89,6 @@ pub async fn open_url(url: String) {
     .await
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ShareEvent {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub stream: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub content_type: Option<String>,
-    pub uri: String,
-}
-
 pub fn extract_text(id: usize) -> Option<String> {
     let window = window()?;
     let document = window.document()?;
@@ -157,31 +144,36 @@ pub fn find_visible_para_id() -> usize {
     id - 1
 }
 
-// Share Target Plugin Connectors
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Message<T> {
-    message: T,
-    index: u32,
-}
-
-pub async fn add_share_listener(callback: Callback<ShareEvent>) -> u32 {
-    let closure = Closure::wrap(Box::new(move |event: JsValue| {
-        match JsValueSerdeExt::into_serde::<Message<ShareEvent>>(&event) {
-            Ok(share_event) => {
-                callback.emit(share_event.message);
+pub async fn add_share_listener(callback: Callback<String>) -> u32 {
+    // on open check if there is anything in queue.
+    if let Some(url) = invoke_parse_log_error::<String>(
+        "plugin:mobile-sharetarget|pop_intent_queue_and_extract_text",
+        &None,
+    )
+    .await
+    {
+        callback.emit(url.to_string());
+    }
+    // then register a callback
+    let closure = Closure::wrap(Box::new(move |_| {
+        let callback = callback.clone();
+        wasm_bindgen_futures::spawn_local(async move {
+            if let Some(url) = invoke_parse_log_error::<String>(
+                "plugin:mobile-sharetarget|pop_intent_queue_and_extract_text",
+                &None,
+            )
+            .await
+            {
+                callback.emit(url.to_string());
             }
-            Err(e) => {
-                web_sys::console::error_1(
-                    &format!("Failed to deserialize share event: {:?}", e).into(),
-                );
-            }
-        }
+        });
     }) as Box<dyn FnMut(JsValue)>);
-
     let id = transform_callback(closure.as_ref().unchecked_ref::<_>(), false);
     invoke_no_parse_log_error(
-        "plugin:sharetarget|register_listener",
-        &Some(serde_json::json!({"event":"share", "handler": &format!("__CHANNEL__:{id}")})),
+        "plugin:event|listen",
+        &Some(
+            serde_json::json!({"event":"tauri://focus", "handler": id, "target": {"kind": "Any"}}),
+        ),
     )
     .await;
     closure.forget();

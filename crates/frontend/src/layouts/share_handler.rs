@@ -1,5 +1,5 @@
 use crate::routes::Route;
-use crate::web_utils::{ShareEvent, add_share_listener, is_android, remove_share_listener};
+use crate::web_utils::{add_share_listener, is_android, remove_share_listener};
 use std::collections::HashMap;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -15,25 +15,20 @@ pub fn share_handler(props: &ShareHandlerProps) -> Html {
         let handler = use_state(Option::<u32>::default);
         let navigator = use_navigator().unwrap();
         let handler = handler.clone();
-        use_effect(move || {
+        use_effect_with((), move |_| {
             if is_android() {
                 let callback = {
-                    Callback::from(move |e: ShareEvent| {
-                        for part in e.uri.split(';') {
-                            if let Some(eq_pos) = part.find('=') {
-                                let (key, val) = part.split_at(eq_pos + 1);
-                                if key.starts_with("S.android.intent.extra.TEXT") {
-                                    let url = urlencoding::decode(val)
-                                        .unwrap_or_else(|_| val.into())
-                                        .into_owned();
-                                    let mut query = HashMap::new();
-                                    query.insert("input", url.to_string());
-                                    navigator
-                                        .push_with_query(&Route::AddArticle, &query)
-                                        .unwrap();
-                                }
-                            }
-                        }
+                    Callback::from(move |uri: String| {
+                        let url = match urlencoding::decode(&uri) {
+                            Ok(url) => url.into_owned(),
+                            Err(_) => uri,
+                        };
+                        // TODO: put it as model
+                        let mut query = HashMap::new();
+                        query.insert("input", url.to_string());
+                        navigator
+                            .push_with_query(&Route::AddArticle, &query)
+                            .unwrap();
                     })
                 };
                 {

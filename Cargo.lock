@@ -107,9 +107,9 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-clipboard-manager",
  "tauri-plugin-http",
+ "tauri-plugin-mobile-sharetarget",
  "tauri-plugin-opener",
  "tauri-plugin-os",
- "tauri-plugin-sharetarget",
  "tauri-plugin-sql",
  "tauri-plugin-tts",
 ]
@@ -5851,6 +5851,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "tauri-plugin-mobile-sharetarget"
+version = "0.1.0"
+source = "git+https://github.com/sak96/tauri-plugin-mobile-sharetarget#41f00d61955e4a6fa5031f26799cef655b308712"
+dependencies = [
+ "anyhow",
+ "crossbeam-queue",
+ "jni",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.17",
+]
+
+[[package]]
 name = "tauri-plugin-opener"
 version = "2.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5888,19 +5903,6 @@ dependencies = [
  "tauri",
  "tauri-plugin",
  "thiserror 2.0.17",
-]
-
-[[package]]
-name = "tauri-plugin-sharetarget"
-version = "0.1.6"
-source = "git+https://github.com/sak96/tauri-plugin-sharetarget#d4e1a915f63b78a480c6e47e1e350004ae74e063"
-dependencies = [
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin",
- "thiserror 1.0.69",
 ]
 
 [[package]]
