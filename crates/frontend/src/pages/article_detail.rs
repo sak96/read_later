@@ -237,7 +237,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                             <button class="icon-btn pause-btn" onclick={on_mode_switch}>
                                 <i class="ti ti-player-pause"></i>
                             </button>
-                            <SpeakRate rate={*rate} {on_rate_change} />
+                            <SpeakRate {on_rate_change} />
                         </div>
                     }
                 </nav>

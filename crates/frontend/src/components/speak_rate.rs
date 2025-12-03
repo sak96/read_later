@@ -1,15 +1,34 @@
+use crate::web_utils::{get_setting, set_setting};
 use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct SpeakRateProps {
-    pub rate: f32,
     pub on_rate_change: Callback<f32>,
 }
 
+const RATE: [f32; 4] = [0.5, 1.0, 1.5, 2.0];
+
 #[function_component(SpeakRate)]
 pub fn speak_rate(props: &SpeakRateProps) -> Html {
-    let rate = use_state(|| props.rate.clone());
+    let rate = use_state(|| 1.0);
+    {
+        let rate = rate.clone();
+        let props = props.clone();
+        use_effect_with((), move |_| {
+            wasm_bindgen_futures::spawn_local(async move {
+                if let Some(value) = get_setting("rate").await
+                    && let Ok(value) = value.parse::<f32>()
+                    && RATE.contains(&value)
+                {
+                    rate.set(value);
+                    props.on_rate_change.emit(value);
+                } else {
+                    set_setting("rate", "1.0").await;
+                }
+            });
+        });
+    }
     let on_change = {
         let rate = rate.clone();
         let props = props.clone();
