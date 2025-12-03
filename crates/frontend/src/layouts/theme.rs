@@ -18,7 +18,7 @@ pub fn theme_provider(props: &Props) -> Html {
     let mode = use_state(|| "system".to_string());
     {
         let mode = mode.clone();
-        use_effect(move || {
+        use_effect_with((), move |_| {
             spawn_local(async move {
                 if let Ok(value) = invoke_parse::<String>(
                     "get_setting",
