@@ -56,7 +56,7 @@ pub fn home() -> Html {
 
             <Fab>
                 <button onclick={add_article}>
-                    <i class="ti ti-bookmark-plus"></i>
+                    <i class="ti ti-bookmark-plus">{"\u{fa60}"}</i>
                 </button>
                 <div>
                     <SettingsButton />

@@ -11,8 +11,7 @@
     <link data-trunk rel="inline" type="css" href="assets/pico.min.css">
 
     <!-- Tabler Icons CDN -->
-    <link data-trunk rel="css" href="assets/tabler-icons.min.css">
-    <link data-trunk rel="copy-dir" href="fonts">
+    <link data-trunk rel="copy-file" href="assets/tabler-icons.woff2">
 
     <!-- Trunk resources -->
     <link data-trunk rel="rust"/>
@@ -45,6 +44,23 @@
     pre, code, code > code {
       white-space: pre;
       max-width: 100%;
+    }
+    @font-face{
+      font-family:"tabler-icons";
+      font-style:normal;
+      font-weight:400;
+      src:url("/tabler-icons.woff2") format("woff2")
+    }
+    .ti{
+      font-family:"tabler-icons" !important;
+      speak:none;
+      font-style:normal;
+      font-weight:normal;
+      font-variant:normal;
+      text-transform:none;
+      line-height:1;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale
     }
     </style>
 

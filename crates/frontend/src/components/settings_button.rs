@@ -11,7 +11,7 @@ pub fn settings_button() -> Html {
     });
     html! {
         <button onclick={on_click} >
-            <i class="ti ti-settings-filled"></i>
+            <i class="ti ti-settings-filled">{"\u{f69e}"}</i>
         </button>
     }
 }

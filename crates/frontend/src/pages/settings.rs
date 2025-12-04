@@ -68,16 +68,16 @@ pub fn settings() -> Html {
             <form class="container">
                 <fieldset>
                     <label>
-                        <h2 class="ti ti-palette"></h2>
+                        <h2 class="ti ti-palette">{"\u{eb01}"}</h2>
                         <div role="group">
                             {
-                                for [("light", "ti-sun"), ("dark","ti-moon"), ("system","ti-device-desktop-cog")].iter().map(|(theme_option, theme_icon)| {
+                                for [("light", "ti-sun", "\u{f6a9}"), ("dark","ti-moon", "\u{eaf8}"), ("system","ti-device-desktop-cog", "\u{f862}")].iter().map(|(theme_option, _theme_icon, theme_code)| {
                                     html! {
                                         <button
                                             class={if theme_ctx.mode.eq(theme_option) { "primary" } else { "outline" }}
                                             onclick={on_theme_change.reform(move |_| theme_option.to_string().clone())}
                                         >
-                                            <i class={classes!("ti", theme_icon.to_owned())}></i>
+                                            <i class="ti">{theme_code}</i>
                                         </button>
                                     }
                                 })
@@ -85,10 +85,10 @@ pub fn settings() -> Html {
                         </div>
                     </label>
                 </fieldset>
-                if is_android() {
+                if is_android(){
                     <fieldset>
                         <tr>
-                            <th><h2 class="ti ti-volume"/></th>
+                            <th><h2 class="ti ti-volume">{"\u{eb51}"}</h2></th>
                             <td><input name="terms" type="checkbox" role="switch" onclick={tts_toggled} checked={*tts_enabled} /></td>
                         </tr>
                         <div role="group">
@@ -98,17 +98,17 @@ pub fn settings() -> Html {
                 }
                 <fieldset>
                     <label>
-                        <h2 class="ti ti-info-circle"></h2>
+                        <h2 class="ti ti-info-circle">{"\u{eac5}"}</h2>
                         <div role="group">
                             {
-                                for [("https://github.com/sak96/read_later","ti-brand-github"), ("https://github.com/sak96/read_later/issues","ti-bug")].iter().map(|(url, url_icon)| {
+                                for [("https://github.com/sak96/read_later","ti-brand-github", "\u{ec1c}"), ("https://github.com/sak96/read_later/issues","ti-bug", "\u{ea48}")].iter().map(|(url, _url_icon, url_code)| {
                                     html! {
                                         <button
                                             type="button"
                                             class="outline"
                                             onclick={open_external_url.reform(move |_| url.to_string())}
                                         >
-                                            <i class={classes!("ti", url_icon.to_owned())}></i>
+                                            <i class="ti">{url_code}</i>
                                         </button>
                                     }
                                 })
@@ -119,7 +119,7 @@ pub fn settings() -> Html {
                 <table>
                     <tbody>
                         <tr>
-                            <th>{"Version  "}<i class="ti ti-tag" /></th>
+                            <th><i class="ti ti-tag">{"Version \u{ff02}"}</i></th>
                             <td>{(*version).to_owned()}</td>
                         </tr>
                     </tbody>

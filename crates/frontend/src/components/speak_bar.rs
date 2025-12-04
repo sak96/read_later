@@ -110,16 +110,14 @@ pub fn speak_bar(props: &SpeakBarProps) -> Html {
                 if *mode == ViewMode::View {
                     <fieldset role="group">
                         <button onclick={on_mode_switch.clone()}>
-                            <i class="ti ti-volume"></i>
+                            <i class="ti ti-volume">{"\u{eb51}"}</i>
                         </button>
                         <LanguageSelection />
-                        <button onclick={scroll_to_checkpoint}><i class="ti ti-player-skip-back"></i></button>
+                        <button onclick={scroll_to_checkpoint}><i class="ti ti-player-skip-back">{"\u{f693}"}</i></button>
                     </fieldset>
                 } else {
                     <fieldset role="group">
-                        <button class="icon-btn pause-btn" onclick={on_mode_switch}>
-                            <i class="ti ti-player-pause"></i>
-                        </button>
+                        <button onclick={on_mode_switch}><i class="ti ti-player-pause">{"\u{f690}"}</i></button>
                         <SpeakRate {on_rate_change} />
                     </fieldset>
                 }

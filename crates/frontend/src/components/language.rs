@@ -54,7 +54,7 @@ pub fn language_selection() -> Html {
             } else{
                 <div role="button">
                     <details ref={details_ref.clone()} class="dropdown" >
-                        <summary role="button"><i class="ti ti-language"></i>{voice}</summary>
+                        <summary role="button"><i class="ti ti-language">{"\u{ebbe}"}</i>{voice}</summary>
                         <ul>
                             {
                                 languages.iter().enumerate().map(|(idx, lang)| {
