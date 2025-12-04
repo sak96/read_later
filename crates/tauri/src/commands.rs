@@ -13,7 +13,7 @@ pub async fn get_articles(db_instances: State<'_, DbInstances>) -> Result<Vec<Ar
     match db {
         // TODO: Paginate
         tauri_plugin_sql::DbPool::Sqlite(pool) => query_as::<_, Article>(
-            "SELECT id, title, body, created_at, url FROM articles ORDER BY created_at DESC",
+            "SELECT id, title, body, datetime(created_at, 'localtime') created_at, url FROM articles ORDER BY created_at DESC",
         )
         .fetch_all(pool)
         .await
