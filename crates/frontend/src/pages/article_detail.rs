@@ -1,8 +1,8 @@
 use crate::components::{HomeButton, LinkPopup, SpeakBar};
 use crate::layouts::{AlertContext, AlertStatus};
-use crate::pages::Article;
 use crate::routes::Route;
 use crate::web_utils::{invoke_no_parse_log_error, invoke_parse, open_url, set_callback_to_link};
+use serde::{Deserialize, Serialize};
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -10,6 +10,13 @@ use yew_router::prelude::*;
 #[derive(Properties, PartialEq, Clone)]
 pub struct ReadViewerProps {
     pub id: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Article {
+    pub title: String,
+    pub body: String,
+    pub url: String,
 }
 
 #[function_component(ReadViewer)]

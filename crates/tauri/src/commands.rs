@@ -7,14 +7,17 @@ use tauri_plugin_http::reqwest;
 use tauri_plugin_sql::DbInstances;
 
 #[tauri::command]
-pub async fn get_articles(db_instances: State<'_, DbInstances>) -> Result<Vec<Article>, String> {
+pub async fn get_articles(
+    db_instances: State<'_, DbInstances>,
+    offset: usize,
+) -> Result<Vec<ArticleEntry>, String> {
     let instances = db_instances.0.read().await;
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
-        // TODO: Paginate
-        tauri_plugin_sql::DbPool::Sqlite(pool) => query_as::<_, Article>(
-            "SELECT id, title, body, datetime(created_at, 'localtime') created_at, url FROM articles ORDER BY created_at DESC",
+        tauri_plugin_sql::DbPool::Sqlite(pool) => query_as::<_, ArticleEntry>(
+            "SELECT id, title, datetime(created_at, 'localtime') created_at FROM articles ORDER BY created_at DESC limit $1, 100",
         )
+        .bind(offset.to_string())
         .fetch_all(pool)
         .await
         .map_err(|e| e.to_string()),
@@ -27,13 +30,12 @@ pub async fn get_article(id: i32, db_instances: State<'_, DbInstances>) -> Resul
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            let mut article = query_as::<_, Article>(
-                "SELECT id, title, body, created_at, url FROM articles WHERE id = ?",
-            )
-            .bind(id)
-            .fetch_one(pool)
-            .await
-            .map_err(|e| e.to_string())?;
+            let mut article =
+                query_as::<_, Article>("SELECT title, body, url FROM articles WHERE id = ?")
+                    .bind(id)
+                    .fetch_one(pool)
+                    .await
+                    .map_err(|e| e.to_string())?;
             article.body = process_html(&article.body, 1000, &mut 0);
             Ok(article)
         }

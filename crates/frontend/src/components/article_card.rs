@@ -1,11 +1,18 @@
-use crate::pages::Article;
 use crate::routes::Route;
+use serde::Deserialize;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct ArticleEntry {
+    pub id: i32,
+    pub title: String,
+    pub created_at: String,
+}
+
 #[derive(Properties, PartialEq)]
 pub struct ArticleCardProps {
-    pub article: Article,
+    pub article: ArticleEntry,
 }
 
 #[function_component(ArticleCard)]

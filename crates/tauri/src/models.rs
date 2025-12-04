@@ -23,11 +23,16 @@ pub fn get_migrations() -> Vec<Migration> {
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
 pub struct Article {
-    pub id: i32, // usually i64 in SQLite/SQLx, but i32 works if fits
     pub title: String,
     pub body: String,
-    pub created_at: String,
     pub url: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
+pub struct ArticleEntry {
+    pub id: i32,
+    pub title: String,
+    pub created_at: String,
 }
 
 // We don't strictly need a separate struct for Insert if we pass args directly,

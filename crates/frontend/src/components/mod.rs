@@ -6,7 +6,7 @@ mod settings_button;
 mod speak_bar;
 mod speak_rate;
 
-pub use article_card::ArticleCard;
+pub use article_card::{ArticleCard, ArticleEntry};
 pub use home_button::HomeButton;
 pub use language::LanguageSelection;
 pub use link_popup::LinkPopup;

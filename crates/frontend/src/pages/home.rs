@@ -1,25 +1,18 @@
-use crate::components::{ArticleCard, SettingsButton};
+use crate::components::{ArticleCard, ArticleEntry, SettingsButton};
 use crate::layouts::Fab;
 use crate::routes::Route;
-use crate::web_utils::invoke_parse;
-use serde::{Deserialize, Serialize};
+use crate::web_utils::invoke_parse_log_error;
+use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-#[derive(Clone, PartialEq, Serialize, Deserialize)]
-pub struct Article {
-    pub id: i32,
-    pub title: String,
-    pub body: String,
-    pub created_at: String,
-    pub url: String,
-}
-
 #[function_component(Home)]
 pub fn home() -> Html {
-    let articles = use_state(Vec::<Article>::new);
-    let refreshed = use_state(|| false);
+    let articles = use_mut_ref(Vec::<ArticleEntry>::new);
+    let loading = use_state(|| false);
+    let force_update = use_force_update();
+    let scroll_ref = use_node_ref();
 
     let navigator = use_navigator().unwrap();
     let add_article = {
@@ -28,31 +21,90 @@ pub fn home() -> Html {
             navigator.push(&Route::AddArticle);
         })
     };
+    let fetch_article = {
+        let articles = articles.clone();
+        let loading = loading.clone();
+        let force_update = force_update.clone();
+        Callback::from(move |_: ()| {
+            loading.set(true);
+            let articles = articles.clone();
+            let force_update = force_update.clone();
+            let loading = loading.clone();
+            let navigator = navigator.clone();
 
-    let articles_clone = articles.clone();
-    if !*refreshed {
-        let refreshed = refreshed.clone();
-        spawn_local(async move {
-            // TODO: paginate and query partial
-            if let Ok(data) = invoke_parse::<Vec<Article>>("get_articles", &None).await {
-                if data.is_empty() {
-                    navigator.push(&Route::AddArticle);
+            spawn_local(async move {
+                if let Some(data) = invoke_parse_log_error::<Vec<ArticleEntry>>(
+                    "get_articles",
+                    &Some(serde_json::json!({ "offset": articles.borrow().len()})),
+                )
+                .await
+                {
+                    if data.is_empty() && articles.borrow().is_empty() {
+                        navigator.push(&Route::AddArticle);
+                    }
+                    articles.borrow_mut().extend(data);
+                    force_update.force_update();
                 }
-                articles_clone.set(data);
-                refreshed.set(true);
+                loading.set(false);
+            });
+        })
+    };
+
+    let onscroll = {
+        let loading = loading.clone();
+        let fetch_article = fetch_article.clone();
+        let scroll_ref = scroll_ref.clone();
+
+        Callback::from(move |e: Event| {
+            e.prevent_default();
+            if *loading {
+                return;
+            }
+
+            let target = scroll_ref.cast::<web_sys::HtmlElement>().unwrap();
+            let scroll_top = target.scroll_top() as f64;
+            let scroll_height = target.scroll_height() as f64;
+            let client_height = target.client_height() as f64;
+            if scroll_top + client_height > scroll_height - 100.0 {
+                fetch_article.emit(());
+            }
+        })
+    };
+    {
+        let fetch_article = fetch_article.clone();
+        let onscroll = onscroll.clone();
+        use_effect_with((), move |_| {
+            let listener = wasm_bindgen::prelude::Closure::<dyn FnMut(Event)>::wrap(Box::new(
+                move |e: Event| onscroll.emit(e),
+            ));
+            let window = web_sys::window().expect("did not get window");
+            window
+                .add_event_listener_with_callback("scroll", listener.as_ref().unchecked_ref())
+                .expect("failed to add scroll listener");
+            fetch_article.emit(());
+            move || {
+                window
+                    .remove_event_listener_with_callback(
+                        "scroll",
+                        listener.as_ref().unchecked_ref(),
+                    )
+                    .expect("failed to remove scroll listener");
             }
         });
     }
 
     html! {
         <>
-            <main class="container">
-                <div class="container">
-                    { for articles.iter().map(|article| html! {
+            <main class="container" ref={scroll_ref}>
+                <div class="container" >
+                    { for articles.borrow().iter().map(|article| html! {
                         <ArticleCard article={article.clone()} />
                     })}
                 </div>
             </main>
+            if *loading {
+                <article aria-busy={true.to_string()} />
+            }
 
             <Fab>
                 <button onclick={add_article}>
