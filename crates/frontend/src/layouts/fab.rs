@@ -9,9 +9,14 @@ pub struct FabProps {
 pub fn fab(props: &FabProps) -> Html {
     html! {
         <div style=r#"
-            position: fixed; bottom: env(safe-area-inset-bottom); right: 0em; z-index: 100; /* fab position */
-            padding: 1em; padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 1em); /* edge gap */
-            display: flex; gap: 5px; flex-direction: column; /* children gap */
+            position: fixed;
+            bottom: var(--safe-area-inset-bottom);
+            right: 0em;
+            z-index: 100;
+            padding: 1em;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         "#>
             { props.children.clone() }
         </div>

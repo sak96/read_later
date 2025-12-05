@@ -145,7 +145,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
               </article>
             </dialog>
             // Action area
-            <aside style="position: sticky; bottom: 0;">
+            <aside style="position: sticky; bottom: var(--safe-area-inset-bottom);">
                 <nav>
                     <SpeakBar {div_ref} />
                     <div role="group">

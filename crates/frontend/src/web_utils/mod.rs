@@ -1,6 +1,7 @@
 use web_sys::{js_sys, window};
 mod core;
 mod dom;
+mod insets;
 mod scroll;
 mod settings;
 mod share;
@@ -12,6 +13,7 @@ pub use crate::web_utils::core::{
     is_android,
 };
 pub use crate::web_utils::dom::*;
+pub use crate::web_utils::insets::set_inset;
 pub use crate::web_utils::scroll::*;
 pub use crate::web_utils::settings::*;
 pub use crate::web_utils::share::*;

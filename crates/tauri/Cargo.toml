@@ -24,6 +24,7 @@ kuchiki = "0.8"
 [target."cfg(any(target_os = \"android\", target_os = \"ios\"))".dependencies]
 tauri-plugin-mobile-sharetarget = { git = "https://github.com/sak96/tauri-plugin-mobile-sharetarget" }
 tauri-plugin-tts = { git = "https://github.com/sak96/tauri-plugin-tts" }
+tauri-plugin-safe-area-insets-css = "0.1"
 
 [lib]
 name = "article_manager_lib"

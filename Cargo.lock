@@ -110,6 +110,7 @@ dependencies = [
  "tauri-plugin-mobile-sharetarget",
  "tauri-plugin-opener",
  "tauri-plugin-os",
+ "tauri-plugin-safe-area-insets-css",
  "tauri-plugin-sql",
  "tauri-plugin-tts",
 ]
@@ -5900,6 +5901,18 @@ dependencies = [
  "serde_json",
  "serialize-to-javascript",
  "sys-locale",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.17",
+]
+
+[[package]]
+name = "tauri-plugin-safe-area-insets-css"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "561c23b4fcc4ba7afa0f88a4267fecf2e814f7575a7b1b1526f5c50830e293ce"
+dependencies = [
+ "serde",
  "tauri",
  "tauri-plugin",
  "thiserror 2.0.17",

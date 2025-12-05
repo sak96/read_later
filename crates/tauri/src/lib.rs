@@ -19,6 +19,7 @@ pub fn run() {
     {
         builder = builder
             .plugin(tauri_plugin_tts::init())
+            .plugin(tauri_plugin_safe_area_insets_css::init())
             .plugin(tauri_plugin_mobile_sharetarget::init());
     }
     builder

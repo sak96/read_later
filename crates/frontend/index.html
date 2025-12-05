@@ -27,11 +27,9 @@
       box-sizing: border-box;
     }
     body {
-      padding-top: constant(safe-area-inset-top);
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: constant(safe-area-inset-bottom);
-      padding-bottom: env(safe-area-inset-bottom);
       height: 100vh;
+      padding-top: var(--safe-area-inset-top);
+      padding-bottom: var(--safe-area-inset-bottom);
     }
     [aria-hidden="true"] {
       display: none !important;

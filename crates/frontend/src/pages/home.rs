@@ -2,7 +2,6 @@ use crate::components::{ArticleCard, ArticleEntry, SettingsButton};
 use crate::layouts::Fab;
 use crate::routes::Route;
 use crate::web_utils::invoke_parse_log_error;
-use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -35,12 +34,17 @@ pub fn home() -> Html {
             spawn_local(async move {
                 if let Some(data) = invoke_parse_log_error::<Vec<ArticleEntry>>(
                     "get_articles",
-                    &Some(serde_json::json!({ "offset": articles.borrow().len()})),
+                    &Some(serde_json::json!({ "offset": articles.borrow().len() / 2})),
                 )
                 .await
                 {
-                    if data.is_empty() && articles.borrow().is_empty() {
-                        navigator.push(&Route::AddArticle);
+                    if data.is_empty() {
+                        if articles.borrow().is_empty() {
+                            navigator.push(&Route::AddArticle);
+                        } else {
+                            loading.set(false);
+                            return;
+                        }
                     }
                     articles.borrow_mut().extend(data);
                     force_update.force_update();
@@ -72,30 +76,19 @@ pub fn home() -> Html {
     };
     {
         let fetch_article = fetch_article.clone();
-        let onscroll = onscroll.clone();
         use_effect_with((), move |_| {
-            let listener = wasm_bindgen::prelude::Closure::<dyn FnMut(Event)>::wrap(Box::new(
-                move |e: Event| onscroll.emit(e),
-            ));
-            let window = web_sys::window().expect("did not get window");
-            window
-                .add_event_listener_with_callback("scroll", listener.as_ref().unchecked_ref())
-                .expect("failed to add scroll listener");
             fetch_article.emit(());
-            move || {
-                window
-                    .remove_event_listener_with_callback(
-                        "scroll",
-                        listener.as_ref().unchecked_ref(),
-                    )
-                    .expect("failed to remove scroll listener");
-            }
+            move || {}
         });
     }
 
     html! {
         <>
-            <main class="container" ref={scroll_ref}>
+            <main class="container"  ref={scroll_ref} {onscroll} style=r#"
+                overflow: scroll;
+                scroll-behaviour: smooth;
+                height:  calc(100vh - var(--safe-area-inset-top) -  var(--safe-area-inset-bottom))
+            "#>
                 <div class="container" >
                     { for articles.borrow().iter().map(|article| html! {
                         <ArticleCard article={article.clone()} />
