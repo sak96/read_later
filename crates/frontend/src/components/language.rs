@@ -1,6 +1,7 @@
 use crate::web_utils::{TTSVoice, get_voices, set_voice, stop_speak};
+use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::Element;
+use web_sys::{Element, HtmlSelectElement};
 use yew::prelude::*;
 
 #[function_component(LanguageSelection)]
@@ -8,7 +9,6 @@ pub fn language_selection() -> Html {
     let language = use_state(Option::<usize>::default);
     let languages = use_state(Vec::<TTSVoice>::new);
     let details_ref = use_node_ref();
-    let voice = use_state(|| None::<String>);
     {
         let languages = languages.clone();
         use_effect_with((), move |_| {
@@ -26,47 +26,57 @@ pub fn language_selection() -> Html {
     let on_language_change = {
         let languages = languages.clone();
         let language = language.clone();
-        let voice = voice.clone();
         let details_ref = details_ref.clone();
-        Callback::from(move |num: usize| {
-            let language = language.clone();
-            let voice_ = voice.clone();
-            let details_ref = details_ref.clone();
-            if let Some(details) = details_ref.cast::<Element>() {
-                details.remove_attribute("open").ok();
-            };
-            if let Some(voice) = (*languages).get(num) {
-                let id = voice.id.clone();
-                voice_.set(Some(voice.label()));
-                wasm_bindgen_futures::spawn_local(async move {
-                    if set_voice(&id).await {
-                        language.set(Some(num));
-                    }
-                });
+        Callback::from(move |event: Event| {
+            let target: Option<web_sys::EventTarget> = event.target();
+            if let Some(select) = target.and_then(|t| t.dyn_into::<HtmlSelectElement>().ok())
+                && let Ok(num) = select.value().parse::<usize>()
+            {
+                let language = language.clone();
+                let details_ref = details_ref.clone();
+                if let Some(details) = details_ref.cast::<Element>() {
+                    details.remove_attribute("open").ok();
+                };
+                if let Some(voice) = (*languages).get(num) {
+                    let id = voice.id.clone();
+                    wasm_bindgen_futures::spawn_local(async move {
+                        if set_voice(&id).await {
+                            language.set(Some(num));
+                            web_sys::console::log_1(&format!("{num}").into());
+                        }
+                    });
+                }
             }
         })
     };
-    let voice = format!(": {}", (*voice).as_ref().map_or("", |v| v.as_str()));
+    // let voice = format!(": {}", (*voice).as_ref().map_or("", |v| v.as_str()));
     html! {
         <>
             if languages.is_empty() {
                 <> </>
             } else{
-                <div role="button">
-                    <details ref={details_ref.clone()} class="dropdown" >
-                        <summary role="button"><i class="ti ti-language">{"\u{ebbe}"}</i>{voice}</summary>
-                        <ul>
-                            {
-                                languages.iter().enumerate().map(|(idx, lang)| {
-                                html! {
-                                    <li onclick={on_language_change.clone().reform(move |_| idx)}>
-                                        {lang.label()}
-                                    </li>
-                                }
-                            }).collect::<Html>()}
-                        </ul>
-                    </details>
-                </div>
+                <select role="button" onchange={on_language_change} class="ti">
+                    <option selected={language.is_none()} disabled={true} class="ti"><i class="ti ti-language">{"\u{ebbe}"}</i></option>
+                    {
+                        languages.iter().enumerate().map(|(idx, lang)| {
+                        html! {
+                            <option value={idx.to_string()}>{lang.label()}</option>
+                        }
+                    }).collect::<Html>()}
+                    // <details ref={details_ref.clone()} class="dropdown" >
+                    //     <summary role="button"><i class="ti ti-language">{"\u{ebbe}"}</i>{voice}</summary>
+                    //     <ul>
+                    //         {
+                    //             languages.iter().enumerate().map(|(idx, lang)| {
+                    //             html! {
+                    //                 <li onclick={on_language_change.clone().reform(move |_| idx)}>
+                    //                     {lang.label()}
+                    //                 </li>
+                    //             }
+                    //         }).collect::<Html>()}
+                    //     </ul>
+                    // </details>
+                </select>
             }
         </>
     }
