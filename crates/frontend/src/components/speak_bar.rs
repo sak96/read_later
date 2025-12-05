@@ -1,7 +1,8 @@
 use crate::{
     components::{LanguageSelection, SpeakRate},
     web_utils::{
-        extract_text, find_visible_para_id, get_setting, is_android, scroll_to_center, scroll_to_top, set_setting, speak, stop_speak
+        extract_text, find_visible_para_id, get_setting, is_android, scroll_to_center,
+        scroll_to_top, set_setting, speak, stop_speak,
     },
 };
 use wasm_bindgen_futures::spawn_local;
@@ -38,6 +39,7 @@ pub fn speak_bar(props: &SpeakBarProps) -> Html {
                     set_setting("tts", &is_android().to_string()).await;
                 }
             });
+            || spawn_local(async { stop_speak().await })
         });
     }
     // Rate change
@@ -52,7 +54,7 @@ pub fn speak_bar(props: &SpeakBarProps) -> Html {
         let checkpoint = checkpoint.clone();
         Callback::from(move |_| {
             if *mode == ViewMode::Reader {
-                spawn_local(stop_speak());
+                spawn_local(async { stop_speak().await });
                 scroll_to_top(&div_ref, *checkpoint);
                 mode.set(ViewMode::View);
             } else {
