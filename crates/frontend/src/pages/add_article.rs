@@ -1,7 +1,8 @@
-use crate::components::{Article, HomeButton, SettingsButton};
+use crate::components::{HomeButton, SettingsButton};
 use crate::layouts::{AlertContext, AlertStatus, Fab};
 use crate::routes::Route;
 use crate::web_utils::{invoke_parse, read_clipboard};
+use shared::models::Article;
 use wasm_bindgen_futures::spawn_local;
 use yew_router::prelude::*;
 

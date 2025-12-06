@@ -1,7 +1,8 @@
-use crate::components::{ArticleCard, ArticleEntry, SettingsButton};
+use crate::components::{ArticleCard, SettingsButton};
 use crate::layouts::Fab;
 use crate::routes::Route;
 use crate::web_utils::invoke_parse_log_error;
+use shared::models::ArticleEntry;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;

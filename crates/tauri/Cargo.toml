@@ -19,6 +19,7 @@ tauri-plugin-http = "2"
 tauri-plugin-sql = { version = "2.3.1", features = ["sqlite"] }
 sqlx = "0.8.0"
 kuchiki = "0.8"
+shared = { path = "../shared" }
 
 
 [target."cfg(any(target_os = \"android\", target_os = \"ios\"))".dependencies]

@@ -1,7 +1,8 @@
-use crate::components::{Article, ReadViewer};
+use crate::components::ReadViewer;
 use crate::layouts::{AlertContext, AlertStatus};
 use crate::routes::Route;
 use crate::web_utils::invoke_parse;
+use shared::models::Article;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -12,7 +13,7 @@ pub struct ArticleDetailProps {
 }
 
 #[allow(dead_code)]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone)]
 pub enum PageMode {
     FetchingArticle,
     DownloadingUrl,

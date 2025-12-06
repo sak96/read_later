@@ -1,6 +1,7 @@
-use crate::models::*;
+use crate::models::DB_URL;
 use crate::parse::process_html;
 use readabilityrs::Readability;
+use shared::models::*;
 use sqlx::{query, query_as};
 use tauri::State;
 use tauri_plugin_http::reqwest;
