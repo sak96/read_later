@@ -50,7 +50,7 @@ pub fn theme_provider(props: &Props) -> Html {
                         AlertStatus::Error=>("#F6CABF", "#D93526"),
                         AlertStatus::Success => ("#39F1A6", "#00895A"),
                     };
-                    let style = format!("position: fixed; bottom: var(--safe-area-inset-bottom); z-index: 1000; background-color: {bgcolor}; color: {color}");
+                    let style = format!("position: fixed; bottom: var(--safe-area-inset-bottom, 0); z-index: 1000; background-color: {bgcolor}; color: {color}");
                     html! {
                         <article class="pico container-fluid" {style}>{text}</article>
                     }

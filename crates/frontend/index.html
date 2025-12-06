@@ -28,13 +28,13 @@
     }
     body {
       height: 100vh;
-      padding-top: var(--safe-area-inset-top);
-      padding-bottom: var(--safe-area-inset-bottom);
+      padding-top: var(--safe-area-inset-top, 0);
+      padding-bottom: var(--safe-area-inset-bottom, 0);
     }
     .page {
         overflow: scroll;
         scroll-behaviour: smooth;
-        height:  calc(100vh - var(--safe-area-inset-top) -  var(--safe-area-inset-bottom))
+        height:  calc(100vh - var(--safe-area-inset-top, 0) -  var(--safe-area-inset-bottom, 0))
     }
     [aria-hidden="true"] {
       display: none !important;

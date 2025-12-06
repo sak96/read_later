@@ -10,7 +10,7 @@ pub fn fab(props: &FabProps) -> Html {
     html! {
         <div style=r#"
             position: fixed;
-            bottom: var(--safe-area-inset-bottom);
+            bottom: var(--safe-area-inset-bottom, 0);
             right: 0em;
             z-index: 100;
             padding: 1em;
