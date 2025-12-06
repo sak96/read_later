@@ -98,7 +98,8 @@ pub fn settings() -> Html {
                 }
                 <fieldset>
                     <label>
-                        <h2 class="ti ti-database">{"\u{ea88}"}</h2>
+                        <h2 class="ti ti-database-exclamation">{"\u{fa13}"}</h2>
+                        <small>{"(beta)"}</small>
                         <div role="group">
                             <ImportButton />
                             <ExportButton />
