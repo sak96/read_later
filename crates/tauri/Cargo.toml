@@ -38,3 +38,10 @@ debug = true
 [profile.dev.package."*"]
 opt-level = 1
 debug = false
+
+[package.metadata.rust-analyzer]
+cargo.targetDir = "target/analyzer/tauri"
+cargo.allTargets = false
+procMacro.enable = false
+check.workspace = false
+cachePriming.enable = false
