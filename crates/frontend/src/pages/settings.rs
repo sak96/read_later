@@ -64,7 +64,7 @@ pub fn settings() -> Html {
     };
 
     html! {
-        <article class="container">
+        <article class="container page">
             <form class="container">
                 <fieldset>
                     <label>

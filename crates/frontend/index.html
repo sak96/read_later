@@ -31,6 +31,11 @@
       padding-top: var(--safe-area-inset-top);
       padding-bottom: var(--safe-area-inset-bottom);
     }
+    .page {
+        overflow: scroll;
+        scroll-behaviour: smooth;
+        height:  calc(100vh - var(--safe-area-inset-top) -  var(--safe-area-inset-bottom))
+    }
     [aria-hidden="true"] {
       display: none !important;
     }

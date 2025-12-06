@@ -127,7 +127,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     };
 
     html! {
-        <div class="container">
+        <div class="container page">
             <article ref={div_ref.clone()} style="min-height: 100vh" aria-busy={(*loading).to_string()}>
                 <h1>{&*title}</h1>
                 {Html::from_html_unchecked(((*html_content).clone()).into())}
@@ -145,7 +145,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
               </article>
             </dialog>
             // Action area
-            <aside style="position: sticky; bottom: var(--safe-area-inset-bottom);">
+            <aside style="position: sticky; bottom: 0;">
                 <nav>
                     <SpeakBar {div_ref} />
                     <div role="group">

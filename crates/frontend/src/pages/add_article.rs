@@ -89,7 +89,7 @@ pub fn add_article() -> Html {
                 </blockquote>
                 <article aria-busy="true"/>
             } else {
-                <form class="container" onsubmit={on_submit}>
+                <form class="container page" onsubmit={on_submit}>
                     <input
                         type="url"
                         value={(*url_input).clone()}

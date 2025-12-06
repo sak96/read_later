@@ -84,11 +84,7 @@ pub fn home() -> Html {
 
     html! {
         <>
-            <main class="container"  ref={scroll_ref} {onscroll} style=r#"
-                overflow: scroll;
-                scroll-behaviour: smooth;
-                height:  calc(100vh - var(--safe-area-inset-top) -  var(--safe-area-inset-bottom))
-            "#>
+            <main class="container page"  ref={scroll_ref} {onscroll}>
                 <div class="container" >
                     { for articles.borrow().iter().map(|article| html! {
                         <ArticleCard article={article.clone()} />
