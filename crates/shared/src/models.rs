@@ -18,6 +18,7 @@ pub struct Article {
 #[cfg_attr(not(target_arch = "wasm32"), derive(sqlx::FromRow))]
 pub struct ArticleEntry {
     pub id: i32,
+    pub url: String,
     pub title: String,
     pub created_at: String,
 }

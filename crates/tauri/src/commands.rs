@@ -18,7 +18,7 @@ pub async fn get_articles(
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => query_as::<_, ArticleEntry>(
-            "SELECT id, title, datetime(created_at, 'localtime') created_at FROM articles ORDER BY created_at DESC limit $1, 100",
+            "SELECT id, url, title, datetime(created_at, 'localtime') created_at FROM articles ORDER BY created_at DESC limit $1, 100",
         )
         .bind(offset.to_string())
         .fetch_all(pool)

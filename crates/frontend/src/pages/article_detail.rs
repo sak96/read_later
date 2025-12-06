@@ -62,7 +62,12 @@ pub fn article_detail(props: &ArticleDetailProps) -> Html {
 
     match &*mode {
         PageMode::FetchingArticle => html! {
-            <article aria-busy="true"><i class="ti ti-database-export">{"\u{ee6e}"}</i></article>
+            <main class="container page" style="display: flex; justify-content: center; align-items: center;">
+              <article style="width: 100%;">
+                <h2 class="ti ti-loader">{"\u{eca3}"}</h2>
+                <progress />
+              </article>
+            </main>
         },
         PageMode::DownloadingUrl => html! {
             <article aria-busy="true"><i class="ti ti-download">{"\u{ea96}"}</i></article>
