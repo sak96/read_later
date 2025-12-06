@@ -42,14 +42,12 @@ pub fn language_selection() -> Html {
                     wasm_bindgen_futures::spawn_local(async move {
                         if set_voice(&id).await {
                             language.set(Some(num));
-                            web_sys::console::log_1(&format!("{num}").into());
                         }
                     });
                 }
             }
         })
     };
-    // let voice = format!(": {}", (*voice).as_ref().map_or("", |v| v.as_str()));
     html! {
         <>
             if languages.is_empty() {
@@ -63,19 +61,6 @@ pub fn language_selection() -> Html {
                             <option value={idx.to_string()}>{lang.label()}</option>
                         }
                     }).collect::<Html>()}
-                    // <details ref={details_ref.clone()} class="dropdown" >
-                    //     <summary role="button"><i class="ti ti-language">{"\u{ebbe}"}</i>{voice}</summary>
-                    //     <ul>
-                    //         {
-                    //             languages.iter().enumerate().map(|(idx, lang)| {
-                    //             html! {
-                    //                 <li onclick={on_language_change.clone().reform(move |_| idx)}>
-                    //                     {lang.label()}
-                    //                 </li>
-                    //             }
-                    //         }).collect::<Html>()}
-                    //     </ul>
-                    // </details>
                 </select>
             }
         </>
