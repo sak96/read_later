@@ -68,7 +68,7 @@ pub async fn get_article(id: i32, db_instances: State<'_, DbInstances>) -> Resul
                         (id, title, body, url)
                         VALUES ($1, $2, $3, $4)
                       ON CONFLICT(id) do update SET
-                        title = $2, body = $3, url = $3
+                        title = $2, body = $3, url = $4
                       RETURNING id, title, body, created_at, url"#,
                 )
                 .bind(article.id)
