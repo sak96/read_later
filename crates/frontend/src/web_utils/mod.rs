@@ -1,4 +1,5 @@
 use web_sys::{js_sys, window};
+mod channel;
 mod core;
 mod dom;
 mod import_export;
@@ -8,18 +9,19 @@ mod settings;
 mod share;
 mod speak;
 
+pub use crate::web_utils::channel::*;
 use crate::web_utils::core::*;
 pub use crate::web_utils::core::{
     get_version, invoke_no_parse, invoke_no_parse_log_error, invoke_parse, invoke_parse_log_error,
     is_android,
 };
 pub use crate::web_utils::dom::*;
+pub use crate::web_utils::import_export::*;
 pub use crate::web_utils::insets::set_inset;
 pub use crate::web_utils::scroll::*;
 pub use crate::web_utils::settings::*;
 pub use crate::web_utils::share::*;
 pub use crate::web_utils::speak::*;
-pub use crate::web_utils::import_export::*;
 
 pub async fn sleep(ms: u32) {
     let promise = js_sys::Promise::new(&mut |resolve, _reject| {

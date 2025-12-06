@@ -5,7 +5,7 @@ use readabilityrs::Readability;
 use shared::models::*;
 use sqlx::{query, query_as, query_scalar};
 use std::io::{BufReader, BufWriter};
-use tauri::State;
+use tauri::{State, ipc::Channel};
 use tauri_plugin_http::reqwest;
 use tauri_plugin_sql::DbInstances;
 
@@ -28,7 +28,11 @@ pub async fn get_articles(
 }
 
 #[tauri::command]
-pub async fn get_article(id: i32, db_instances: State<'_, DbInstances>) -> Result<Article, String> {
+pub async fn get_article(
+    id: i32,
+    db_instances: State<'_, DbInstances>,
+    on_progress: Channel<FetchProgress>,
+) -> Result<Article, String> {
     let instances = db_instances.0.read().await;
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
@@ -40,6 +44,7 @@ pub async fn get_article(id: i32, db_instances: State<'_, DbInstances>) -> Resul
                     .await
                     .map_err(|e| e.to_string())?;
             if article.title.is_empty() {
+                let _ = on_progress.send(FetchProgress::Downloading);
                 let html = reqwest::get(&article.url)
                     .await
                     .map_err(|e| e.to_string())?
@@ -79,6 +84,7 @@ pub async fn get_article(id: i32, db_instances: State<'_, DbInstances>) -> Resul
                 .await
                 .map_err(|e| e.to_string())?;
             }
+            let _ = on_progress.send(FetchProgress::Parsing);
             article.body = process_html(&article.body, 1000, &mut 0);
             Ok(article)
         }

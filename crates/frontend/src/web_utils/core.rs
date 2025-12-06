@@ -18,6 +18,8 @@ extern "C" {
     #[wasm_bindgen(thread_local_v2, js_namespace = ["window", "__TAURI_OS_PLUGIN_INTERNALS__"], js_name = "os_type")]
     pub static OS_TYPE: String;
 
+    #[wasm_bindgen(js_namespace = ["window", "__TAURI_INTERNALS__"], js_name = "unregisterCallback")]
+    pub(super) fn unregister_channel(id: u32);
 }
 
 pub fn is_android() -> bool {

@@ -1,8 +1,9 @@
 use crate::components::ReadViewer;
 use crate::layouts::{AlertContext, AlertStatus};
 use crate::routes::Route;
-use crate::web_utils::invoke_parse;
+use crate::web_utils::{Channel, invoke_parse};
 use shared::models::Article;
+use shared::models::FetchProgress;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -15,15 +16,19 @@ pub struct ArticleDetailProps {
 #[allow(dead_code)]
 #[derive(PartialEq, Clone)]
 pub enum PageMode {
-    FetchingArticle,
-    DownloadingUrl,
-    ParsingPage,
+    FetchingArticle(Option<FetchProgress>),
     PageReturned(Article),
+}
+
+impl PageMode {
+    pub fn is_done(&self) -> bool {
+        matches!(&self, PageMode::PageReturned(_))
+    }
 }
 
 #[function_component(ArticleDetail)]
 pub fn article_detail(props: &ArticleDetailProps) -> Html {
-    let mode = use_state(|| PageMode::FetchingArticle);
+    let mode = use_state(|| PageMode::FetchingArticle(None));
     let navigator = use_navigator().unwrap();
 
     // Load article on mount
@@ -35,20 +40,32 @@ pub fn article_detail(props: &ArticleDetailProps) -> Html {
             let mode = mode.clone();
             spawn_local({
                 let navigator = navigator.clone();
+
+                let progress_listener = {
+                    let mode = mode.clone();
+                    Callback::from(move |event: FetchProgress| {
+                        if !mode.is_done() {
+                            mode.set(PageMode::FetchingArticle(Some(event)));
+                        }
+                    })
+                };
+                let progress_listener = Channel::from(progress_listener);
                 async move {
-                    mode.set(PageMode::FetchingArticle);
-                    match invoke_parse::<Article>(
+                    mode.set(PageMode::FetchingArticle(None));
+                    let result = invoke_parse::<Article>(
                         "get_article",
-                        &Some(serde_json::json!({"id": article_id})),
+                        &Some(
+                            serde_json::json!({"id": article_id, "onProgress": progress_listener}),
+                        ),
                     )
-                    .await
-                    {
+                    .await;
+                    match result {
                         Ok(article) => {
                             mode.set(PageMode::PageReturned(article));
                         }
                         Err(err) => {
                             alert_ctx.alert.emit((
-                                format!("Failed to fetc article: {err}"),
+                                format!("Failed to fetch article: {err}"),
                                 AlertStatus::Error,
                             ));
                             navigator.push(&Route::Home);
@@ -61,20 +78,25 @@ pub fn article_detail(props: &ArticleDetailProps) -> Html {
     }
 
     match &*mode {
-        PageMode::FetchingArticle => html! {
-            <main class="container page" style="display: flex; justify-content: center; align-items: center;">
-              <article style="width: 100%;">
-                <h2 class="ti ti-loader">{"\u{eca3}"}</h2>
-                <progress />
-              </article>
-            </main>
-        },
-        PageMode::DownloadingUrl => html! {
-            <article aria-busy="true"><i class="ti ti-download">{"\u{ea96}"}</i></article>
-        },
-        PageMode::ParsingPage => html! {
-            <article aria-busy="true"><i class="ti ti-ea96">{"\u{eca3}"}</i></article>
-        },
+        PageMode::FetchingArticle(event) => {
+            html! {
+                <main class="container page" style="display: flex; justify-content: center; align-items: center;">
+                  <article style="width: 100%;">
+                    {{
+                       let (_icon, icon_code) = match event {
+                        Some(FetchProgress::Downloading) => ("ti-cloud-download", "\u{ea71}"),
+                        Some(FetchProgress::Parsing) => ("ti-database-search", "\u{fa18}"),
+                        None => ("ti-loader", "\u{eca3}"),
+                    };
+                       html! {
+                           <h2 class="ti">{icon_code}</h2>
+                       }
+                    }}
+                    <progress />
+                  </article>
+                </main>
+            }
+        }
         PageMode::PageReturned(article) => html! {
             <ReadViewer article={article.clone()} />
         },

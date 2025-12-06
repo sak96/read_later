@@ -37,3 +37,9 @@ pub enum IntentEvent {
     TextIntent(String),
     Empty,
 }
+
+#[derive(Clone, Serialize, Deserialize, PartialEq)]
+pub enum FetchProgress {
+    Downloading,
+    Parsing,
+}

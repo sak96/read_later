@@ -68,9 +68,6 @@ pub fn add_article() -> Html {
                     .await
                 {
                     Ok(article) => {
-                        alert_ctx
-                            .alert
-                            .emit(("Added Article".into(), AlertStatus::Success));
                         navigator.push(&Route::Article { id: article.id })
                     }
                     Err(err) => {
