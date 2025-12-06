@@ -18,7 +18,7 @@ pub fn export_button() -> Html {
     };
     html! {
         <button onclick={on_click} type="button">
-            <i class="ti ti-file-export"></i>
+            <i class="ti ti-table-down">{"\u{fa1c}"}</i>
         </button>
     }
 }

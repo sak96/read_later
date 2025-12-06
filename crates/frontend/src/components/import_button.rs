@@ -18,7 +18,7 @@ pub fn import_button() -> Html {
     };
     html! {
         <button onclick={on_click} type="button">
-            <i class="ti ti-file-import"></i>
+            <i class="ti ti-table-import">{"\u{eef9}"}</i>
         </button>
     }
 }

@@ -98,7 +98,7 @@ pub fn settings() -> Html {
                 }
                 <fieldset>
                     <label>
-                        <h2 class="ti ti-database"></h2>
+                        <h2 class="ti ti-database">{"\u{ea88}"}</h2>
                         <div role="group">
                             <ImportButton />
                             <ExportButton />
