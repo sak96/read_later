@@ -29,3 +29,10 @@ pub struct Setting {
     pub value: String,
     pub default_value: String,
 }
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[serde(untagged)]
+pub enum IntentEvent {
+    TextIntent(String),
+    Empty,
+}

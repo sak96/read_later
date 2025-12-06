@@ -1,10 +1,11 @@
 use crate::web_utils::{invoke_no_parse_log_error, invoke_parse_log_error, transform_callback};
+use shared::models::IntentEvent;
 use wasm_bindgen::prelude::*;
 use yew::prelude::*;
 
 pub async fn add_share_listener(callback: Callback<String>) -> u32 {
     // on open check if there is anything in queue.
-    if let Some(url) = invoke_parse_log_error::<String>(
+    if let Some(IntentEvent::TextIntent(url)) = invoke_parse_log_error::<IntentEvent>(
         "plugin:mobile-sharetarget|pop_intent_queue_and_extract_text",
         &None,
     )
@@ -16,7 +17,7 @@ pub async fn add_share_listener(callback: Callback<String>) -> u32 {
     let closure = Closure::wrap(Box::new(move |_| {
         let callback = callback.clone();
         wasm_bindgen_futures::spawn_local(async move {
-            if let Some(url) = invoke_parse_log_error::<String>(
+            if let Some(IntentEvent::TextIntent(url)) = invoke_parse_log_error::<IntentEvent>(
                 "plugin:mobile-sharetarget|pop_intent_queue_and_extract_text",
                 &None,
             )
