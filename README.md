@@ -45,14 +45,18 @@ cargo tauri android build
 
 ## Screenshots
 
-|![home](screenshots/home.png)|![settings](screenshots/settings.png)|
+|![share](screenshots/1_share.png)|![home](screenshots/2_home.png)|
 |---|---|
-|![light](screenshots/light.png)|![dark](screenshots/dark.png)|
+|![tts](screenshots/3_tts.png)|![settings](screenshots/4_settings.png)|
+|![light](screenshots/5_light.png)|![dark](screenshots/6_dark.png)|
 
 ## Roadmap
 
-- Feature: Import and Export of URLs.
-- Chore: Move model to command place to access by Tauri and Yew.
+- export and import need confirmation pages.
+- rework css for code block.
+- rework tts parsing logic.
+- image handling during offline.
+- keep awake during tts.
 
 ## Acknowledgment
 
