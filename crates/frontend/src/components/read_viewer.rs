@@ -1,7 +1,7 @@
 use crate::components::{HomeButton, LinkPopup, SpeakBar};
 use crate::routes::Route;
 use crate::web_utils::{invoke_no_parse_log_error, open_url, set_callback_to_link};
-use serde::{Deserialize, Serialize};
+use shared::models::Article;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -9,14 +9,6 @@ use yew_router::prelude::*;
 #[derive(Properties, PartialEq, Clone)]
 pub struct ReadViewerProps {
     pub article: Article,
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Article {
-    pub id: i32,
-    pub title: String,
-    pub body: String,
-    pub url: String,
 }
 
 #[function_component(ReadViewer)]
@@ -84,8 +76,8 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     };
 
     html! {
-        <div class="container page">
-            <article ref={div_ref.clone()}>
+        <div class="container">
+            <article ref={div_ref.clone()} class="page">
                 <h1>{&props.article.title}</h1>
                 {Html::from_html_unchecked(props.article.body.clone().into())}
             </article>
@@ -102,7 +94,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
               </article>
             </dialog>
             // Action area
-            <aside style="position: sticky; bottom: 0;">
+            <aside style="position: sticky; bottom: var(--safe-area-inset-bottom, 0);">
                 <nav>
                     <SpeakBar {div_ref} />
                     <div role="group">
