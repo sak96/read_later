@@ -19,6 +19,7 @@ pub use crate::web_utils::scroll::*;
 pub use crate::web_utils::settings::*;
 pub use crate::web_utils::share::*;
 pub use crate::web_utils::speak::*;
+pub use crate::web_utils::import_export::*;
 
 pub async fn sleep(ms: u32) {
     let promise = js_sys::Promise::new(&mut |resolve, _reject| {

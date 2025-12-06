@@ -3,7 +3,7 @@ use crate::parse::process_html;
 pub use import_export::*;
 use readabilityrs::Readability;
 use shared::models::*;
-use sqlx::{query, query_as};
+use sqlx::{query, query_as, query_scalar};
 use std::io::{BufReader, BufWriter};
 use tauri::State;
 use tauri_plugin_http::reqwest;
@@ -171,21 +171,29 @@ mod import_export {
     use std::fs::File;
     use tauri_plugin_dialog::DialogExt;
     #[tauri::command]
-    pub async fn pick_import_file(app: tauri::AppHandle) -> Result<(), String> {
+    pub async fn pick_import_file(
+        app: tauri::AppHandle,
+        db_instances: State<'_, DbInstances>,
+    ) -> Result<(), String> {
         if let Some(file_path) = app.dialog().file().blocking_pick_file() {
             let path = file_path.as_path().ok_or("could not get a path")?;
             let file = File::open(path).map_err(|e| format!("Failed to open file: {e}"))?;
             let reader = BufReader::new(file);
-            let url_list: UrlList = serde_json::from_reader(reader)
-                .map_err(|e| format!("Failed to parse file: {e}"))?;
-            println!("{url_list:?}");
+            for url in serde_json::from_reader::<_, Vec<String>>(reader)
+                .map_err(|e| format!("Failed to parse file: {e}"))?
+            {
+                add_article(url, db_instances.clone()).await?;
+            }
             Ok(())
         } else {
             Err("No file selected".into())
         }
     }
     #[tauri::command]
-    pub async fn pick_export_file(app: tauri::AppHandle) -> Result<(), String> {
+    pub async fn pick_export_file(
+        app: tauri::AppHandle,
+        db_instances: State<'_, DbInstances>,
+    ) -> Result<(), String> {
         if let Some(file_path) = app
             .dialog()
             .file()
@@ -195,7 +203,17 @@ mod import_export {
             let path = file_path.as_path().ok_or("could not get a path")?;
             let file = File::create(path).map_err(|e| format!("could not create path: {e}"))?;
             let writer = BufWriter::new(file);
-            serde_json::to_writer(writer, &UrlList { urls: vec![] })
+            let instances = db_instances.0.read().await;
+            let db = instances.get(DB_URL).ok_or("db not loaded")?;
+            let urls = match db {
+                tauri_plugin_sql::DbPool::Sqlite(pool) => {
+                    query_scalar::<_, String>("SELECT url FROM articles ORDER BY created_at")
+                        .fetch_all(pool)
+                        .await
+                        .map_err(|e| e.to_string())?
+                }
+            };
+            serde_json::to_writer(writer, &urls)
                 .map_err(|e| format!("Failed to write to file: {e}"))?;
             Ok(())
         } else {
@@ -209,7 +227,10 @@ mod import_export {
     use super::*;
     use tauri_plugin_android_fs::AndroidFsExt;
     #[tauri::command]
-    pub async fn pick_import_file(app: tauri::AppHandle) -> Result<(), String> {
+    pub async fn pick_import_file(
+        app: tauri::AppHandle,
+        db_instances: State<'_, DbInstances>,
+    ) -> Result<(), String> {
         let api = app.android_fs();
         if let Ok(Some(file_path)) =
             app.android_fs()
@@ -220,16 +241,21 @@ mod import_export {
                 .open_file_readable(&file_path)
                 .map_err(|err| err.to_string())?;
             let reader = BufReader::new(file);
-            let url_list: UrlList = serde_json::from_reader(reader)
-                .map_err(|e| format!("Failed to parse file: {e}"))?;
-            println!("{url_list:?}");
+            for url in serde_json::from_reader::<_, Vec<String>>(reader)
+                .map_err(|e| format!("Failed to parse file: {e}"))?
+            {
+                add_article(url, db_instances.clone()).await?;
+            }
             Ok(())
         } else {
             Err("No file selected".into())
         }
     }
     #[tauri::command]
-    pub async fn pick_export_file(app: tauri::AppHandle) -> Result<(), String> {
+    pub async fn pick_export_file(
+        app: tauri::AppHandle,
+        db_instances: State<'_, DbInstances>,
+    ) -> Result<(), String> {
         let api = app.android_fs();
         if let Ok(Some(file_path)) = app.android_fs().file_picker().save_file(
             None,
@@ -241,7 +267,17 @@ mod import_export {
                 .open_file_writable(&file_path)
                 .map_err(|err| err.to_string())?;
             let writer = BufWriter::new(file);
-            serde_json::to_writer(writer, &UrlList { urls: vec![] })
+            let instances = db_instances.0.read().await;
+            let db = instances.get(DB_URL).ok_or("db not loaded")?;
+            let urls = match db {
+                tauri_plugin_sql::DbPool::Sqlite(pool) => {
+                    query_scalar::<_, String>("SELECT url FROM articles ORDER BY created_at")
+                        .fetch_all(pool)
+                        .await
+                        .map_err(|e| e.to_string())?
+                }
+            };
+            serde_json::to_writer(writer, &urls)
                 .map_err(|e| format!("Failed to write to file: {e}"))?;
             Ok(())
         } else {
