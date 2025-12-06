@@ -22,7 +22,12 @@ pub fn get_migrations() -> Vec<Migration> {
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
+pub struct ArticleId {
+    pub id: i32,
+}
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
 pub struct Article {
+    pub id: i32,
     pub title: String,
     pub body: String,
     pub url: String,

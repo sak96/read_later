@@ -31,11 +31,51 @@ pub async fn get_article(id: i32, db_instances: State<'_, DbInstances>) -> Resul
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
             let mut article =
-                query_as::<_, Article>("SELECT title, body, url FROM articles WHERE id = ?")
+                query_as::<_, Article>("SELECT id, title, body, url FROM articles WHERE id = ?")
                     .bind(id)
                     .fetch_one(pool)
                     .await
                     .map_err(|e| e.to_string())?;
+            if article.title.is_empty() {
+                let html = reqwest::get(&article.url)
+                    .await
+                    .map_err(|e| e.to_string())?
+                    .text()
+                    .await
+                    .map_err(|e| e.to_string())?;
+
+                // Readability is not send.
+                let article_data = {
+                    Readability::new(&html, Some(&article.url), None)
+                        .map_err(|e| format!("Failed to parse: {:?}", e))?
+                        .parse()
+                        .ok_or("Failed to extract article")?
+                };
+
+                let title = match article_data.title {
+                    Some(v) if v.is_empty() => "Untitled".into(),
+                    None => "Untitled".into(),
+                    Some(v) => v,
+                };
+                let body = article_data.content.unwrap_or_default();
+
+                // could be update
+                article = query_as::<_, Article>(
+                    r#"INSERT INTO articles
+                        (id, title, body, url)
+                        VALUES ($1, $2, $3, $4)
+                      ON CONFLICT(id) do update SET
+                        title = $2, body = $3, url = $3
+                      RETURNING id, title, body, created_at, url"#,
+                )
+                .bind(article.id)
+                .bind(title)
+                .bind(body)
+                .bind(&article.url)
+                .fetch_one(pool)
+                .await
+                .map_err(|e| e.to_string())?;
+            }
             article.body = process_html(&article.body, 1000, &mut 0);
             Ok(article)
         }
@@ -51,29 +91,9 @@ pub async fn add_article(
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            let html = reqwest::get(&url)
-                .await
-                .map_err(|e| e.to_string())?
-                .text()
-                .await
-                .map_err(|e| e.to_string())?;
-
-            // Readability is not send.
-            let article_data = {
-                Readability::new(&html, Some(&url), None)
-                    .map_err(|e| format!("Failed to parse: {:?}", e))?
-                    .parse()
-                    .ok_or("Failed to extract article")?
-            };
-
-            let title = article_data.title.unwrap_or_else(|| "Untitled".to_string());
-            let body = article_data.content.unwrap_or_default();
-
             let article = query_as::<_, Article>(
-                "INSERT INTO articles (title, body, url) VALUES (?, ?, ?) RETURNING id, title, body, created_at, url",
+                "INSERT INTO articles (title, body, url) VALUES ('', '', $1) RETURNING id, title, body, created_at, url",
             )
-            .bind(title)
-            .bind(body)
             .bind(url)
             .fetch_one(pool)
             .await

@@ -6,6 +6,7 @@ pub struct Props {
     pub children: Html,
 }
 
+#[allow(dead_code)]
 pub enum AlertStatus {
     Success,
     Info,
@@ -30,7 +31,7 @@ pub fn theme_provider(props: &Props) -> Html {
             status.set(new_status);
             message.set(Some(new_message));
             wasm_bindgen_futures::spawn_local(async move {
-                sleep(2500).await;
+                sleep(5000).await;
                 message.set(None);
             })
         })

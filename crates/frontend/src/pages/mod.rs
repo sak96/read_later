@@ -4,6 +4,6 @@ mod home;
 mod settings;
 
 pub use add_article::AddArticle;
-pub use article_detail::ReadViewer as ArticleDetail;
+pub use article_detail::ArticleDetail;
 pub use home::Home;
 pub use settings::Settings;
