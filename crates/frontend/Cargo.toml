@@ -16,7 +16,6 @@ urlencoding = "2.1.3"
 gloo-net = "0.5"
 gloo-utils = "0.2"
 shared = { path = "../shared" }
-unicode-segmentation = "1.12.0"
 
 [package.metadata.rust-analyzer]
 cargo.target = "wasm32-unknown-unknown"

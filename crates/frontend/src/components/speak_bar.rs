@@ -5,7 +5,6 @@ use crate::{
         scroll_to_top, set_setting, speak, stop_speak,
     },
 };
-use unicode_segmentation::UnicodeSegmentation;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
