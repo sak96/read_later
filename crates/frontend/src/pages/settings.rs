@@ -138,7 +138,7 @@ pub fn settings() -> Html {
                                 <a
                                     class="outline"
                                     onclick={open_external_url.reform(move |_| "https://github.com/sak96/read_later/blob/master/PRIVACY_POLICY.md".to_string())}>
-                                    {"**Last Updated:** December 7, 2025"}
+                                    {"Last Updated: December 7, 2025"}
                                 </a>
                             </td>
                         </tr>
