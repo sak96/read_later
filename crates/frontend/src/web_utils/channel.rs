@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize, Serializer};
 use std::marker::PhantomData;
 use wasm_bindgen::prelude::*;
 use yew::prelude::*;
+
+#[derive(Clone)]
 pub struct Channel<T> {
     id: u32,
     _type: PhantomData<T>,

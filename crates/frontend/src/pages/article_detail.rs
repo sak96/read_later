@@ -30,18 +30,22 @@ impl PageMode {
 pub fn article_detail(props: &ArticleDetailProps) -> Html {
     let mode = use_state(|| PageMode::FetchingArticle(None));
     let navigator = use_navigator().unwrap();
+    let progress_listener = use_mut_ref(|| None::<Channel<FetchProgress>>);
 
     // Load article on mount
     {
         let alert_ctx = use_context::<AlertContext>().expect("AlertContext missing");
         let mode = mode.clone();
+        let navigator = navigator.clone();
+        let progress_listener = progress_listener.clone();
         use_effect_with(props.id, move |article_id| {
             let article_id = *article_id;
             let mode = mode.clone();
+            let progress_listener = progress_listener.clone();
             spawn_local({
                 let navigator = navigator.clone();
 
-                let progress_listener = {
+                let listener = {
                     let mode = mode.clone();
                     Callback::from(move |event: FetchProgress| {
                         if !mode.is_done() {
@@ -49,14 +53,13 @@ pub fn article_detail(props: &ArticleDetailProps) -> Html {
                         }
                     })
                 };
-                let progress_listener = Channel::from(progress_listener);
+                let on_progress = Some(Channel::from(listener));
+                progress_listener.replace(on_progress.clone());
                 async move {
                     mode.set(PageMode::FetchingArticle(None));
                     let result = invoke_parse::<Article>(
                         "get_article",
-                        &Some(
-                            serde_json::json!({"id": article_id, "onProgress": progress_listener}),
-                        ),
+                        &Some(serde_json::json!({"id": article_id, "onProgress": on_progress})),
                     )
                     .await;
                     match result {
@@ -73,7 +76,10 @@ pub fn article_detail(props: &ArticleDetailProps) -> Html {
                     }
                 }
             });
-            || ()
+            let progress_listener = progress_listener.clone();
+            move || {
+                (*progress_listener).take();
+            }
         });
     }
 
