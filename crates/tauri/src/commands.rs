@@ -44,7 +44,9 @@ pub async fn get_article(
                     .await
                     .map_err(|e| e.to_string())?;
             if article.title.is_empty() {
-                let _ = on_progress.send(FetchProgress::Downloading);
+                on_progress
+                    .send(FetchProgress::Downloading(article.url.to_string()))
+                    .map_err(|e| e.to_string())?;
                 let html = reqwest::get(&article.url)
                     .await
                     .map_err(|e| e.to_string())?
@@ -84,7 +86,9 @@ pub async fn get_article(
                 .await
                 .map_err(|e| e.to_string())?;
             }
-            let _ = on_progress.send(FetchProgress::Parsing);
+            on_progress
+                .send(FetchProgress::Parsing(article.title.to_string()))
+                .map_err(|e| e.to_string())?;
             article.body = process_html(&article.body, 1000, &mut 0);
             Ok(article)
         }

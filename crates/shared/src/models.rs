@@ -40,6 +40,6 @@ pub enum IntentEvent {
 
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub enum FetchProgress {
-    Downloading,
-    Parsing,
+    Downloading(String),
+    Parsing(String),
 }

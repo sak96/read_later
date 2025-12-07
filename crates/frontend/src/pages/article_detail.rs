@@ -1,7 +1,7 @@
 use crate::components::ReadViewer;
 use crate::layouts::{AlertContext, AlertStatus};
 use crate::routes::Route;
-use crate::web_utils::{Channel, invoke_parse};
+use crate::web_utils::{Channel, invoke_no_parse_log_error, invoke_parse};
 use shared::models::Article;
 use shared::models::FetchProgress;
 use wasm_bindgen_futures::spawn_local;
@@ -71,7 +71,14 @@ pub fn article_detail(props: &ArticleDetailProps) -> Html {
                                 format!("Failed to fetch article: {err}"),
                                 AlertStatus::Error,
                             ));
-                            navigator.push(&Route::Home);
+                            spawn_local(async move {
+                                invoke_no_parse_log_error(
+                                    "delete_article",
+                                    &Some(serde_json::json!({"id": article_id})),
+                                )
+                                .await;
+                                navigator.push(&Route::Home);
+                            });
                         }
                     }
                 }
@@ -83,22 +90,41 @@ pub fn article_detail(props: &ArticleDetailProps) -> Html {
         });
     }
 
+    // Handle delete
+    let delete_article = {
+        let article_id = props.id;
+        Callback::from(move |_| {
+            let navigator = navigator.clone();
+            spawn_local(async move {
+                invoke_no_parse_log_error(
+                    "delete_article",
+                    &Some(serde_json::json!({"id": article_id})),
+                )
+                .await;
+                navigator.push(&Route::Home);
+            });
+        })
+    };
+
     match &*mode {
         PageMode::FetchingArticle(event) => {
             html! {
                 <main class="container page" style="display: flex; justify-content: center; align-items: center;">
                   <article style="width: 100%;">
                     {{
-                       let (_icon, icon_code) = match event {
-                        Some(FetchProgress::Downloading) => ("ti-cloud-download", "\u{ea71}"),
-                        Some(FetchProgress::Parsing) => ("ti-database-search", "\u{fa18}"),
-                        None => ("ti-loader", "\u{eca3}"),
+                       let (_icon, icon_code, title) = match event {
+                        Some(FetchProgress::Downloading(title)) => ("ti-cloud-download", "\u{ea71}", title.to_string()),
+                        Some(FetchProgress::Parsing(title)) => ("ti-database-search", "\u{fa18}", title.to_string()),
+                        None => ("ti-loader", "\u{eca3}", "...".to_string()),
                     };
                        html! {
-                           <h2 class="ti">{icon_code}</h2>
+                           <h2 class="ti">{icon_code}<p>{title}</p></h2>
                        }
                     }}
                     <progress />
+                    <footer dir="rtl">
+                        <button class="secondary" onclick={delete_article}><i class="ti ti-trash-x">{"\u{f784}"}</i></button>
+                    </footer>
                   </article>
                 </main>
             }
