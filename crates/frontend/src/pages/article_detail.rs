@@ -31,13 +31,14 @@ pub fn article_detail(props: &ArticleDetailProps) -> Html {
     let mode = use_state(|| PageMode::FetchingArticle(None));
     let navigator = use_navigator().unwrap();
     let progress_listener = use_mut_ref(|| None::<Channel<FetchProgress>>);
+    let alert_ctx = use_context::<AlertContext>().expect("AlertContext missing");
 
     // Load article on mount
     {
-        let alert_ctx = use_context::<AlertContext>().expect("AlertContext missing");
         let mode = mode.clone();
         let navigator = navigator.clone();
         let progress_listener = progress_listener.clone();
+        let alert_ctx = alert_ctx.clone();
         use_effect_with(props.id, move |article_id| {
             let article_id = *article_id;
             let mode = mode.clone();
@@ -55,6 +56,8 @@ pub fn article_detail(props: &ArticleDetailProps) -> Html {
                 };
                 let on_progress = Some(Channel::from(listener));
                 progress_listener.replace(on_progress.clone());
+                {
+                    let progress_listener = progress_listener.clone();
                 async move {
                     mode.set(PageMode::FetchingArticle(None));
                     let result = invoke_parse::<Article>(
@@ -67,10 +70,12 @@ pub fn article_detail(props: &ArticleDetailProps) -> Html {
                             mode.set(PageMode::PageReturned(article));
                         }
                         Err(err) => {
-                            alert_ctx.alert.emit((
-                                format!("Failed to fetch article: {err}"),
-                                AlertStatus::Error,
-                            ));
+                            if (progress_listener).borrow().is_some() {
+                                alert_ctx.alert.emit((
+                                    format!("Failed to fetch article: {err}"),
+                                    AlertStatus::Error,
+                                ));
+                            }
                             spawn_local(async move {
                                 invoke_no_parse_log_error(
                                     "delete_article",
@@ -81,6 +86,7 @@ pub fn article_detail(props: &ArticleDetailProps) -> Html {
                             });
                         }
                     }
+                }
                 }
             });
             let progress_listener = progress_listener.clone();
@@ -93,14 +99,19 @@ pub fn article_detail(props: &ArticleDetailProps) -> Html {
     // Handle delete
     let delete_article = {
         let article_id = props.id;
+        let alert_ctx = alert_ctx.clone();
         Callback::from(move |_| {
             let navigator = navigator.clone();
+            let alert_ctx = alert_ctx.clone();
             spawn_local(async move {
                 invoke_no_parse_log_error(
                     "delete_article",
                     &Some(serde_json::json!({"id": article_id})),
                 )
                 .await;
+                alert_ctx
+                    .alert
+                    .emit(("Deleted article.".to_string(), AlertStatus::Success));
                 navigator.push(&Route::Home);
             });
         })
@@ -122,9 +133,13 @@ pub fn article_detail(props: &ArticleDetailProps) -> Html {
                        }
                     }}
                     <progress />
-                    <footer dir="rtl">
-                        <button class="secondary" onclick={delete_article}><i class="ti ti-trash-x">{"\u{f784}"}</i></button>
-                    </footer>
+                    if matches!(event, Some(FetchProgress::Downloading(_))) {
+                            <footer dir="rtl">
+                                <button class="secondary" onclick={delete_article}>
+                                    <i class="ti ti-trash-x">{"\u{f784}"}</i>
+                                </button>
+                            </footer>
+                    }
                   </article>
                 </main>
             }

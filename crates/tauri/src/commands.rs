@@ -71,12 +71,7 @@ pub async fn get_article(
 
                 // could be update
                 article = query_as::<_, Article>(
-                    r#"INSERT INTO articles
-                        (id, title, body, url)
-                        VALUES ($1, $2, $3, $4)
-                      ON CONFLICT(id) do update SET
-                        title = $2, body = $3, url = $4
-                      RETURNING id, title, body, created_at, url"#,
+                    "UPDATE articles SET title = $2, body = $3, url = $4 where id = $1 RETURNING id, title, body, created_at, url",
                 )
                 .bind(article.id)
                 .bind(title)
