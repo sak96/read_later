@@ -83,11 +83,7 @@ pub fn speak_bar(props: &SpeakBarProps) -> Html {
                         if let Some(para_text) = extract_text(&div_ref, *checkpoint) {
                             let div_ref = div_ref.clone();
                             scroll_to_center(&div_ref, *checkpoint);
-                            for sentences in para_text.unicode_sentences() {
-                                if *mode == ViewMode::Reader {
-                                    speak(sentences.to_string(), *rate).await;
-                                }
-                            }
+                            speak(para_text.to_string(), *rate).await;
                             checkpoint.set(*checkpoint + 1);
                         } else {
                             mode.set(ViewMode::View);
@@ -110,11 +106,11 @@ pub fn speak_bar(props: &SpeakBarProps) -> Html {
     html! {
         <>
             if is_android() && * tts_enabled{
-                <style>{{
-                    let current_para = *checkpoint;
-                    format!("#para_{current_para} {{border: var(--pico-border-width) solid var(--pico-primary-hover);border-radius: var(--pico-border-radius)}}")
-                }}</style>
                 if *mode == ViewMode::View {
+                    <style>{{
+                        let current_para = *checkpoint;
+                        format!(".tts_para_{current_para} {{border: var(--pico-border-width) solid var(--pico-primary-hover);border-radius: var(--pico-border-radius)}}")
+                    }}</style>
                     <fieldset role="group">
                         <button onclick={on_mode_switch.clone()}>
                             <i class="ti ti-volume">{"\u{eb51}"}</i>
@@ -123,6 +119,10 @@ pub fn speak_bar(props: &SpeakBarProps) -> Html {
                         <button onclick={scroll_to_checkpoint}><i class="ti ti-player-skip-back">{"\u{f693}"}</i></button>
                     </fieldset>
                 } else {
+                    <style>{{
+                        let current_para = *checkpoint;
+                        format!(".tts_para_{current_para} {{background-color: var(--pico-mark-background-color) !important; color: var(--pico-mark-color) !important; }}")
+                    }}</style>
                     <fieldset role="group">
                         <button onclick={on_mode_switch}><i class="ti ti-player-pause">{"\u{f690}"}</i></button>
                         <SpeakRate {on_rate_change} />

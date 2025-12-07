@@ -98,6 +98,7 @@ name = "article-manager"
 version = "0.1.1"
 dependencies = [
  "chrono",
+ "html5ever 0.25.2",
  "kuchiki",
  "readabilityrs",
  "serde",
