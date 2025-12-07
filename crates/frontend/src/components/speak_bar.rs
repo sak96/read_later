@@ -5,6 +5,7 @@ use crate::{
         scroll_to_top, set_setting, speak, stop_speak,
     },
 };
+use unicode_segmentation::UnicodeSegmentation;
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
@@ -82,7 +83,11 @@ pub fn speak_bar(props: &SpeakBarProps) -> Html {
                         if let Some(para_text) = extract_text(&div_ref, *checkpoint) {
                             let div_ref = div_ref.clone();
                             scroll_to_center(&div_ref, *checkpoint);
-                            speak(para_text.clone(), *rate).await;
+                            for sentences in para_text.unicode_sentences() {
+                                if *mode == ViewMode::Reader {
+                                    speak(sentences.to_string(), *rate).await;
+                                }
+                            }
                             checkpoint.set(*checkpoint + 1);
                         } else {
                             mode.set(ViewMode::View);

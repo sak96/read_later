@@ -4450,6 +4450,7 @@ dependencies = [
  "serde-wasm-bindgen 0.6.5",
  "serde_json",
  "shared",
+ "unicode-segmentation",
  "urlencoding",
  "wasm-bindgen",
  "wasm-bindgen-futures",

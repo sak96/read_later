@@ -4,7 +4,7 @@ use yew::prelude::*;
 
 pub fn extract_text(div: &NodeRef, id: usize) -> Option<String> {
     if let Some(div) = div.cast::<Element>()
-        && let Ok(Some(element)) = div.query_selector(&format!("#para_{}", id))
+        && let Ok(Some(element)) = div.query_selector(&format!(".tts_para_{}", id))
     {
         element.text_content()
     } else {
@@ -17,7 +17,7 @@ pub fn find_visible_para_id() -> usize {
     let document = window.document().expect("should have a document on window");
     let window_height = window.inner_height().unwrap().as_f64().unwrap_or(0.0);
     let mut id = 0;
-    while let Some(element) = document.get_element_by_id(&format!("para_{}", id)) {
+    while let Ok(Some(element)) = document.query_selector(&format!(".tts_para_{}", id)) {
         let rect = element.get_bounding_client_rect();
         if rect.bottom() >= 0.0 && rect.bottom() <= window_height {
             return id;

@@ -84,7 +84,7 @@ pub async fn get_article(
             on_progress
                 .send(FetchProgress::Parsing(article.title.to_string()))
                 .map_err(|e| e.to_string())?;
-            article.body = process_html(&article.body, 1000, &mut 0);
+            article.body = process_html(&article.body);
             Ok(article)
         }
     }
