@@ -32,15 +32,6 @@ tauri-plugin-android-fs = "23.0.1"
 name = "article_manager_lib"
 crate-type = ["staticlib", "cdylib", "lib"]
 
-[profile.dev]
-incremental = true
-opt-level = 0
-debug = true
-
-[profile.dev.package."*"]
-opt-level = 1
-debug = false
-
 [package.metadata.rust-analyzer]
 cargo.targetDir = "target/analyzer/tauri"
 cargo.allTargets = false

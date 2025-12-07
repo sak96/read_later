@@ -12,3 +12,12 @@ codegen-units = 1 # Compile crates one after another so the compiler can optimiz
 lto = true # Enables link time optimizations
 opt-level = "s" # Optimize for binary size
 strip = true # Remove debug symbols
+
+[profile.dev]
+incremental = true
+opt-level = 0
+debug = true
+
+[profile.dev.package."*"]
+opt-level = 1
+debug = false
