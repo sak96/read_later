@@ -132,6 +132,16 @@ pub fn settings() -> Html {
                             <th><i class="ti ti-tag">{"Version \u{ff02}"}</i></th>
                             <td>{(*version).to_owned()}</td>
                         </tr>
+                        <tr>
+                            <th><i class="ti ti-file-text-shield">{"\u{100f2}"}</i></th>
+                            <td>
+                                <a
+                                    class="outline"
+                                    onclick={open_external_url.reform(move |_| "https://github.com/sak96/read_later/blob/master/PRIVACY_POLICY.md".to_string())}>
+                                    {"**Last Updated:** December 7, 2025"}
+                                </a>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </form>

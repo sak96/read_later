@@ -143,8 +143,7 @@ Data stored locally on your device is retained indefinitely until you:
 We may update this Privacy Policy from time to time to reflect changes in our practices, technology, legal requirements, or other factors. We will notify you of material changes by:
 
 - Updating the "Last Updated" date at the top of this policy
-- Providing notice within the App
-- Requiring your consent if required by applicable law
+- Providing "Last Updated" date in the App Settings Page
 
 Your continued use of the App after changes constitutes your acceptance of the updated Privacy Policy.
 
@@ -157,4 +156,3 @@ If you have questions, concerns, or requests regarding this Privacy Policy or ou
 We are committed to working with you to resolve any privacy concerns.
 
 **Thank you for using sak96's Read-Later App!**
-
