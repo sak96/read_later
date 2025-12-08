@@ -2,7 +2,7 @@
 
 Read it later app done using Tauri. Mainly for android.
 
-![cover](screenshots/read-later-cover.png)
+![cover](fastlane/metadata/android/en-US/images/featureGraphic.png)
 
 ## Install
 
@@ -35,6 +35,12 @@ Setup environment as per [tauri](https://v2.tauri.app/start/prerequisites/#andro
 - `ANDROID_HOME`: Possibly in `~/Android/Sdk`.
 - `NDK_HOME`: Extracted NDK package folder. (e.g.: `android-ndk-r27d`)
 
+Setup Cargo tools:
+
+```bash
+cargo install wasm-bindgen-cli wasm-opt tauri-cli trunk
+```
+
 To develop use (needs to be in same network):
 
 ```bash
@@ -51,10 +57,10 @@ cargo tauri android build
 
 ## Screenshots
 
-|![share](screenshots/1_share.png)|![home](screenshots/2_home.png)|
+|![share](fastlane/metadata/android/en-US/images/phoneScreenshots/1_share.png)|![home](fastlane/metadata/android/en-US/images/phoneScreenshots/2_home.png)|
 |---|---|
-|![tts](screenshots/3_tts.png)|![settings](screenshots/4_settings.png)|
-|![light](screenshots/5_light.png)|![dark](screenshots/6_dark.png)|
+|![tts](fastlane/metadata/android/en-US/images/phoneScreenshots/3_tts.png)|![settings](fastlane/metadata/android/en-US/images/phoneScreenshots/4_settings.png)|
+|![light](fastlane/metadata/android/en-US/images/phoneScreenshots/5_light.png)|![dark](fastlane/metadata/android/en-US/images/phoneScreenshots/6_dark.png)|
 
 ## Roadmap
 
