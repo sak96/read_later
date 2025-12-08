@@ -11,8 +11,11 @@ Use APK from [releases.](https://github.com/sak96/read_later/releases)
 ## Setup
 
 ```bash
-cargo install trunk tauri-cli
-cargo install wasm-bindgen-cli
+cargo install wasm-bindgen-cli@0.2.106 wasm-opt@0.116.1 tauri-cli@2.9.5 trunk@0.21.14
+```
+
+```bash
+rustup target add wasm32-unknown-unknown
 ```
 
 ## Development
@@ -34,12 +37,6 @@ Setup environment as per [tauri](https://v2.tauri.app/start/prerequisites/#andro
 - `JAVA_HOME`: can point to jbr folder from android studio.
 - `ANDROID_HOME`: Possibly in `~/Android/Sdk`.
 - `NDK_HOME`: Extracted NDK package folder. (e.g.: `android-ndk-r27d`)
-
-Setup Cargo tools:
-
-```bash
-cargo install wasm-bindgen-cli@0.2.106 wasm-opt@0.116.1 tauri-cli@2.9.5 trunk@0.21.14
-```
 
 To develop use (needs to be in same network):
 
