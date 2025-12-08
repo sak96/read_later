@@ -52,7 +52,7 @@ To build use:
 Follow code signing as per [here](https://tauri.app/distribute/sign/android/).
 
 ```bash
-cargo tauri android build
+cargo tauri android build  --split-per-abi
 ```
 
 ## Screenshots
