@@ -2,6 +2,12 @@
 
 Read it later app done using Tauri. Mainly for android.
 
+![cover](screenshots/read-later-cover.png)
+
+## Install
+
+Use APK from [releases.](https://github.com/sak96/read_later/releases)
+
 ## Setup
 
 ```bash
