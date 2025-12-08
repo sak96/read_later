@@ -38,7 +38,7 @@ Setup environment as per [tauri](https://v2.tauri.app/start/prerequisites/#andro
 Setup Cargo tools:
 
 ```bash
-cargo install wasm-bindgen-cli wasm-opt tauri-cli trunk
+cargo install wasm-bindgen-cli@0.2.106 wasm-opt@0.116.1 tauri-cli@2.9.5 trunk@0.21.14
 ```
 
 To develop use (needs to be in same network):
