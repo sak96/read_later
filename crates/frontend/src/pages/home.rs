@@ -35,7 +35,7 @@ pub fn home() -> Html {
             spawn_local(async move {
                 if let Some(data) = invoke_parse_log_error::<Vec<ArticleEntry>>(
                     "get_articles",
-                    &Some(serde_json::json!({ "offset": articles.borrow().len() / 2})),
+                    &Some(serde_json::json!({ "offset": articles.borrow().len()})),
                 )
                 .await
                 {
