@@ -15,7 +15,11 @@ pub fn extract_text(div: &NodeRef, id: usize) -> Option<String> {
 pub fn find_visible_para_id() -> usize {
     let window = window().expect("no global `window` exists");
     let document = window.document().expect("should have a document on window");
-    let window_height = window.inner_height().unwrap().as_f64().unwrap_or(0.0);
+    let window_height = window
+        .inner_height()
+        .ok()
+        .and_then(|x| x.as_f64())
+        .unwrap_or(0.0);
     let mut id = 0;
     while let Ok(Some(element)) = document.query_selector(&format!(".tts_para_{id}")) {
         let rect = element.get_bounding_client_rect();
@@ -29,10 +33,15 @@ pub fn find_visible_para_id() -> usize {
 
 pub fn set_callback_to_link(div: &NodeRef, on_click: Callback<String>, url: String) {
     if let Some(div) = div.cast::<Element>() {
-        let anchors = div.query_selector_all("a").unwrap();
+        let anchors = if let Ok(anchors) = div.query_selector_all("a") {
+            anchors
+        } else {
+            return;
+        };
         for i in 0..anchors.length() {
-            if let Some(anchor) = anchors.item(i) {
-                let anchor = anchor.dyn_into::<HtmlAnchorElement>().unwrap();
+            if let Some(anchor) = anchors.item(i)
+                && let Ok(anchor) = anchor.dyn_into::<HtmlAnchorElement>()
+            {
                 let mut href = anchor.href();
                 if href.starts_with('#') {
                     href = format!("{url}{href}");
