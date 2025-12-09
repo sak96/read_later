@@ -39,3 +39,4 @@ cargo.allTargets = false
 procMacro.enable = false
 check.workspace = false
 cachePriming.enable = false
+checkOnSave = false

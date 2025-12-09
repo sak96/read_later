@@ -92,11 +92,11 @@ pub fn add_article() -> Html {
                     />
                     <div role="group">
                         <button class="outline" type="button" onclick={paste_from_clipboard} >
-                            <i class="ti ti-clipboard">{"\u{100cc}"}</i>
+                            <i class="sui sui-paste">{"\u{f0ea}"}</i>
                         </button>
                         <div role="group">
                             <button type="submit">
-                                <i class="ti ti-device-floppy">{"\u{eb62}"}</i>
+                                <i class="sui sui-save">{"\u{f0c7}"}</i>
                             </button>
                         </div>
                     </div>

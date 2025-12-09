@@ -3,7 +3,6 @@ use yew::prelude::*;
 
 #[component(ExportButton)]
 pub fn export_button() -> Html {
-    // TODO: add loading screen
     let open = use_state(|| false);
     let on_click = {
         let open = open.clone();
@@ -18,7 +17,7 @@ pub fn export_button() -> Html {
     };
     html! {
         <button onclick={on_click} type="button">
-            <i class="ti ti-table-down">{"\u{fa1c}"}</i>
+            <i class="sui sui-download">{"\u{f019}"}</i>
         </button>
     }
 }

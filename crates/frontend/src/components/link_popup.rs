@@ -35,12 +35,12 @@ pub fn link_popup(props: &LinkPopupProps) -> Html {
                 <article>
                     <header>
                        <button aria-label="Close" onclick={on_close} rel="prev"></button>
-                       <h2 class="ti ti-world-www">{"\u{f38f}"}</h2>
+                       <h2 class="sui sui-globe">{"\u{f0ac}"}</h2>
                     </header>
                     <strong>{url.to_owned()}</strong>
                     <footer>
                         <button type="button" onclick={open_external_url}>
-                            <i class="ti ti-check">{"\u{ea5e}"}</i>
+                            <i class="sui sui-check">{"\u{f00c}"}</i>
                         </button>
                     </footer>
                 </article>

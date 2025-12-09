@@ -11,7 +11,7 @@ pub fn home_button() -> Html {
     });
     html! {
         <button onclick={on_click}>
-            <i class="ti ti-home">{"\u{eac1}"}</i>
+            <i class="sui sui-home">{"\u{f015}"}</i>
         </button>
     }
 }

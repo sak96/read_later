@@ -124,19 +124,19 @@ pub fn article_detail(props: &ArticleDetailProps) -> Html {
                   <article style="width: 100%;">
                     {{
                        let (_icon, icon_code, title) = match event {
-                        Some(FetchProgress::Downloading(title)) => ("ti-cloud-download", "\u{ea71}", title.to_string()),
-                        Some(FetchProgress::Parsing(title)) => ("ti-database-search", "\u{fa18}", title.to_string()),
-                        None => ("ti-loader", "\u{eca3}", "...".to_string()),
+                        Some(FetchProgress::Downloading(title)) => ("sui-cloud sui-search", "\u{f0c2} \u{f002}:", title.to_string()),
+                        Some(FetchProgress::Parsing(title)) => ("sui-code sui-print", "\u{f15b} \u{f02f}:", title.to_string()),
+                        None => ("sui-database sui-search", "\u{f1c0} \u{f002}:", "...".to_string()),
                     };
                        html! {
-                           <h2 class="ti">{icon_code}<p>{title}</p></h2>
+                           <h2 class="sui">{icon_code}<p>{title}</p></h2>
                        }
                     }}
                     <progress />
                     if matches!(event, Some(FetchProgress::Downloading(_))) {
                             <footer dir="rtl">
                                 <button class="secondary" onclick={delete_article}>
-                                    <i class="ti ti-trash-x">{"\u{f784}"}</i>
+                                    <i class="sui sui-trash">{"\u{f1f8}"}</i>
                                 </button>
                             </footer>
                     }

@@ -38,7 +38,7 @@ pub fn article_card(props: &ArticleCardProps) -> Html {
         <article style="cursor: pointer;" onclick={on_click}>
             <h3>
                 if !loaded {
-                    <i class="ti ti-loader">{"\u{eca3}"}</i>
+                    <i class="sui sui-spinner">{"\u{f110}"}</i>
                 }
                 {&title}
             </h3>

@@ -111,10 +111,10 @@ pub fn speak_bar(props: &SpeakBarProps) -> Html {
                     }}</style>
                     <fieldset role="group">
                         <button onclick={on_mode_switch.clone()}>
-                            <i class="ti ti-volume">{"\u{eb51}"}</i>
+                            <i class="sui sui-volume-up">{"\u{f028}"}</i>
                         </button>
                         <LanguageSelection />
-                        <button onclick={scroll_to_checkpoint}><i class="ti ti-player-skip-back">{"\u{f693}"}</i></button>
+                        <button onclick={scroll_to_checkpoint}><i class="sui sui-backward">{"\u{f04a}"}</i></button>
                     </fieldset>
                 } else {
                     <style>{{
@@ -122,7 +122,7 @@ pub fn speak_bar(props: &SpeakBarProps) -> Html {
                         format!(".tts_para_{current_para} {{background-color: var(--pico-mark-background-color) !important; color: var(--pico-mark-color) !important; }}")
                     }}</style>
                     <fieldset role="group">
-                        <button onclick={on_mode_switch}><i class="ti ti-player-pause">{"\u{f690}"}</i></button>
+                        <button onclick={on_mode_switch}><i class="sui sui-pause">{"\u{f04c}"}</i></button>
                         <SpeakRate {on_rate_change} />
                     </fieldset>
                 }

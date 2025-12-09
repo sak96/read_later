@@ -86,10 +86,10 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
             // Delete modal
             <dialog open={*delete_modal}>
               <article>
-                <h2><strong class="ti ti-trash-x">{format!("\u{f784}: {}", &props.article.title)}</strong></h2>
+                <h2><strong class="sui sui-trash">{format!("\u{f1f8}: {}", &props.article.title)}</strong></h2>
                 <footer>
-                  <button class="secondary" onclick={delete_dialog_toggle.clone()}><i class="ti ti-x">{"\u{eb55}"}</i></button>
-                  <button onclick={delete_article}><i class="ti ti-check">{"\u{ea5e}"}</i></button>
+                  <button class="secondary" onclick={delete_dialog_toggle.clone()}><i class="sui sui-close">{"\u{f00d}"}</i></button>
+                  <button onclick={delete_article}><i class="sui sui-check">{"\u{f00c}"}</i></button>
                 </footer>
               </article>
             </dialog>
@@ -99,8 +99,8 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                     <SpeakBar {div_ref} />
                     <div role="group">
                         <HomeButton />
-                        <button onclick={open_web_url}><i class="ti ti-world-www">{"\u{f38f}"}</i></button>
-                        <button class="secondary" onclick={delete_dialog_toggle}><i class="ti ti-trash-x">{"\u{f784}"}</i></button>
+                        <button onclick={open_web_url}><i class="sui sui-world-www">{"\u{f0ac}"}</i></button>
+                        <button class="secondary" onclick={delete_dialog_toggle}><i class="sui sui-trash">{"\u{f1f8}"}</i></button>
                     </div>
                 </nav>
             </aside>

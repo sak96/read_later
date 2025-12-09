@@ -5,21 +5,21 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
 const THEMES: [(&str, &str, &str); 3] = [
-    ("light", "ti-sun", "\u{f6a9}"),
-    ("dark", "ti-moon", "\u{eaf8}"),
-    ("system", "ti-device-desktop-cog", "\u{f862}"),
+    ("light", "sui-sun", "\u{f185}"),
+    ("dark", "sui-moon", "\u{f186}"),
+    ("system", "sui-laptop", "\u{f108}"),
 ];
 
 const INFOS: [(&str, &str, &str); 2] = [
     (
         "https://github.com/sak96/read_later",
-        "ti-brand-github",
-        "\u{ec1c}",
+        "sui-github",
+        "\u{f092}",
     ),
     (
         "https://github.com/sak96/read_later/issues",
         "ti-bug",
-        "\u{ea48}",
+        "\u{f188}",
     ),
 ];
 
@@ -87,14 +87,14 @@ pub fn settings() -> Html {
             <form class="container">
                 <fieldset>
                     <label>
-                        <h2 class="ti ti-palette">{"\u{eb01}"}</h2>
+                        <h2 class="sui sui-paint-brush">{"\u{f1fc}"}</h2>
                         <div role="group">
                             for (theme_option, _theme_icon, theme_code) in THEMES {
                                         <button
                                             class={if theme_ctx.mode.eq(theme_option) { "primary" } else { "outline" }}
                                             onclick={on_theme_change.reform(move |_| theme_option.to_string().clone())}
                                         >
-                                            <i class="ti">{theme_code}</i>
+                                            <i class="sui">{theme_code}</i>
                                         </button>
                                     }
                         </div>
@@ -103,7 +103,7 @@ pub fn settings() -> Html {
                 if is_android(){
                     <fieldset>
                         <tr>
-                            <th><h2 class="ti ti-volume">{"\u{eb51}"}</h2></th>
+                            <th><h2 class="sui sui-volume-up">{"\u{f028}"}</h2></th>
                             <td><input name="terms" type="checkbox" role="switch" onclick={tts_toggled} checked={*tts_enabled} /></td>
                         </tr>
                         <div role="group">
@@ -113,8 +113,8 @@ pub fn settings() -> Html {
                 }
                 <fieldset>
                     <label>
-                        <h2 class="ti ti-database-exclamation">{"\u{fa13}"}</h2>
-                        <small>{"(beta)"}</small>
+                        <h2 class="sui sui-database">{"\u{f1c0}"}</h2>
+                        <small class="sui sui-exclamation-triangle">{"(beta) \u{f071}"}</small>
                         <div role="group">
                             <ImportButton />
                             <ExportButton />
@@ -123,7 +123,7 @@ pub fn settings() -> Html {
                 </fieldset>
                 <fieldset>
                     <label>
-                        <h2 class="ti ti-info-circle">{"\u{eac5}"}</h2>
+                        <h2 class="sui sui-info-circle">{"\u{f05a}"}</h2>
                         <div role="group">
                             for (url, _url_icon, url_code) in &INFOS {
                                 <button
@@ -131,7 +131,7 @@ pub fn settings() -> Html {
                                     class="outline"
                                     onclick={open_external_url.reform(move |_| url.to_string())}
                                 >
-                                    <i class="ti">{*url_code}</i>
+                                    <i class="sui">{*url_code}</i>
                                 </button>
                             }
                         </div>
@@ -140,11 +140,11 @@ pub fn settings() -> Html {
                 <table>
                     <tbody>
                         <tr>
-                            <th><i class="ti ti-tag">{"Version \u{ff02}"}</i></th>
+                            <th><i class="sui sui-tag">{"Version \u{f02b}"}</i></th>
                             <td>{(*version).to_owned()}</td>
                         </tr>
                         <tr>
-                            <th><i class="ti ti-file-text-shield">{"\u{100f2}"}</i></th>
+                            <th><i class="sui sui-user-secret">{"\u{f21b}"}</i></th>
                             <td>
                                 <a
                                     class="outline"
