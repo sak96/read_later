@@ -68,7 +68,7 @@ pub fn add_article() -> Html {
                     .await
                 {
                     Ok(article) => {
-                        navigator.push(&Route::Article { id: article.id })
+                        navigator.replace(&Route::Article { id: article.id })
                     }
                     Err(err) => {
                         alert_ctx
