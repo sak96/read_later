@@ -1,18 +1,11 @@
 use crate::components::{HomeButton, SettingsButton};
-use crate::layouts::{AlertContext, AlertStatus, Fab};
+use crate::layouts::{AlertContext, AlertStatus, Fab, ShareParams};
 use crate::routes::Route;
 use crate::web_utils::{invoke_parse, read_clipboard};
 use shared::models::Article;
 use wasm_bindgen_futures::spawn_local;
 use yew_router::prelude::*;
-
-use serde::Deserialize;
 use yew::prelude::*;
-
-#[derive(Deserialize, Default)]
-struct ShareParams {
-    input: Option<String>,
-}
 
 #[component(AddArticle)]
 pub fn add_article() -> Html {
