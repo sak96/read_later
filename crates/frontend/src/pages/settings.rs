@@ -4,6 +4,25 @@ use crate::web_utils::{get_setting, get_version, is_android, open_url, set_setti
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
+const THEMES: [(&str, &str, &str); 3] = [
+    ("light", "ti-sun", "\u{f6a9}"),
+    ("dark", "ti-moon", "\u{eaf8}"),
+    ("system", "ti-device-desktop-cog", "\u{f862}"),
+];
+
+const INFOS: [(&str, &str, &str); 2] = [
+    (
+        "https://github.com/sak96/read_later",
+        "ti-brand-github",
+        "\u{ec1c}",
+    ),
+    (
+        "https://github.com/sak96/read_later/issues",
+        "ti-bug",
+        "\u{ea48}",
+    ),
+];
+
 #[component(Settings)]
 pub fn settings() -> Html {
     let theme_ctx = use_context::<ThemeContext>().expect("ThemeProvider missing");
@@ -70,18 +89,14 @@ pub fn settings() -> Html {
                     <label>
                         <h2 class="ti ti-palette">{"\u{eb01}"}</h2>
                         <div role="group">
-                            {
-                                for [("light", "ti-sun", "\u{f6a9}"), ("dark","ti-moon", "\u{eaf8}"), ("system","ti-device-desktop-cog", "\u{f862}")].iter().map(|(theme_option, _theme_icon, theme_code)| {
-                                    html! {
+                            for (theme_option, _theme_icon, theme_code) in THEMES {
                                         <button
                                             class={if theme_ctx.mode.eq(theme_option) { "primary" } else { "outline" }}
                                             onclick={on_theme_change.reform(move |_| theme_option.to_string().clone())}
                                         >
-                                            <i class="ti">{*theme_code}</i>
+                                            <i class="ti">{theme_code}</i>
                                         </button>
                                     }
-                                })
-                            }
                         </div>
                     </label>
                 </fieldset>
@@ -110,18 +125,14 @@ pub fn settings() -> Html {
                     <label>
                         <h2 class="ti ti-info-circle">{"\u{eac5}"}</h2>
                         <div role="group">
-                            {
-                                for [("https://github.com/sak96/read_later","ti-brand-github", "\u{ec1c}"), ("https://github.com/sak96/read_later/issues","ti-bug", "\u{ea48}")].iter().map(|(url, _url_icon, url_code)| {
-                                    html! {
-                                        <button
-                                            type="button"
-                                            class="outline"
-                                            onclick={open_external_url.reform(move |_| url.to_string())}
-                                        >
-                                            <i class="ti">{*url_code}</i>
-                                        </button>
-                                    }
-                                })
+                            for (url, _url_icon, url_code) in &INFOS {
+                                <button
+                                    type="button"
+                                    class="outline"
+                                    onclick={open_external_url.reform(move |_| url.to_string())}
+                                >
+                                    <i class="ti">{*url_code}</i>
+                                </button>
                             }
                         </div>
                     </label>
