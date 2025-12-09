@@ -31,7 +31,8 @@ pub fn find_visible_para_id() -> usize {
     id - 1
 }
 
-pub fn set_callback_to_link(div: &NodeRef, on_click: Callback<String>, url: String) {
+pub fn set_callback_to_link(div: &NodeRef, on_click: Callback<String>, id: i32) {
+    let page_url = format!("http://tauri.localhost/article/{id}#");
     if let Some(div) = div.cast::<Element>() {
         let anchors = if let Ok(anchors) = div.query_selector_all("a") {
             anchors
@@ -42,9 +43,9 @@ pub fn set_callback_to_link(div: &NodeRef, on_click: Callback<String>, url: Stri
             if let Some(anchor) = anchors.item(i)
                 && let Ok(anchor) = anchor.dyn_into::<HtmlAnchorElement>()
             {
-                let mut href = anchor.href();
-                if href.starts_with('#') {
-                    href = format!("{url}{href}");
+                let href = anchor.href();
+                if href.starts_with(&page_url) {
+                    continue;
                 }
                 let on_click = on_click.clone();
                 let closure = Closure::wrap(Box::new(move || {

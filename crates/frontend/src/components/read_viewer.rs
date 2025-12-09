@@ -35,9 +35,9 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
     {
         let div_ref = div_ref.clone();
         let on_click = on_link.clone();
-        let url = url.clone();
+        let id = props.article.id;
         use_effect_with(div_ref, move |div_ref| {
-            set_callback_to_link(div_ref, on_click, (*url).to_string());
+            set_callback_to_link(div_ref, on_click, id);
         })
     }
 
