@@ -1,7 +1,7 @@
 use crate::web_utils::import_data;
 use yew::prelude::*;
 
-#[function_component(ImportButton)]
+#[component(ImportButton)]
 pub fn import_button() -> Html {
     // TODO: add loading screen
     let open = use_state(|| false);

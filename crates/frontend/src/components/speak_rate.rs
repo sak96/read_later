@@ -11,7 +11,7 @@ pub struct SpeakRateProps {
 
 const RATE: [f32; 4] = [0.5, 1.0, 1.5, 2.0];
 
-#[function_component(SpeakRate)]
+#[component(SpeakRate)]
 pub fn speak_rate(props: &SpeakRateProps) -> Html {
     let rate = use_state(|| 1.0);
     {

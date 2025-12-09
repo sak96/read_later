@@ -19,7 +19,7 @@ pub struct SpeakBarProps {
     pub div_ref: NodeRef,
 }
 
-#[function_component(SpeakBar)]
+#[component(SpeakBar)]
 pub fn speak_bar(props: &SpeakBarProps) -> Html {
     let div_ref = props.div_ref.clone();
     let checkpoint = use_state(|| 0);
@@ -90,7 +90,6 @@ pub fn speak_bar(props: &SpeakBarProps) -> Html {
                     }
                 });
             }
-            || ()
         });
     }
 

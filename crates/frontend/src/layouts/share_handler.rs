@@ -9,7 +9,7 @@ pub struct ShareHandlerProps {
     pub children: Html,
 }
 
-#[function_component(ShareHandler)]
+#[component(ShareHandler)]
 pub fn share_handler(props: &ShareHandlerProps) -> Html {
     {
         let handler = use_state(Option::<u32>::default);

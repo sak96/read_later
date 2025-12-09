@@ -5,7 +5,7 @@ pub struct FabProps {
     pub children: Html,
 }
 
-#[function_component(Fab)]
+#[component(Fab)]
 pub fn fab(props: &FabProps) -> Html {
     html! {
         <div style=r#"

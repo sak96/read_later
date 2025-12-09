@@ -8,7 +8,7 @@ pub struct ArticleCardProps {
     pub article: ArticleEntry,
 }
 
-#[function_component(ArticleCard)]
+#[component(ArticleCard)]
 pub fn article_card(props: &ArticleCardProps) -> Html {
     let navigator = use_navigator().unwrap();
     let article_id = props.article.id;

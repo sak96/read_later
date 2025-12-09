@@ -4,7 +4,7 @@ use crate::web_utils::{get_setting, get_version, is_android, open_url, set_setti
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
-#[function_component(Settings)]
+#[component(Settings)]
 pub fn settings() -> Html {
     let theme_ctx = use_context::<ThemeContext>().expect("ThemeProvider missing");
     let version = use_state(|| "N/A".to_string());
@@ -77,7 +77,7 @@ pub fn settings() -> Html {
                                             class={if theme_ctx.mode.eq(theme_option) { "primary" } else { "outline" }}
                                             onclick={on_theme_change.reform(move |_| theme_option.to_string().clone())}
                                         >
-                                            <i class="ti">{theme_code}</i>
+                                            <i class="ti">{*theme_code}</i>
                                         </button>
                                     }
                                 })
@@ -118,7 +118,7 @@ pub fn settings() -> Html {
                                             class="outline"
                                             onclick={open_external_url.reform(move |_| url.to_string())}
                                         >
-                                            <i class="ti">{url_code}</i>
+                                            <i class="ti">{*url_code}</i>
                                         </button>
                                     }
                                 })

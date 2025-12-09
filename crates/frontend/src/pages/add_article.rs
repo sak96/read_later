@@ -14,7 +14,7 @@ struct ShareParams {
     input: Option<String>,
 }
 
-#[function_component(AddArticle)]
+#[component(AddArticle)]
 pub fn add_article() -> Html {
     let url_input = use_state(String::new);
     let location = use_location().expect("no location");

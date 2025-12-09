@@ -3,7 +3,7 @@ use yew_router::prelude::*;
 
 use crate::routes::Route;
 
-#[function_component(HomeButton)]
+#[component(HomeButton)]
 pub fn home_button() -> Html {
     let navigator = use_navigator().unwrap();
     let on_click = Callback::from(move |_| {

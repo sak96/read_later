@@ -26,7 +26,7 @@ impl PageMode {
     }
 }
 
-#[function_component(ArticleDetail)]
+#[component(ArticleDetail)]
 pub fn article_detail(props: &ArticleDetailProps) -> Html {
     let mode = use_state(|| PageMode::FetchingArticle(None));
     let navigator = use_navigator().unwrap();

@@ -11,7 +11,7 @@ pub struct ReadViewerProps {
     pub article: Article,
 }
 
-#[function_component(ReadViewer)]
+#[component(ReadViewer)]
 pub fn read_viewer(props: &ReadViewerProps) -> Html {
     // States
     let div_ref = use_node_ref();

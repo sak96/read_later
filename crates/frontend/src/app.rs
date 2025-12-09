@@ -4,7 +4,7 @@ use crate::web_utils::set_inset;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-#[function_component(App)]
+#[component(App)]
 pub fn app() -> Html {
     use_effect_with((), |_| {
         wasm_bindgen_futures::spawn_local(async move {

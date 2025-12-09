@@ -1,7 +1,7 @@
 use crate::web_utils::export_data;
 use yew::prelude::*;
 
-#[function_component(ExportButton)]
+#[component(ExportButton)]
 pub fn export_button() -> Html {
     // TODO: add loading screen
     let open = use_state(|| false);

@@ -7,7 +7,7 @@ use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-#[function_component(Home)]
+#[component(Home)]
 pub fn home() -> Html {
     let articles = use_mut_ref(Vec::<ArticleEntry>::new);
     let loading = use_state(|| false);
@@ -79,7 +79,6 @@ pub fn home() -> Html {
         let fetch_article = fetch_article.clone();
         use_effect_with((), move |_| {
             fetch_article.emit(());
-            move || {}
         });
     }
 
@@ -87,9 +86,9 @@ pub fn home() -> Html {
         <>
             <main class="container page"  ref={scroll_ref} {onscroll}>
                 <div class="container" >
-                    { for articles.borrow().iter().map(|article| html! {
+                    for article in articles.borrow().iter() {
                         <ArticleCard article={article.clone()} />
-                    })}
+                    }
                 </div>
             </main>
             if *loading {

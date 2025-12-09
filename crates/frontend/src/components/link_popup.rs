@@ -7,7 +7,7 @@ pub struct LinkPopupProps {
     pub on_close: Callback<()>,
 }
 
-#[function_component(LinkPopup)]
+#[component(LinkPopup)]
 pub fn link_popup(props: &LinkPopupProps) -> Html {
     let open_external_url = {
         let url = props.url.clone();

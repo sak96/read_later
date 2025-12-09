@@ -4,7 +4,7 @@ use wasm_bindgen_futures::spawn_local;
 use web_sys::{Element, HtmlSelectElement};
 use yew::prelude::*;
 
-#[function_component(LanguageSelection)]
+#[component(LanguageSelection)]
 pub fn language_selection() -> Html {
     let language = use_state(Option::<usize>::default);
     let languages = use_state(Vec::<TTSVoice>::new);

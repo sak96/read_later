@@ -18,7 +18,7 @@ pub struct AlertContext {
     pub alert: Callback<(String, AlertStatus)>,
 }
 
-#[function_component(AlertHandler)]
+#[component(AlertHandler)]
 pub fn theme_provider(props: &Props) -> Html {
     let message = use_state(Option::<String>::default);
     let status = use_state(|| AlertStatus::Info);

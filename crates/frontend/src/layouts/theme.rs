@@ -15,7 +15,7 @@ pub struct Props {
 
 const THEME: [&str; 3] = ["dark", "light", "system"];
 
-#[function_component(ThemeProvider)]
+#[component(ThemeProvider)]
 pub fn theme_provider(props: &Props) -> Html {
     let mode = use_state(|| "system".to_string());
     {
@@ -49,7 +49,6 @@ pub fn theme_provider(props: &Props) -> Html {
                     html.remove_attribute("data-theme").ok();
                 }
             };
-            || ()
         });
     }
 
