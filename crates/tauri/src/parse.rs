@@ -196,11 +196,11 @@ fn split_text_content(parent: &NodeRef, full_text: &str, current_id: &RefCell<u3
     let words = full_text.split_inclusive(|c: char| c.is_whitespace());
 
     for word in words {
-        if current_chunk.chars().count() + word.chars().count() > MAX_LENGTH {
-            if !current_chunk.is_empty() {
-                append_span(parent, &current_chunk, current_id);
-                current_chunk.clear();
-            }
+        if current_chunk.chars().count() + word.chars().count() > MAX_LENGTH
+            && !current_chunk.is_empty()
+        {
+            append_span(parent, &current_chunk, current_id);
+            current_chunk.clear();
         }
         current_chunk.push_str(word);
 
