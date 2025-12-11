@@ -1,8 +1,8 @@
-use html5ever::{local_name, namespace_url, ns};
-use kuchiki::NodeRef;
-use kuchiki::traits::*;
-use std::cell::RefCell;
 use html5ever::QualName;
+use html5ever::{local_name, ns};
+use kuchikikiki::traits::*;
+use kuchikikiki::{ElementData, NodeRef, parse_html};
+use std::cell::RefCell;
 
 fn is_block_element(name: &str) -> bool {
     matches!(
@@ -58,7 +58,7 @@ fn is_code_tag(name: &str) -> bool {
 const MAX_LENGTH: usize = 500;
 
 pub fn process_html(html: &str) -> String {
-    let document = kuchiki::parse_html().one(html);
+    let document = parse_html().one(html);
     let current_id = RefCell::new(0);
 
     process_node(&document, &current_id);
@@ -156,7 +156,7 @@ fn process_node(node: &NodeRef, current_id: &RefCell<u32>) {
 }
 
 // Helper to add the class
-fn tag_element(element: &kuchiki::ElementData, current_id: &RefCell<u32>) {
+fn tag_element(element: &ElementData, current_id: &RefCell<u32>) {
     let mut id_val = current_id.borrow_mut();
     element
         .attributes
