@@ -1,11 +1,11 @@
 use crate::components::{HomeButton, SettingsButton};
-use crate::layouts::{AlertContext, AlertStatus, Fab, ShareParams};
+use crate::layouts::{AlertContext, AlertStatus, Fab};
 use crate::routes::Route;
 use crate::web_utils::{invoke_parse, read_clipboard};
 use shared::models::Article;
 use wasm_bindgen_futures::spawn_local;
-use yew_router::prelude::*;
 use yew::prelude::*;
+use yew_router::prelude::*;
 
 #[component(AddArticle)]
 pub fn add_article() -> Html {
@@ -17,8 +17,9 @@ pub fn add_article() -> Html {
         use_effect_with(location, move |location| {
             let location = location.clone();
             spawn_local(async move {
-                let query: ShareParams = location.query::<ShareParams>().unwrap_or_default();
-                url_input.set(query.input.unwrap_or_default());
+                if let Some(text) = location.state::<String>() {
+                    url_input.set((*text).to_string());
+                }
             })
         })
     };
@@ -60,9 +61,7 @@ pub fn add_article() -> Html {
                 match invoke_parse::<Article>("add_article", &Some(serde_json::json!({"url": url})))
                     .await
                 {
-                    Ok(article) => {
-                        navigator.replace(&Route::Article { id: article.id })
-                    }
+                    Ok(article) => navigator.replace(&Route::Article { id: article.id }),
                     Err(err) => {
                         alert_ctx
                             .alert

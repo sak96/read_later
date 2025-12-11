@@ -1,13 +1,7 @@
 use crate::routes::Route;
 use crate::web_utils::{add_share_listener, is_android, remove_share_listener};
-use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use yew_router::prelude::*;
-
-#[derive(Serialize, Deserialize, Default)]
-pub struct ShareParams {
-    pub input: Option<String>,
-}
 
 #[derive(Properties, PartialEq)]
 pub struct ShareHandlerProps {
@@ -28,14 +22,7 @@ pub fn share_handler(props: &ShareHandlerProps) -> Html {
                             Ok(url) => url.into_owned(),
                             Err(_) => uri,
                         };
-                        navigator
-                            .push_with_query(
-                                &Route::AddArticle,
-                                &ShareParams {
-                                    input: Some(url.to_string()),
-                                },
-                            )
-                            .unwrap();
+                        navigator.push_with_state(&Route::AddArticle, url.to_string());
                     })
                 };
                 {
