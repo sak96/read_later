@@ -48,13 +48,18 @@ jobs:
         run: |
           export NDK_HOME=$ANDROID_NDK
           cargo tauri android build
-          mkdir output
-          find  crates/tauri/gen/android/app/build/outputs/apk/ -iname *-release.apk -exec cp {} output \;
+          mkdir dist
+          find  crates/tauri/gen/android/app/build/outputs/apk/ -iname *-release.apk -exec cp {} dist \;
 
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: android-apk
-          path: output/*.apk
-
+          files: |
+            dist/*
+            LICENSE.md
+            PRIVACY_POLICY.md
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
