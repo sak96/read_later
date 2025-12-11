@@ -20,6 +20,9 @@ jobs:
         with:
           targets: wasm32-unknown-unknown,aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
 
+      - name: Cache the rust details
+        uses: Swatinem/rust-cache@v2
+
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
@@ -35,7 +38,7 @@ jobs:
 
       - name: Setup Android signing
         run: |
-          cd src-tauri/gen/android
+          cd crates/tauri/gen/android
           echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" > keystore.properties
           echo "password=${{ secrets.ANDROID_KEY_PASSWORD }}" >> keystore.properties
           base64 -d <<< "${{ secrets.ANDROID_KEY_BASE64 }}" > $RUNNER_TEMP/keystore.jks
@@ -44,11 +47,14 @@ jobs:
       - name: Build Tauri Android
         run: |
           export NDK_HOME=$ANDROID_NDK
-          tauri android build -- --ci
+          cargo tauri android build
+          mkdir output
+          find  crates/tauri/gen/android/app/build/outputs/apk/ -iname *-release.apk -exec cp {} output \;
+
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk
+          path: output/*.apk
 
