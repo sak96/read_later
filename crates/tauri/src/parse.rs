@@ -81,6 +81,7 @@ fn process_node(node: &NodeRef, current_id: &RefCell<u32>) {
         // 6. For code just add para and don't recurse
         if is_code_tag(tag_name) {
             tag_element(element, current_id);
+            process_code_elements(node);
             return;
         }
 
@@ -102,6 +103,7 @@ fn process_node(node: &NodeRef, current_id: &RefCell<u32>) {
 
         if criteria_met {
             tag_element(element, current_id);
+            process_code_elements(node);
             // If we tagged the block, we usually stop recursion for this branch
             // as it is now a distinct "paragraph".
             return;
@@ -163,6 +165,22 @@ fn tag_element(element: &kuchiki::ElementData, current_id: &RefCell<u32>) {
     *id_val += 1;
 }
 
+fn process_code_elements(node: &NodeRef) {
+    if let Some(element) = node.as_element() {
+        let tag_name = &element.name.local;
+        if tag_name == &local_name!("code") {
+            let text_content = node.text_contents();
+            if text_content.contains('\t') || text_content.contains('\n') {
+                let mut attrs = element.attributes.borrow_mut();
+                attrs.insert("class", "tts_code_block".to_string());
+            }
+            return;
+        }
+    }
+    for child in node.children() {
+        process_code_elements(&child);
+    }
+}
 // Helper for Requirement 5: Split long text into grouped sentences
 fn split_text_content(parent: &NodeRef, full_text: &str, current_id: &RefCell<u32>) {
     // Clear existing children (the long text node)

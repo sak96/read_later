@@ -77,7 +77,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
 
     html! {
         <div class="container">
-            <article ref={div_ref.clone()} class="page">
+            <article ref={div_ref.clone()} class="page reader_view">
                 <h1>{&props.article.title}</h1>
                 {Html::from_html_unchecked(props.article.body.clone().into())}
             </article>

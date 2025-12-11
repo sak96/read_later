@@ -39,14 +39,15 @@
     [aria-hidden="true"] {
       display: none !important;
     }
-    code:has(*) {
+    .reader_view > * {
+      max-width: 100%;
+      overflow-x: scroll;
+    }
+    code.tts_code_block {
       display: block;
       min-width: 100%;
       overflow-x: scroll;
-    }
-    pre, code, code > code {
       white-space: pre;
-      max-width: 100%;
     }
     @font-face{
       font-family:"tabler-icons";
