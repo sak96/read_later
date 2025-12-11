@@ -54,7 +54,7 @@ pub fn language_selection() -> Html {
                 <> </>
             } else{
                 <select role="button" onchange={on_language_change} class="ti">
-                    <option selected={language.is_none()} disabled={true} class="ti"><i class="ti ti-language">{"\u{ebbe}"}</i></option>
+                    <option selected={language.is_none()} disabled={true}><i class="ti ti-language">{"\u{ebbe}"}</i></option>
                     {
                         languages.iter().enumerate().map(|(idx, lang)| {
                         html! {
