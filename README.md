@@ -61,11 +61,15 @@ cargo tauri android build  --split-per-abi
 
 ## Roadmap
 
-- export and import need confirmation pages.
-- rework css for code block.
-- rework tts parsing logic.
 - image handling during offline.
 - keep awake during tts.
+- create [issue](https://github.com/sak96/read_later/issues) for more features
+
+## License
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Distributed under the MIT License. See `LICENSE.md` for more information.
 
 ## Acknowledgment
 
