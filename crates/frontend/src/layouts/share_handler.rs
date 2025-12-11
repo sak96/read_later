@@ -13,6 +13,7 @@ pub fn share_handler(props: &ShareHandlerProps) -> Html {
     {
         let handler = use_state(Option::<u32>::default);
         let navigator = use_navigator().unwrap();
+        let location = use_location().unwrap();
         let handler = handler.clone();
         use_effect_with((), move |_| {
             if is_android() {
@@ -22,7 +23,11 @@ pub fn share_handler(props: &ShareHandlerProps) -> Html {
                             Ok(url) => url.into_owned(),
                             Err(_) => uri,
                         };
-                        navigator.push_with_state(&Route::AddArticle, url.to_string());
+                        if location.path() == Route::AddArticle.to_path() {
+                            navigator.replace_with_state(&Route::AddArticle, url.to_string());
+                        } else {
+                            navigator.push_with_state(&Route::AddArticle, url.to_string());
+                        }
                     })
                 };
                 {
