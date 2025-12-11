@@ -56,7 +56,7 @@ pub fn speak_rate(props: &SpeakRateProps) -> Html {
 
     html! {
         <div role="group">
-            <label role="button" class={classes!(props.outline.then_some("outline"))}>
+            <label style="display: flex; gap: 1em; padding-left: 1em; padding-right: 1em; justify-content: space-evenly; background-color: var(--pico-primary-background)" class={classes!(props.outline.then_some("outline"))}>
                 <b>{&format!("{:0.1}x", *rate)}</b>
                 <input type="range" min="0.5" step="0.5" max="2" value={rate.to_string()} onchange={on_change} />
             </label>
