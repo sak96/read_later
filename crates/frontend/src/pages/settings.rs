@@ -107,7 +107,9 @@ pub fn settings() -> Html {
                                 <th><h2 class="ti ti-volume">{"\u{eb51}"}</h2></th>
                                 <td><input name="terms" type="checkbox" role="switch" onclick={tts_toggled} checked={*tts_enabled} /></td>
                             </tr>
-                            <SpeakRate on_rate_change={Callback::from(|_| {})} outline={true}/>
+                            <div role="group">
+                                <SpeakRate on_rate_change={Callback::from(|_| {})} outline={true}/>
+                            </div>
                         </div>
                     </fieldset>
                 }
