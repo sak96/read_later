@@ -3,7 +3,6 @@ use yew::prelude::*;
 
 #[component(ImportButton)]
 pub fn import_button() -> Html {
-    // TODO: add loading screen
     let open = use_state(|| false);
     let on_click = {
         let open = open.clone();
@@ -18,7 +17,7 @@ pub fn import_button() -> Html {
     };
     html! {
         <button onclick={on_click} type="button">
-            <i class="ti ti-table-import">{"\u{eef9}"}</i>
+            <i class="ti ti-upload">{"\u{eb47}"}</i>
         </button>
     }
 }
