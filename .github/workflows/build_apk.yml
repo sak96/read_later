@@ -49,7 +49,7 @@ jobs:
       - name: Build Tauri Android
         run: |
           export NDK_HOME=$ANDROID_NDK
-          cargo tauri android build
+          cargo tauri android build  --split-per-abi
           mkdir dist
           find  crates/tauri/gen/android/app/build/outputs/apk/ -iname *-release.apk -exec cp {} dist \;
 
