@@ -1,3 +1,5 @@
 /target
 /crates/frontend/dist
 /.env
+/crates/tauri/gen/android/keystore.properties
+
