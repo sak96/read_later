@@ -21,6 +21,10 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     compileSdk = 36
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
     namespace = "io.github.sak.read.it.later"
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "false"
