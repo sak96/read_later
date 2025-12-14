@@ -58,35 +58,35 @@ pub fn article_detail(props: &ArticleDetailProps) -> Html {
                 progress_listener.replace(on_progress.clone());
                 {
                     let progress_listener = progress_listener.clone();
-                async move {
-                    mode.set(PageMode::FetchingArticle(None));
-                    let result = invoke_parse::<Article>(
-                        "get_article",
-                        &Some(serde_json::json!({"id": article_id, "onProgress": on_progress})),
-                    )
-                    .await;
-                    match result {
-                        Ok(article) => {
-                            mode.set(PageMode::PageReturned(article));
-                        }
-                        Err(err) => {
-                            if (progress_listener).borrow().is_some() {
-                                alert_ctx.alert.emit((
-                                    format!("Failed to fetch article: {err}"),
-                                    AlertStatus::Error,
-                                ));
+                    async move {
+                        mode.set(PageMode::FetchingArticle(None));
+                        let result = invoke_parse::<Article>(
+                            "get_article",
+                            &Some(serde_json::json!({"id": article_id, "onProgress": on_progress})),
+                        )
+                        .await;
+                        match result {
+                            Ok(article) => {
+                                mode.set(PageMode::PageReturned(article));
                             }
-                            spawn_local(async move {
-                                invoke_no_parse_log_error(
-                                    "delete_article",
-                                    &Some(serde_json::json!({"id": article_id})),
-                                )
-                                .await;
-                                navigator.push(&Route::Home);
-                            });
+                            Err(err) => {
+                                if (progress_listener).borrow().is_some() {
+                                    alert_ctx.alert.emit((
+                                        format!("Failed to fetch article: {err}"),
+                                        AlertStatus::Error,
+                                    ));
+                                }
+                                spawn_local(async move {
+                                    invoke_no_parse_log_error(
+                                        "delete_article",
+                                        &Some(serde_json::json!({"id": article_id})),
+                                    )
+                                    .await;
+                                    navigator.push(&Route::Home);
+                                });
+                            }
                         }
                     }
-                }
                 }
             });
             let progress_listener = progress_listener.clone();
