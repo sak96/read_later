@@ -57,11 +57,12 @@ fn is_code_tag(name: &str) -> bool {
 
 const MAX_LENGTH: usize = 500;
 
-pub fn process_html(html: &str) -> String {
+pub fn process_html(html: &str, url: &str) -> String {
     let document = parse_html().one(html);
     let current_id = RefCell::new(0);
 
     process_node(&document, &current_id);
+    process_node_url(&document, url);
 
     let mut bytes = Vec::new();
     document.serialize(&mut bytes).unwrap();
@@ -220,4 +221,61 @@ fn append_span(parent: &NodeRef, text: &str, current_id: &RefCell<u32>) {
     tag_element(new_span.as_element().unwrap(), current_id);
     new_span.append(NodeRef::new_text(text));
     parent.append(new_span);
+}
+
+fn process_node_url(node: &NodeRef, url: &str) {
+    // Parse the base URL
+    let base_url = match url::Url::parse(url) {
+        Ok(u) => u,
+        Err(e) => {
+            eprintln!("Invalid base URL '{}': {}", url, e);
+            return;
+        }
+    };
+
+    // Process all anchor elements
+    for anchor in node.select("a").unwrap() {
+        let mut element = anchor.attributes.borrow_mut();
+
+        // Process href attribute
+        if let Some(href) = element.get_mut("href") {
+            let original_href = href.clone();
+
+            // Replace with absolute URL
+            if let Ok(absolute_url) = base_url.join(&original_href) {
+                let mut url_without_fragment = absolute_url.clone();
+                url_without_fragment.set_fragment(None);
+                let is_fragement_only =
+                    url_without_fragment == base_url && absolute_url.fragment().is_some();
+                if is_fragement_only {
+                    *href = format!("#{}", absolute_url.fragment().unwrap());
+                } else {
+                    *href = absolute_url.to_string();
+                    // Add tts_anchor class
+                    if let Some(class) = element.get_mut("class") {
+                        if !class.contains("tts_anchor") {
+                            class.push_str(" tts_anchor");
+                        }
+                    } else {
+                        element.insert("class", "tts_anchor".to_string());
+                    }
+                }
+            }
+        }
+    }
+
+    // Process all img elements
+    for img in node.select("img").unwrap() {
+        let mut element = img.attributes.borrow_mut();
+
+        // Process src attribute
+        if let Some(src) = element.get_mut("src") {
+            let original_src = src.clone();
+
+            // Replace with absolute URL
+            if let Ok(absolute_url) = base_url.join(&original_src) {
+                *src = absolute_url.to_string();
+            }
+        }
+    }
 }

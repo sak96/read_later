@@ -109,6 +109,7 @@ dependencies = [
  "tauri-plugin-safe-area-insets-css",
  "tauri-plugin-sql",
  "tauri-plugin-tts",
+ "url",
 ]
 
 [[package]]
