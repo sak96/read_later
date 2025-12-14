@@ -9,6 +9,8 @@ use tauri::{State, ipc::Channel};
 use tauri_plugin_http::reqwest;
 use tauri_plugin_sql::DbInstances;
 
+const CHROME_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36";
+
 #[tauri::command]
 pub async fn get_articles(
     db_instances: State<'_, DbInstances>,
@@ -47,7 +49,11 @@ pub async fn get_article(
                 on_progress
                     .send(FetchProgress::Downloading(article.url.to_string()))
                     .map_err(|e| e.to_string())?;
-                let html = reqwest::get(&article.url)
+                let client = reqwest::Client::new();
+                let html = client
+                    .get(&article.url)
+                    .header(reqwest::header::USER_AGENT, CHROME_USER_AGENT)
+                    .send()
                     .await
                     .map_err(|e| e.to_string())?
                     .text()
