@@ -113,8 +113,8 @@ pub fn speak_bar(props: &SpeakBarProps) -> Html {
                         <button onclick={on_mode_switch.clone()}>
                             <i class="ti ti-volume">{"\u{eb51}"}</i>
                         </button>
+                        <button onclick={scroll_to_checkpoint}><i class="ti ti-arrow-back">{"\u{ea0c}"}</i></button>
                         <LanguageSelection />
-                        <button onclick={scroll_to_checkpoint}><i class="ti ti-player-skip-back">{"\u{f693}"}</i></button>
                     </fieldset>
                 } else {
                     <style>{{
