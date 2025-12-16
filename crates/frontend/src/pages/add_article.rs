@@ -102,7 +102,7 @@ pub fn add_article() -> Html {
                 </form>
             }
             <Fab>
-                <HomeButton />
+                <HomeButton replace_history={true} />
                 <SettingsButton />
             </Fab>
         </article>

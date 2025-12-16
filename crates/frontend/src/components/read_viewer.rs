@@ -70,7 +70,7 @@ pub fn read_viewer(props: &ReadViewerProps) -> Html {
                     &Some(serde_json::json!({"id": article_id})),
                 )
                 .await;
-                navigator.push(&Route::Home);
+                navigator.replace(&Route::Home);
             });
         })
     };
