@@ -61,7 +61,7 @@ jobs:
           cargo tauri android build  --split-per-abi
           mkdir dist
           find  crates/tauri/gen/android/app/build/outputs/apk/ -iname *-release.apk -exec cp {} dist \;
-          find  crates/tauri/gen/android/app/build/outputs/bundle/ -iname *-release.apk -exec cp {} dist \;
+          find  crates/tauri/gen/android/app/build/outputs/bundle/ -iname *-release.aab -exec cp {} dist \;
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
