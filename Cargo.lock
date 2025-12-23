@@ -76,7 +76,7 @@ dependencies = [
 
 [[package]]
 name = "article-manager"
-version = "0.1.11"
+version = "0.1.13"
 dependencies = [
  "html5ever 0.36.1",
  "kuchikikiki",
