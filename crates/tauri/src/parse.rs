@@ -1,7 +1,7 @@
 use html5ever::QualName;
 use html5ever::{local_name, ns};
 use kuchikikiki::traits::*;
-use kuchikikiki::{ElementData, NodeRef, parse_html};
+use kuchikikiki::{ElementData, NodeRef, parse_fragment};
 use std::cell::RefCell;
 
 fn is_block_element(name: &str) -> bool {
@@ -56,9 +56,14 @@ fn is_code_tag(name: &str) -> bool {
 }
 
 const MAX_LENGTH: usize = 500;
+const HTML_OPEN: &[u8] = b"<html>";
+const HTML_CLOSE: &[u8] = b"</html>";
+const DIV_OPEN: &[u8] = b"<div> ";
+const DIV_CLOSE: &[u8] = b" </div>";
 
-pub fn process_html(html: &str, url: &str) -> String {
-    let document = parse_html().one(html);
+pub fn process_html(frag: &str, url: &str) -> String {
+    let ctx_name = QualName::new(None, ns!(html), local_name!("article"));
+    let document = parse_fragment(ctx_name, vec![]).one(frag);
     let current_id = RefCell::new(0);
 
     process_node(&document, &current_id);
@@ -66,7 +71,18 @@ pub fn process_html(html: &str, url: &str) -> String {
 
     let mut bytes = Vec::new();
     document.serialize(&mut bytes).unwrap();
-    String::from_utf8(bytes).unwrap()
+    {
+        // replace root html tag with div tag.
+        let bytes = bytes.as_mut_slice();
+        if bytes.starts_with(HTML_OPEN) {
+            bytes[..HTML_OPEN.len()].copy_from_slice(DIV_OPEN);
+        };
+        if bytes.ends_with(HTML_CLOSE) {
+            let start = bytes.len() - HTML_CLOSE.len();
+            bytes[start..].copy_from_slice(DIV_CLOSE);
+        };
+    }
+    String::from_utf8(bytes).unwrap_or_else(|_| "<p>not valid utf8</p>".to_string())
 }
 
 fn process_node(node: &NodeRef, current_id: &RefCell<u32>) {

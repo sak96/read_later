@@ -32,7 +32,6 @@
       padding-bottom: var(--safe-area-inset-bottom, 0);
     }
     .page {
-        overflow: scroll;
         scroll-behaviour: smooth;
         height:  calc(100vh - var(--safe-area-inset-top, 0) -  var(--safe-area-inset-bottom, 0))
     }
@@ -40,6 +39,9 @@
       display: none !important;
     }
     .reader_view > * {
+      max-width: 100%;
+    }
+    table {
       max-width: 100%;
       overflow-x: scroll;
     }
