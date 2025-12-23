@@ -34,7 +34,7 @@ pub fn find_visible_para_id() -> usize {
 pub fn set_callback_to_link(div: &NodeRef, on_click: Callback<String>, id: i32) {
     let page_url = format!("http://tauri.localhost/article/{id}#");
     if let Some(div) = div.cast::<Element>() {
-        let anchors = if let Ok(anchors) = div.query_selector_all("a") {
+        let anchors = if let Ok(anchors) = div.query_selector_all(".tts_anchor") {
             anchors
         } else {
             return;
