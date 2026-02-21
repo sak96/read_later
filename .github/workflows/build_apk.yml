@@ -62,6 +62,7 @@ jobs:
           mkdir dist
           find  crates/tauri/gen/android/app/build/outputs/apk/ -iname *-release.apk -exec cp {} dist \;
           find  crates/tauri/gen/android/app/build/outputs/bundle/ -iname *-release.aab -exec cp {} dist \;
+          tar -cvf dist/frontend.tar -C crates/frontend dist
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
