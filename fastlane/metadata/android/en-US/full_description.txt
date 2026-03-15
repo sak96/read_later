@@ -4,22 +4,22 @@ We combine a clean, distraction-free reading experience with powerful accessibil
 
 KEY FEATURES:
 
-🔖 Save & Organize
+🔖 Save & Organize<br>
 Instantly bookmark articles from your browser or other apps. Keep your reading list organized and accessible in one clean, clutter-free feed. "Save now, read later" has never been this simple.
 
-🎧 Listen on the Go (Text-to-Speech)
+🎧 Listen on the Go (Text-to-Speech)<br>
 Busy commute? Tired eyes? Turn any saved article into an audio experience.
 
 - High-quality voice output: Converts text to natural-sounding speech.
 - Adjustable settings: Customize the pitch and speed in our simple settings menu to match your listening preference.
 
-🌙 Read Comfortably Day & Night
+🌙 Read Comfortably Day & Night<br>
 Switch between themes to match your environment.
 
 - Dark Mode: Reduce eye strain and save battery during late-night reading sessions.
 - Light Mode: Enjoy a crisp, clear reading experience in bright daylight.
 
-⚙️ Your Experience, Your Way
+⚙️ Your Experience, Your Way<br>
 A minimalist settings menu puts you in control without the clutter. Manage your preferences, adjust audio settings, and customize your interface in seconds.
 
 Why choose Read Later App?
