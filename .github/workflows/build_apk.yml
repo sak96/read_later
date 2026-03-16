@@ -62,7 +62,11 @@ jobs:
           mkdir dist
           find  crates/tauri/gen/android/app/build/outputs/apk/ -iname *-release.apk -exec cp {} dist \;
           find  crates/tauri/gen/android/app/build/outputs/bundle/ -iname *-release.aab -exec cp {} dist \;
+
+      - name: Create frontend.tar and checksum
+        run: |
           tar -cvf dist/frontend.tar -C crates/frontend dist
+          sha256sum dist/frontend.tar > dist/frontend.tar.sha256sum
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
