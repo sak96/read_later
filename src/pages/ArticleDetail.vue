@@ -2,6 +2,7 @@
 import { ref, onMounted, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { invokeParse, invokeNoParseLogError } from '@/composables/useTauri'
+import { transformCallback } from '@tauri-apps/api/core';
 import type { Article, FetchProgress } from '@/types'
 import ReadViewer from '@/components/ReadViewer.vue'
 
@@ -19,9 +20,16 @@ const mode = ref<PageMode>({ type: 'fetching', progress: null })
 
 const alert = inject<(message: string, status: 'success' | 'info' | 'error') => void>('alert')
 
+const onProgress = (progress: FetchProgress | null) => {
+  mode.value = { type: 'fetching', progress }
+}
+
 async function loadArticle() {
   try {
-    const result = await invokeParse<Article>('get_article', { id: props.id })
+    const progressId = transformCallback((event) => {
+      onProgress(event.message)
+    })
+    const result = await invokeParse<Article>('get_article', { id: props.id, onProgress: `__CHANNEL__:${progressId}` })
     mode.value = { type: 'returned', article: result }
   } catch (err) {
     if (alert) {
