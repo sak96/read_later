@@ -22,15 +22,17 @@ export default [
       }
     },
     plugins: {
-      vue: pluginVue
+      vue: pluginVue,
     },
     rules: {
       ...pluginVue.configs.base.rules,
       ...pluginVue.configs['vue3-essential'].rules,
       'vue/comment-directive': 'off',
+      'vue/multi-word-component-names': 'off',
       'vue/no-side-effects-in-computed-properties': 'off',
       'no-unused-vars': 'off',
-      'no-undef': 'off'
+      'no-undef': 'off',
+      'indent': ["error", 2],
     }
   },
   {
