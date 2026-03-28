@@ -21,47 +21,47 @@ const mode = ref<PageMode>({ type: 'fetching', progress: null })
 const { updateAlertContext } = inject<AlertContext>('alert') || {}
 
 const onProgress = (progress: FetchProgress | null) => {
-  mode.value = { type: 'fetching', progress }
+	mode.value = { type: 'fetching', progress }
 }
 
 async function loadArticle() {
-  try {
-    const channel = new Channel<FetchProgress>(onProgress);
-    const result = await invokeParse<Article>('get_article', { id: props.id, onProgress: channel })
-    mode.value = { type: 'returned', article: result }
-    channel.cleanupCallback()
-  } catch (err) {
-    updateAlertContext?.('error', `Failed to fetch article: ${err}`)
-    await invokeNoParseLogError('delete_article', { id: props.id })
-    router.push({ name: 'home' })
-  }
+	try {
+		const channel = new Channel<FetchProgress>(onProgress);
+		const result = await invokeParse<Article>('get_article', { id: props.id, onProgress: channel })
+		mode.value = { type: 'returned', article: result }
+		channel.cleanupCallback()
+	} catch (err) {
+		updateAlertContext?.('error', `Failed to fetch article: ${err}`)
+		await invokeNoParseLogError('delete_article', { id: props.id })
+		router.push({ name: 'home' })
+	}
 }
 
 async function deleteArticle() {
-  await invokeNoParseLogError('delete_article', { id: props.id })
-  updateAlertContext?.('success', 'Deleted article.')
-  router.push({ name: 'home' })
+	await invokeNoParseLogError('delete_article', { id: props.id })
+	updateAlertContext?.('success', 'Deleted article.')
+	router.push({ name: 'home' })
 }
 
 onMounted(async () => {
-  mode.value = { type: 'fetching', progress: null }
-  await loadArticle()
+	mode.value = { type: 'fetching', progress: null }
+	await loadArticle()
 })
 
 function getProgressInfo(progress: FetchProgress | null): { icon: string; iconCode: string; title: string } {
-  if (!progress) {
-    return { icon: 'ti-loader', iconCode: '\ueca3', title: '...' }
-  }
+	if (!progress) {
+		return { icon: 'ti-loader', iconCode: '\ueca3', title: '...' }
+	}
   
-  if ('Downloading' in progress) {
-    return { icon: 'ti-cloud-download', iconCode: '\uea71', title: progress.Downloading }
-  }
+	if ('Downloading' in progress) {
+		return { icon: 'ti-cloud-download', iconCode: '\uea71', title: progress.Downloading }
+	}
   
-  if ('Parsing' in progress) {
-    return { icon: 'ti-database-search', iconCode: '\ufa18', title: progress.Parsing }
-  }
+	if ('Parsing' in progress) {
+		return { icon: 'ti-database-search', iconCode: '\ufa18', title: progress.Parsing }
+	}
   
-  return { icon: 'ti-loader', iconCode: '\ueca3', title: '...' }
+	return { icon: 'ti-loader', iconCode: '\ueca3', title: '...' }
 }
 </script>
 

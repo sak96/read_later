@@ -17,103 +17,103 @@ const rate = ref(1.0)
 const ttsEnabled = ref(true)
 
 async function loadTtsSetting() {
-  const value = await getSetting('tts')
-  if (value !== null) {
-    ttsEnabled.value = value === 'true'
-  } else {
-    const isAndroid = await checkAndroid()
-    await setSetting('tts', isAndroid.toString())
-    ttsEnabled.value = isAndroid
-  }
+	const value = await getSetting('tts')
+	if (value !== null) {
+		ttsEnabled.value = value === 'true'
+	} else {
+		const isAndroid = await checkAndroid()
+		await setSetting('tts', isAndroid.toString())
+		ttsEnabled.value = isAndroid
+	}
 }
 
 async function checkAndroid(): Promise<boolean> {
-  try {
-    const osType = await import('@tauri-apps/api/core').then(m => 
-      m.invoke<string>('plugin:os|type')
-    )
-    return osType === 'android'
-  } catch {
-    return false
-  }
+	try {
+		const osType = await import('@tauri-apps/api/core').then(m => 
+			m.invoke<string>('plugin:os|type')
+		)
+		return osType === 'android'
+	} catch {
+		return false
+	}
 }
 
 function switchMode() {
-  if (mode.value === 'reader') {
-    stopSpeaking()
-    scrollToTop()
-    mode.value = 'view'
-  } else {
-    checkpoint.value = findVisibleParaId()
-    mode.value = 'reader'
-  }
+	if (mode.value === 'reader') {
+		stopSpeaking()
+		scrollToTop()
+		mode.value = 'view'
+	} else {
+		checkpoint.value = findVisibleParaId()
+		mode.value = 'reader'
+	}
 }
 
 function findVisibleParaId(): number {
-  const paras = props.divRef.querySelectorAll('[id^="para_"]')
-  for (let i = 0; i < paras.length; i++) {
-    const rect = paras[i].getBoundingClientRect()
-    if (rect.top >= 0 && rect.top < window.innerHeight / 2) {
-      return i
-    }
-  }
-  return 0
+	const paras = props.divRef.querySelectorAll('[id^="para_"]')
+	for (let i = 0; i < paras.length; i++) {
+		const rect = paras[i].getBoundingClientRect()
+		if (rect.top >= 0 && rect.top < window.innerHeight / 2) {
+			return i
+		}
+	}
+	return 0
 }
 
 function scrollToTop() {
-  const para = props.divRef.querySelector(`[id="para_${checkpoint.value}"]`)
-  if (para) {
-    para.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+	const para = props.divRef.querySelector(`[id="para_${checkpoint.value}"]`)
+	if (para) {
+		para.scrollIntoView({ behavior: 'smooth', block: 'start' })
+	}
 }
 
 function scrollToCenter() {
-  const para = props.divRef.querySelector(`[id="para_${checkpoint.value}"]`)
-  if (para) {
-    para.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }
+	const para = props.divRef.querySelector(`[id="para_${checkpoint.value}"]`)
+	if (para) {
+		para.scrollIntoView({ behavior: 'smooth', block: 'center' })
+	}
 }
 
 function extractParaText(id: number): string | null {
-  const para = props.divRef.querySelector(`[id="para_${id}"]`)
-  return para?.textContent || null
+	const para = props.divRef.querySelector(`[id="para_${id}"]`)
+	return para?.textContent || null
 }
 
 async function runReader() {
-  if (mode.value !== 'reader') return
+	if (mode.value !== 'reader') return
   
-  const text = extractParaText(checkpoint.value)
-  if (text) {
-    scrollToCenter()
-    await speakText({ text, rate: rate.value })
-    checkpoint.value++
-    if (mode.value === 'reader') {
-      setTimeout(runReader, 100)
-    }
-  } else {
-    mode.value = 'view'
-    stopSpeaking()
-  }
+	const text = extractParaText(checkpoint.value)
+	if (text) {
+		scrollToCenter()
+		await speakText({ text, rate: rate.value })
+		checkpoint.value++
+		if (mode.value === 'reader') {
+			setTimeout(runReader, 100)
+		}
+	} else {
+		mode.value = 'view'
+		stopSpeaking()
+	}
 }
 
 watch(mode, (newMode) => {
-  if (newMode === 'reader') {
-    runReader()
-  }
+	if (newMode === 'reader') {
+		runReader()
+	}
 })
 
 onMounted(() => {
-  loadTtsSetting()
+	loadTtsSetting()
 })
 
 onUnmounted(() => {
-  stopSpeaking()
+	stopSpeaking()
 })
 
 defineExpose({
-  mode,
-  checkpoint,
-  switchMode,
+	mode,
+	checkpoint,
+	switchMode,
 })
 </script>
 

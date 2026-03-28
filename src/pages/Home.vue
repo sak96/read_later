@@ -13,40 +13,40 @@ const loading = ref(false)
 const scrollRef = ref<HTMLElement | null>(null)
 
 async function fetchArticles() {
-  if (loading.value) return
+	if (loading.value) return
   
-  loading.value = true
-  const data = await invokeParseLogError<ArticleEntry[]>('get_articles', { offset: articles.value.length })
+	loading.value = true
+	const data = await invokeParseLogError<ArticleEntry[]>('get_articles', { offset: articles.value.length })
   
-  if (data) {
-    if (data.length === 0) {
-      if (articles.value.length === 0) {
-        router.push({ name: 'addArticle' })
-      }
-    } else {
-      articles.value.push(...data)
-    }
-  }
-  loading.value = false
+	if (data) {
+		if (data.length === 0) {
+			if (articles.value.length === 0) {
+				router.push({ name: 'addArticle' })
+			}
+		} else {
+			articles.value.push(...data)
+		}
+	}
+	loading.value = false
 }
 
 function onScroll(e: Event) {
-  const target = e.target as HTMLElement
-  const scrollTop = target.scrollTop
-  const scrollHeight = target.scrollHeight
-  const clientHeight = target.clientHeight
+	const target = e.target as HTMLElement
+	const scrollTop = target.scrollTop
+	const scrollHeight = target.scrollHeight
+	const clientHeight = target.clientHeight
   
-  if (scrollTop + clientHeight > scrollHeight - 100) {
-    fetchArticles()
-  }
+	if (scrollTop + clientHeight > scrollHeight - 100) {
+		fetchArticles()
+	}
 }
 
 function goToAddArticle() {
-  router.push({ name: 'addArticle' })
+	router.push({ name: 'addArticle' })
 }
 
 onMounted(() => {
-  fetchArticles()
+	fetchArticles()
 })
 </script>
 

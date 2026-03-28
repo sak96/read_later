@@ -17,43 +17,43 @@ const deleteModal = ref(false)
 const externalUrl = ref<string | null>(null)
 
 function handleLinkClick(href: string) {
-  externalUrl.value = href
+	externalUrl.value = href
 }
 
 function closeLinkPopup() {
-  externalUrl.value = null
+	externalUrl.value = null
 }
 
 async function openUrl(url: string) {
-  await invokeNoParseLogError('open_url', { url })
+	await invokeNoParseLogError('open_url', { url })
 }
 
 function toggleDeleteModal() {
-  deleteModal.value = !deleteModal.value
+	deleteModal.value = !deleteModal.value
 }
 
 async function deleteArticle() {
-  await invokeNoParseLogError('delete_article', { id: props.article.id })
-  router.replace({ name: 'home' })
+	await invokeNoParseLogError('delete_article', { id: props.article.id })
+	router.replace({ name: 'home' })
 }
 
 function setLinkCallbacks() {
-  if (!divRef.value) return
+	if (!divRef.value) return
   
-  const links = divRef.value.querySelectorAll('a')
-  links.forEach(link => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault()
-      const href = link.getAttribute('href')
-      if (href) {
-        handleLinkClick(href)
-      }
-    })
-  })
+	const links = divRef.value.querySelectorAll('a')
+	links.forEach(link => {
+		link.addEventListener('click', (e) => {
+			e.preventDefault()
+			const href = link.getAttribute('href')
+			if (href) {
+				handleLinkClick(href)
+			}
+		})
+	})
 }
 
 onMounted(() => {
-  setLinkCallbacks()
+	setLinkCallbacks()
 })
 </script>
 

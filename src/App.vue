@@ -5,7 +5,7 @@ import { Alert, Theme } from '@/layouts'
 import { setInset } from '@/composables/useInset'
 
 onMounted(() => {
-  setInset()
+	setInset()
 })
 </script>
 

@@ -17,67 +17,67 @@ const ttsEnabled = ref(true)
 const isAndroid = ref(false)
 
 const themes: Array<{ value: Theme; icon: string; code: string }> = [
-  { value: 'light', icon: 'ti-sun', code: '\uf6a9' },
-  { value: 'dark', icon: 'ti-moon', code: '\ueaf8' },
-  { value: 'system', icon: 'ti-device-desktop-cog', code: '\uf862' },
+	{ value: 'light', icon: 'ti-sun', code: '\uf6a9' },
+	{ value: 'dark', icon: 'ti-moon', code: '\ueaf8' },
+	{ value: 'system', icon: 'ti-device-desktop-cog', code: '\uf862' },
 ]
 
 const infos = [
-  { url: 'https://github.com/sak96/read_later', icon: 'ti-brand-github', code: '\uec1c' },
-  { url: 'https://github.com/sak96/read_later/issues', icon: 'ti-bug', code: '\uea48' },
+	{ url: 'https://github.com/sak96/read_later', icon: 'ti-brand-github', code: '\uec1c' },
+	{ url: 'https://github.com/sak96/read_later/issues', icon: 'ti-bug', code: '\uea48' },
 ]
 
 async function loadVersion() {
-  try {
-    const v = await invoke<string>('plugin:app|version')
-    if (v) version.value = v
-  } catch {
-    // Ignore
-  }
+	try {
+		const v = await invoke<string>('plugin:app|version')
+		if (v) version.value = v
+	} catch {
+		// Ignore
+	}
 }
 
 async function loadTtsSetting() {
-  const value = await getSetting('tts')
-  if (value !== null) {
-    ttsEnabled.value = value === 'true'
-  } else {
-    await setSetting('tts', isAndroid.value.toString())
-    ttsEnabled.value = isAndroid.value
-  }
+	const value = await getSetting('tts')
+	if (value !== null) {
+		ttsEnabled.value = value === 'true'
+	} else {
+		await setSetting('tts', isAndroid.value.toString())
+		ttsEnabled.value = isAndroid.value
+	}
 }
 
 async function onThemeChange(newTheme: Theme) {
-  if (themeContext) {
-    themeContext.setMode(newTheme)
-  }
-  await setSetting('theme', newTheme)
+	if (themeContext) {
+		themeContext.setMode(newTheme)
+	}
+	await setSetting('theme', newTheme)
 }
 
 async function onTtsToggle() {
-  const newState = !ttsEnabled.value
-  ttsEnabled.value = newState
-  await setSetting('tts', newState.toString())
+	const newState = !ttsEnabled.value
+	ttsEnabled.value = newState
+	await setSetting('tts', newState.toString())
 }
 
 async function openExternalUrl(url: string) {
-  await invoke('open_url', { url })
+	await invoke('open_url', { url })
 }
 
 async function checkAndroid(): Promise<boolean> {
-  try {
-    const osType = await import('@tauri-apps/api/core').then(m => 
-      m.invoke<string>('plugin:os|type')
-    )
-    return osType === 'android'
-  } catch {
-    return false
-  }
+	try {
+		const osType = await import('@tauri-apps/api/core').then(m => 
+			m.invoke<string>('plugin:os|type')
+		)
+		return osType === 'android'
+	} catch {
+		return false
+	}
 }
 
 onMounted(async () => {
-  isAndroid.value = await checkAndroid()
-  await loadVersion()
-  await loadTtsSetting()
+	isAndroid.value = await checkAndroid()
+	await loadVersion()
+	await loadTtsSetting()
 })
 </script>
 

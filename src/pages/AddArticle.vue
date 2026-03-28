@@ -17,31 +17,31 @@ const progressBar = ref(false)
 const { updateAlertContext } = inject<AlertContext>('alert') || {}
 
 async function pasteFromClipboard() {
-  const text = await readClipboard()
-  if (text) {
-    urlInput.value = text
-  }
+	const text = await readClipboard()
+	if (text) {
+		urlInput.value = text
+	}
 }
 
 async function onSubmit(e: Event) {
-  e.preventDefault()
+	e.preventDefault()
   
-  progressBar.value = true
+	progressBar.value = true
   
-  try {
-    const article = await invokeParse<Article>('add_article', { url: urlInput.value })
-    router.replace({ name: 'article', params: { id: article.id } })
-  } catch (err) {
-    updateAlertContext?.('error', `Failed to add article: ${err}`)
-    progressBar.value = false
-  }
+	try {
+		const article = await invokeParse<Article>('add_article', { url: urlInput.value })
+		router.replace({ name: 'article', params: { id: article.id } })
+	} catch (err) {
+		updateAlertContext?.('error', `Failed to add article: ${err}`)
+		progressBar.value = false
+	}
 }
 
 onMounted(() => {
-  const state = (route.meta as Record<string, unknown>)?.state as { url?: string } | undefined
-  if (state?.url) {
-    urlInput.value = state.url
-  }
+	const state = (route.meta as Record<string, unknown>)?.state as { url?: string } | undefined
+	if (state?.url) {
+		urlInput.value = state.url
+	}
 })
 </script>
 

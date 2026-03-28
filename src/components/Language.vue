@@ -12,23 +12,23 @@ const languages = ref<Voice[]>([])
 const selectedIndex = ref<number | null>(null)
 
 async function loadVoices() {
-  const voices = await getVoices()
-  languages.value = voices.map(v => ({
-    voice: v,
-    label: v.name,
-    id: v.voiceURI
-  }))
+	const voices = await getVoices()
+	languages.value = voices.map(v => ({
+		voice: v,
+		label: v.name,
+		id: v.voiceURI
+	}))
 }
 
 async function onLanguageChange(event: Event) {
-  const target = event.target as HTMLSelectElement
-  const index = parseInt(target.value)
-  selectedIndex.value = index
-  // Set voice in settings - would need implementation
+	const target = event.target as HTMLSelectElement
+	const index = parseInt(target.value)
+	selectedIndex.value = index
+	// Set voice in settings - would need implementation
 }
 
 onMounted(() => {
-  loadVoices()
+	loadVoices()
 })
 </script>
 

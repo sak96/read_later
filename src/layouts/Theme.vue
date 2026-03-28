@@ -8,40 +8,40 @@ type Theme = typeof themes[number]
 const mode = ref<Theme>('system')
 
 async function loadTheme() {
-  const value = await getSetting('theme')
-  if (value && themes.includes(value as Theme)) {
-    mode.value = value as Theme
-  } else {
-    await setSetting('theme', 'system')
-    mode.value = 'system'
-  }
+	const value = await getSetting('theme')
+	if (value && themes.includes(value as Theme)) {
+		mode.value = value as Theme
+	} else {
+		await setSetting('theme', 'system')
+		mode.value = 'system'
+	}
 }
 
 function applyTheme(newMode: Theme) {
-  const html = document.documentElement
-  if (newMode === 'dark' || newMode === 'light') {
-    html.setAttribute('data-theme', newMode)
-  } else {
-    html.removeAttribute('data-theme')
-  }
+	const html = document.documentElement
+	if (newMode === 'dark' || newMode === 'light') {
+		html.setAttribute('data-theme', newMode)
+	} else {
+		html.removeAttribute('data-theme')
+	}
 }
 
 function setMode(newMode: Theme) {
-  mode.value = newMode
-  setSetting('theme', newMode)
+	mode.value = newMode
+	setSetting('theme', newMode)
 }
 
 provide('theme', {
-  mode,
-  setMode
+	mode,
+	setMode
 })
 
 watch(mode, (newMode) => {
-  applyTheme(newMode)
+	applyTheme(newMode)
 })
 
 onMounted(() => {
-  loadTheme()
+	loadTheme()
 })
 </script>
 

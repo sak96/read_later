@@ -5,9 +5,9 @@ import { invokeNoParseLogError } from '@/composables/useTauri'
 const isExporting = ref(false)
 
 async function exportData() {
-  isExporting.value = true
-  await invokeNoParseLogError('pick_export_file', {})
-  isExporting.value = false
+	isExporting.value = true
+	await invokeNoParseLogError('pick_export_file', {})
+	isExporting.value = false
 }
 </script>
 
