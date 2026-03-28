@@ -9,6 +9,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2.0.0", features = [] }
 serde_json = "1"
+serde = { version = "1", features = ["derive"] }
 readabilityrs = { git = "https://github.com/sak96/readabilityrs" }
 tauri-plugin-opener = "2.0.0"
 tauri-plugin-clipboard-manager = "2.0.0"
@@ -20,7 +21,6 @@ sqlx = "0.8.0"
 kuchikikiki = "0.9"
 html5ever = "0.36"
 url = "2.5.7"
-shared = { path = "../shared" }
 
 [target."cfg(any(target_os = \"android\", target_os = \"ios\"))".dependencies]
 tauri-plugin-mobile-sharetarget = { git = "https://github.com/sak96/tauri-plugin-mobile-sharetarget" }

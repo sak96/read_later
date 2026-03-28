@@ -81,8 +81,8 @@ dependencies = [
  "html5ever 0.36.1",
  "kuchikikiki",
  "readabilityrs",
+ "serde",
  "serde_json",
- "shared",
  "sqlx",
  "tauri",
  "tauri-build",
@@ -4327,14 +4327,6 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
-]
-
-[[package]]
-name = "shared"
-version = "0.1.2"
-dependencies = [
- "serde",
- "sqlx",
 ]
 
 [[package]]

@@ -1,8 +1,7 @@
-use crate::models::DB_URL;
+use crate::models::*;
 use crate::parse::process_html;
 pub use import_export::*;
 use readabilityrs::Readability;
-use shared::models::*;
 use sqlx::{query, query_as, query_scalar};
 use std::io::{BufReader, BufWriter};
 use tauri::{State, ipc::Channel};
