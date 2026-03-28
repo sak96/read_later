@@ -10,6 +10,6 @@ function goHome() {
 
 <template>
   <button @click="goHome">
-    <i class="ti ti-home">&#xeaeb;</i>
+    <i class="ti ti-home">&#xeac1;</i>
   </button>
 </template>
