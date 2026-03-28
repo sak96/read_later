@@ -1,16 +1,11 @@
 <script setup lang="ts">
 import { ref, provide, computed } from 'vue'
-
-type AlertStatus = 'success' | 'info' | 'error'
-
-interface AlertContext {
-  alert: (message: string, status: AlertStatus) => void
-}
+import type { AlertContext, AlertStatus } from '@/types'
 
 const message = ref<string | null>(null)
 const status = ref<AlertStatus>('info')
 
-function alert(newMessage: string, newStatus: AlertStatus) {
+function updateAlertContext(newStatus: AlertStatus, newMessage: string) {
   status.value = newStatus
   message.value = newMessage
   setTimeout(() => {
@@ -18,7 +13,11 @@ function alert(newMessage: string, newStatus: AlertStatus) {
   }, 5000)
 }
 
-provide<AlertContext>('alert', { alert })
+provide<AlertContext>('alert', {
+  status,
+  message,
+  updateAlertContext
+})
 
 const alertStyle = computed(() => {
   const { bgcolor, color } = {

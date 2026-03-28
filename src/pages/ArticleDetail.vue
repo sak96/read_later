@@ -3,7 +3,7 @@ import { ref, onMounted, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { invokeParse, invokeNoParseLogError } from '@/composables/useTauri'
 import { Channel } from '@tauri-apps/api/core';
-import type { Article, FetchProgress } from '@/types'
+import type { Article, FetchProgress, AlertContext } from '@/types'
 import ReadViewer from '@/components/ReadViewer.vue'
 
 const props = defineProps<{
@@ -18,7 +18,7 @@ type PageMode =
 
 const mode = ref<PageMode>({ type: 'fetching', progress: null })
 
-const alert = inject<(message: string, status: 'success' | 'info' | 'error') => void>('alert')
+const { updateAlertContext } = inject<AlertContext>('alert') || {}
 
 const onProgress = (progress: FetchProgress | null) => {
   mode.value = { type: 'fetching', progress }
@@ -31,9 +31,7 @@ async function loadArticle() {
     mode.value = { type: 'returned', article: result }
     channel.cleanupCallback()
   } catch (err) {
-    if (alert) {
-      alert(`Failed to fetch article: ${err}`, 'error')
-    }
+    updateAlertContext?.('error', `Failed to fetch article: ${err}`)
     await invokeNoParseLogError('delete_article', { id: props.id })
     router.push({ name: 'home' })
   }
@@ -41,9 +39,7 @@ async function loadArticle() {
 
 async function deleteArticle() {
   await invokeNoParseLogError('delete_article', { id: props.id })
-  if (alert) {
-    alert('Deleted article.', 'success')
-  }
+  updateAlertContext?.('success', 'Deleted article.')
   router.push({ name: 'home' })
 }
 

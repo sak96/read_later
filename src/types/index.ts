@@ -34,3 +34,11 @@ export interface GetInsetResponse {
   top: number
   bottom: number
 }
+
+export type AlertStatus = 'success' | 'info' | 'error'
+
+export interface AlertContext {
+  status: AlertStatus
+  message: string | null
+  updateAlertContext: (status: AlertStatus, message: string) => void
+}

@@ -3,7 +3,7 @@ import { ref, onMounted, inject } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { invokeParse } from '@/composables/useTauri'
 import { readClipboard } from '@/composables/useClipboard'
-import type { Article } from '@/types'
+import type { Article, AlertContext } from '@/types'
 import HomeButton from '@/components/HomeButton.vue'
 import SettingsButton from '@/components/SettingsButton.vue'
 import { Fab } from '@/layouts'
@@ -14,7 +14,7 @@ const route = useRoute()
 const urlInput = ref('')
 const progressBar = ref(false)
 
-const alert = inject<(message: string, status: 'success' | 'info' | 'error') => void>('alert')
+const { updateAlertContext } = inject<AlertContext>('alert') || {}
 
 async function pasteFromClipboard() {
   const text = await readClipboard()
@@ -32,9 +32,7 @@ async function onSubmit(e: Event) {
     const article = await invokeParse<Article>('add_article', { url: urlInput.value })
     router.replace({ name: 'article', params: { id: article.id } })
   } catch (err) {
-    if (alert) {
-      alert(`Failed to add article: ${err}`, 'error')
-    }
+    updateAlertContext?.('error', `Failed to add article: ${err}`)
     progressBar.value = false
   }
 }
