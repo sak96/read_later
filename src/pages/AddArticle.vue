@@ -38,10 +38,7 @@ async function onSubmit(e: Event) {
 }
 
 onMounted(() => {
-	const state = (route.meta as Record<string, unknown>)?.state as { url?: string } | undefined
-	if (state?.url) {
-		urlInput.value = state.url
-	}
+	urlInput.value = decodeURIComponent(route.query?.shared || '');
 })
 </script>
 
