@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Read Later</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+
+    <link rel="stylesheet" href="/src/assets/pico.min.css">
+
+    <meta name="color-scheme" content="light dark">
+
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      height: 100vh;
+      padding-top: var(--safe-area-inset-top, 0);
+      padding-bottom: var(--safe-area-inset-bottom, 0);
+    }
+    .page {
+        scroll-behaviour: smooth;
+        height:  calc(100vh - var(--safe-area-inset-top, 0) -  var(--safe-area-inset-bottom, 0))
+    }
+    [aria-hidden="true"] {
+      display: none !important;
+    }
+    .reader_view *:not(code) {
+      max-width: 100%;
+      overflow-x: auto;
+    }
+    .reader_view ol,  .reader_view ul{
+      list-style-position: inside;
+    }
+    .reader_view ol > li {
+      max-width: unset;
+    }
+    .reader_view ul > li {
+      list-style: inside;
+    }
+    code.tts_code_block {
+      width: 100%;
+      overflow-x: scroll;
+      white-space: pre;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+    table {
+      overflow-x: scroll;
+    }
+    @font-face{
+      font-family:"tabler-icons";
+      font-style:normal;
+      font-weight:400;
+      src:url("/src/assets/tabler-icons.woff2") format("woff2")
+    }
+    .ti{
+      font-family:"tabler-icons" !important;
+      speak:none;
+      font-style:normal;
+      font-weight:normal;
+      font-variant:normal;
+      text-transform:none;
+      line-height:1;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale
+    }
+    </style>
+  </head>
+  <body>
+    <main class="container"></main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

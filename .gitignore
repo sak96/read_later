@@ -1,5 +1,9 @@
 /target
-/crates/frontend/dist
-/.env
+/dist
+/node_modules
+.env
+.env.local
+*.local
+*.log
+.DS_Store
 /crates/tauri/gen/android/keystore.properties
-
