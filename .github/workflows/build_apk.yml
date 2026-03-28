@@ -54,7 +54,7 @@ jobs:
 
       - name: Setup Android signing
         run: |
-          cd crates/tauri/gen/android
+          cd src-tauri/gen/android
           echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" > keystore.properties
           echo "password=${{ secrets.ANDROID_KEY_PASSWORD }}" >> keystore.properties
           base64 -d <<< "${{ secrets.ANDROID_KEY_BASE64 }}" > $RUNNER_TEMP/keystore.jks
@@ -65,13 +65,8 @@ jobs:
           export NDK_HOME=$ANDROID_NDK
           cargo tauri android build  --split-per-abi
           mkdir dist
-          find  crates/tauri/gen/android/app/build/outputs/apk/ -iname *-release.apk -exec cp {} dist \;
-          find  crates/tauri/gen/android/app/build/outputs/bundle/ -iname *-release.aab -exec cp {} dist \;
-
-      - name: Create frontend.tar and checksum
-        run: |
-          tar -cvf dist/frontend.tar -C crates/frontend dist
-          sha256sum dist/frontend.tar > dist/frontend.tar.sha256sum
+          find  src-tauri/gen/android/app/build/outputs/apk/ -iname *-release.apk -exec cp {} dist \;
+          find  src-tauri/gen/android/app/build/outputs/bundle/ -iname *-release.aab -exec cp {} dist \;
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
