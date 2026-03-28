@@ -21,6 +21,10 @@
     "clipboard-manager:allow-read-text",
     "os:allow-os-type",
     "opener:default",
+    "tts:allow-speak",
+    "tts:allow-stop",
+    "tts:allow-get-voices",
+    "tts:allow-is-speaking",
     "dialog:default",
     "http:default"
   ]

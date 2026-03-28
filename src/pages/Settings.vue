@@ -14,7 +14,6 @@ const themeContext = inject<{ mode: Theme; setMode: (mode: Theme) => void }>('th
 
 const version = ref('N/A')
 const ttsEnabled = ref(true)
-const isAndroid = ref(false)
 
 const themes: Array<{ value: Theme; icon: string; code: string }> = [
 	{ value: 'light', icon: 'ti-sun', code: '\uf6a9' },
@@ -38,12 +37,7 @@ async function loadVersion() {
 
 async function loadTtsSetting() {
 	const value = await getSetting('tts')
-	if (value !== null) {
-		ttsEnabled.value = value === 'true'
-	} else {
-		await setSetting('tts', isAndroid.value.toString())
-		ttsEnabled.value = isAndroid.value
-	}
+	ttsEnabled.value = value === 'true'
 }
 
 async function onThemeChange(newTheme: Theme) {
@@ -65,17 +59,13 @@ async function openExternalUrl(url: string) {
 
 async function checkAndroid(): Promise<boolean> {
 	try {
-		const osType = await import('@tauri-apps/api/core').then(m => 
-			m.invoke<string>('plugin:os|type')
-		)
-		return osType === 'android'
+		return platform() === 'android'
 	} catch {
 		return false
 	}
 }
 
 onMounted(async () => {
-	isAndroid.value = await checkAndroid()
 	await loadVersion()
 	await loadTtsSetting()
 })
@@ -100,7 +90,7 @@ onMounted(async () => {
         </label>
       </fieldset>
 
-      <fieldset v-if="isAndroid">
+      <fieldset >
         <div role="group">
           <tr style="background-color: var(--pico-mark-background-color)">
             <th><h2 class="ti ti-volume">&#xeb51;</h2></th>

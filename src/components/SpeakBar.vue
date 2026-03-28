@@ -20,13 +20,7 @@ const selectedIndex = ref<number | null>(null)
 
 async function loadTtsSetting() {
 	const value = await getSetting('tts')
-	if (value !== null) {
-		ttsEnabled.value = value === 'true'
-	} else {
-		const isAndroid = await checkAndroid()
-		await setSetting('tts', isAndroid.toString())
-		ttsEnabled.value = isAndroid
-	}
+	ttsEnabled.value = value === 'true'
 }
 
 
@@ -39,18 +33,6 @@ async function onLanguageChange(event: Event) {
 	const target = event.target as HTMLSelectElement
 	const index = parseInt(target.value)
 	selectedIndex.value = index
-}
-
-
-async function checkAndroid(): Promise<boolean> {
-	try {
-		const osType = await import('@tauri-apps/api/core').then(m => 
-			m.invoke<string>('plugin:os|type')
-		)
-		return osType === 'android'
-	} catch {
-		return false
-	}
 }
 
 function switchMode() {
