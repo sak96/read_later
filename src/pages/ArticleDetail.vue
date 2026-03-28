@@ -2,7 +2,7 @@
 import { ref, onMounted, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { invokeParse, invokeNoParseLogError } from '@/composables/useTauri'
-import { transformCallback } from '@tauri-apps/api/core';
+import { Channel } from '@tauri-apps/api/core';
 import type { Article, FetchProgress } from '@/types'
 import ReadViewer from '@/components/ReadViewer.vue'
 
@@ -26,11 +26,10 @@ const onProgress = (progress: FetchProgress | null) => {
 
 async function loadArticle() {
   try {
-    const progressId = transformCallback((event) => {
-      onProgress(event.message)
-    })
-    const result = await invokeParse<Article>('get_article', { id: props.id, onProgress: `__CHANNEL__:${progressId}` })
+    const channel = new Channel<FetchProgress>(onProgress);
+    const result = await invokeParse<Article>('get_article', { id: props.id, onProgress: channel })
     mode.value = { type: 'returned', article: result }
+    channel.cleanupCallback()
   } catch (err) {
     if (alert) {
       alert(`Failed to fetch article: ${err}`, 'error')
