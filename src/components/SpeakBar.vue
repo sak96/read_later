@@ -25,7 +25,7 @@ async function loadTtsSetting() {
 
 
 async function loadVoices() {
-	languages.value = await getVoices("en")
+	languages.value = await getVoices()
 }
 
 
