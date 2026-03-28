@@ -8,10 +8,10 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
-    "lint": "eslint src"
+    "lint": "eslint --fix src"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.2.0",
+    "@tauri-apps/api": "~2.9.0",
     "@tauri-apps/plugin-clipboard-manager": "^2.2.3",
     "@tauri-apps/plugin-dialog": "^2.2.0",
     "@tauri-apps/plugin-fs": "^2.2.0",
@@ -20,16 +20,17 @@
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@typescript-eslint/eslint-plugin": "^8.57.2",
-    "@typescript-eslint/parser": "^8.57.2",
-    "@vitejs/plugin-vue": "^5.2.1",
-    "eslint": "^10.1.0",
-    "eslint-plugin-vue": "^10.8.0",
+    "@types/node": "^25.5.0",
+    "@typescript-eslint/eslint-plugin": "^8.57.0",
+    "@typescript-eslint/parser": "^8.57.0",
+    "@vitejs/plugin-vue": "^6.0.5",
+    "eslint": "^9.39.4",
+    "eslint-plugin-vue": "^9.24.0",
     "globals": "^17.4.0",
-    "typescript": "~5.7.3",
-    "vite": "^6.0.11",
+    "typescript": "^5.9.3",
+    "jiti": "^2.6.1",
+    "vite": "^8.0.0",
     "vue-eslint-parser": "^10.4.0",
-    "vue-tsc": "^2.2.0"
+    "vue-tsc": "^3.2.5"
   }
 }
