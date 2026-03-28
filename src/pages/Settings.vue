@@ -57,14 +57,6 @@ async function openExternalUrl(url: string) {
 	await invoke('open_url', { url })
 }
 
-async function checkAndroid(): Promise<boolean> {
-	try {
-		return platform() === 'android'
-	} catch {
-		return false
-	}
-}
-
 onMounted(async () => {
 	await loadVersion()
 	await loadTtsSetting()

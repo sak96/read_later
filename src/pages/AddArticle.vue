@@ -38,7 +38,7 @@ async function onSubmit(e: Event) {
 }
 
 onMounted(() => {
-	urlInput.value = decodeURIComponent(route.query?.shared || '');
+	urlInput.value = decodeURIComponent((route.query?.shared as string) || '');
 })
 </script>
 

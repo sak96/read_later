@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
-import { getSetting, setSetting } from '../composables/useSettings'
+import { getSetting } from '../composables/useSettings'
 import { speak, stop, isSpeaking, getVoices, Voice } from "tauri-plugin-tts-api";
 import SpeakRate from './SpeakRate.vue'
-import LanguageSelection from './Language.vue'
 
 const props = defineProps<{
   divRef: HTMLElement
@@ -79,7 +78,17 @@ async function runReader() {
 		const text = paraText.replace(/\s+/g, ' ').trim()
  	   scrollToCenter()
 		try {
-			await speak({ text, rate: rate.value});
+			const voice = selectedIndex.value !== null ? languages.value[selectedIndex.value] : null
+			const voiceId = voice?.id ?? ''
+			await speak({
+				text,
+				rate: rate.value,
+				language: '',
+				voiceId: voiceId,
+				pitch: 1,
+				volume: 1,
+				queueMode: 'flush'
+			})
 		} catch (err) { console.error(err) }
 		while (await isSpeaking()) {
 			await new Promise(resolve => setTimeout(resolve, 1000));
@@ -117,7 +126,6 @@ watch(checkpoint, (newId) => {
 			}
 		}
 	)
-	const test = props.divRef.querySelector('.current_para');
 })
 
 onMounted(() => {

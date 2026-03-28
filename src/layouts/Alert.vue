@@ -14,8 +14,6 @@ function updateAlertContext(newStatus: AlertStatus, newMessage: string) {
 }
 
 provide<AlertContext>('alert', {
-	status,
-	message,
 	updateAlertContext
 })
 

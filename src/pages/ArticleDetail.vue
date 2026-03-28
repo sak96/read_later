@@ -28,8 +28,9 @@ async function loadArticle() {
 	try {
 		const channel = new Channel<FetchProgress>(onProgress);
 		const result = await invokeParse<Article>('get_article', { id: props.id, onProgress: channel })
-		mode.value = { type: 'returned', article: result }
-		channel.cleanupCallback()
+		mode.value = { type: 'returned', article: result } as PageMode
+		// add any to call private functions
+		(channel as any).cleanupCallback()
 	} catch (err) {
 		updateAlertContext?.('error', `Failed to fetch article: ${err}`)
 		await invokeNoParseLogError('delete_article', { id: props.id })

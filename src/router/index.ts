@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
 import Home from '../pages/Home.vue'
 import ArticleDetail from '../pages/ArticleDetail.vue'
 import Settings from '../pages/Settings.vue'
@@ -11,10 +11,10 @@ const routes = [
 		component: Home,
 	},
 	{
-		path: '/article/:id',
+		path: '/article/:id(\\d+)',
 		name: 'article',
 		component: ArticleDetail,
-		props: (route) => ({
+		props: (route: RouteLocationNormalized) => ({
 			id: Number(route.params.id)
 		})
 	},

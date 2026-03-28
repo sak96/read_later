@@ -10,7 +10,6 @@ import { Fab } from '../layouts'
 const router = useRouter()
 const articles = ref<ArticleEntry[]>([])
 const loading = ref(false)
-const scrollRef = ref<HTMLElement | null>(null)
 
 async function fetchArticles() {
 	if (loading.value) return
@@ -51,7 +50,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="container page" ref="scrollRef" @scroll="onScroll">
+  <main class="container page" @scroll="onScroll">
     <div class="container">
       <ArticleCard 
         v-for="article in articles" 
