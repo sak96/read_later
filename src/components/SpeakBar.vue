@@ -59,12 +59,12 @@ function findVisibleParaId(): number {
 
 function scrollToTop() {
 	const para = props.divRef.querySelector(".current_para")
-    para?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+	para?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 function scrollToCenter() {
 	const para = props.divRef.querySelector(".current_para")
-    para?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+	para?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
 
 function extractParaText(): string | null {
@@ -76,48 +76,48 @@ async function runReader() {
 	if (mode.value !== 'reader') return
 	const paraText = extractParaText()
 	if (paraText !== null) {
-       const text = paraText.replace(/\s+/g, ' ').trim()
+		const text = paraText.replace(/\s+/g, ' ').trim()
  	   scrollToCenter()
-       try {
-            await speak({ text, rate: rate.value});
-        } catch (err) { console.error(err) }
-        while (await isSpeaking()) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        checkpoint.value++
-        if (mode.value === 'reader') {
+		try {
+			await speak({ text, rate: rate.value});
+		} catch (err) { console.error(err) }
+		while (await isSpeaking()) {
+			await new Promise(resolve => setTimeout(resolve, 1000));
+		}
+		checkpoint.value++
+		if (mode.value === 'reader') {
 		   setTimeout(runReader, 1000)
-        }
+		}
 	} else {
 		mode.value = 'view'
 		stop()
-        return
+		return
 	}
 }
 
 watch(mode, (newMode) => {
 	if (newMode === 'reader') {
 		runReader()
-        props.divRef?.classList.remove('view')
-        props.divRef?.classList.add('reader')
-    } else {
-        props.divRef?.classList.remove('reader')
-        props.divRef?.classList.add('view')
-    }
+		props.divRef?.classList.remove('view')
+		props.divRef?.classList.add('reader')
+	} else {
+		props.divRef?.classList.remove('reader')
+		props.divRef?.classList.add('view')
+	}
 })
 
 watch(checkpoint, (newId) => {
-    const paraId = `.tts_para_${newId}`
+	const paraId = `.tts_para_${newId}`
 	const para = props.divRef.querySelector(paraId)
-    para?.classList.add('current_para');
-    props.divRef.querySelectorAll('.current_para').forEach(
-      el => {
-        if (!el.classList.contains(paraId.slice(1))) {
-          el.classList.remove("current_para")
-        }
-      }
-    )
-    const test = props.divRef.querySelector('.current_para');
+	para?.classList.add('current_para');
+	props.divRef.querySelectorAll('.current_para').forEach(
+		el => {
+			if (!el.classList.contains(paraId.slice(1))) {
+				el.classList.remove("current_para")
+			}
+		}
+	)
+	const test = props.divRef.querySelector('.current_para');
 })
 
 onMounted(() => {
