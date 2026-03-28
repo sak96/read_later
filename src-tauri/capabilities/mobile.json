@@ -24,11 +24,14 @@
     "opener:default",
     "tts:allow-speak",
     "tts:allow-stop",
-    "tts:allow-set-voice",
-    "tts:allow-get-all-voices",
+    "tts:allow-get-voices",
+    "tts:allow-is-speaking",
     "safe-area-insets-css:default",
     "dialog:default",
     "http:default"
   ],
-  "platforms": ["android", "iOS"]
+  "platforms": [
+    "android",
+    "iOS"
+  ]
 }
