@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, provide, watch, onMounted } from 'vue'
-import { getSetting, setSetting } from '@/composables/useSettings'
+import { getSetting, setSetting } from '../composables/useSettings'
 
 const themes = ['dark', 'light', 'system'] as const
 type Theme = typeof themes[number]

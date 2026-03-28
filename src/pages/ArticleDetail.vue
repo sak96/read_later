@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, inject } from 'vue'
 import { useRouter } from 'vue-router'
-import { invokeParse, invokeNoParseLogError } from '@/composables/useTauri'
+import { invokeParse, invokeNoParseLogError } from '../composables/useTauri'
 import { Channel } from '@tauri-apps/api/core';
-import type { Article, FetchProgress, AlertContext } from '@/types'
-import ReadViewer from '@/components/ReadViewer.vue'
+import type { Article, FetchProgress, AlertContext } from '../types'
+import ReadViewer from '../components/ReadViewer.vue'
 
 const props = defineProps<{
   id: number

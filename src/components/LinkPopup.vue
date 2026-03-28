@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { invokeNoParseLogError } from '@/composables/useTauri'
+import { invokeNoParseLogError } from '../composables/useTauri'
 
 defineProps<{
   url: string | null

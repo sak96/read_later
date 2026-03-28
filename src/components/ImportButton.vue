@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { invokeNoParseLogError } from '@/composables/useTauri'
+import { invokeNoParseLogError } from '../composables/useTauri'
 
 const isImporting = ref(false)
 

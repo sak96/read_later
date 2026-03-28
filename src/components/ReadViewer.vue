@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import type { Article } from '@/types'
-import { invokeNoParseLogError } from '@/composables/useTauri'
+import type { Article } from '../types'
+import { invokeNoParseLogError } from '../composables/useTauri'
 import HomeButton from './HomeButton.vue'
 import LinkPopup from './LinkPopup.vue'
 import SpeakBar from './SpeakBar.vue'

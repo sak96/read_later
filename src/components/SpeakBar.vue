@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
-import { getSetting, setSetting } from '@/composables/useSettings'
+import { getSetting, setSetting } from '../composables/useSettings'
 import { speak, stop, isSpeaking, getVoices, Voice } from "tauri-plugin-tts-api";
 import SpeakRate from './SpeakRate.vue'
 import LanguageSelection from './Language.vue'

@@ -1,5 +1,5 @@
 import { invokeParseLogError, invokeNoParseLogError } from './useTauri'
-import type { IntentEvent } from '@/types'
+import type { IntentEvent } from '../types'
 
 export async function getSharedText(): Promise<IntentEvent | null> {
 	return invokeParseLogError<IntentEvent>('get_shared_text', {})

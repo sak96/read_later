@@ -2,8 +2,8 @@
 import { onMounted, onUnmounted } from 'vue'
 import { RouterView } from 'vue-router'
 import { useRouter } from 'vue-router'
-import { Alert, Theme } from '@/layouts'
-import { setInset } from '@/composables/useInset'
+import { Alert, Theme } from './layouts'
+import { setInset } from './composables/useInset'
 import { popIntentQueueAndExtractText } from 'tauri-plugin-mobile-sharetarget-api';
 import { platform } from '@tauri-apps/plugin-os';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';

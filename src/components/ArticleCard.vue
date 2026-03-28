@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import type { ArticleEntry } from '@/types'
+import type { ArticleEntry } from '../types'
 
 const props = defineProps<{
   article: ArticleEntry

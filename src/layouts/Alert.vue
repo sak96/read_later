@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, provide, computed } from 'vue'
-import type { AlertContext, AlertStatus } from '@/types'
+import type { AlertContext, AlertStatus } from '../types'
 
 const message = ref<string | null>(null)
 const status = ref<AlertStatus>('info')

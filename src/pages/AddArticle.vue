@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, inject } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { invokeParse } from '@/composables/useTauri'
-import { readClipboard } from '@/composables/useClipboard'
-import type { Article, AlertContext } from '@/types'
-import HomeButton from '@/components/HomeButton.vue'
-import SettingsButton from '@/components/SettingsButton.vue'
-import { Fab } from '@/layouts'
+import { invokeParse } from '../composables/useTauri'
+import { readClipboard } from '../composables/useClipboard'
+import type { Article, AlertContext } from '../types'
+import HomeButton from '../components/HomeButton.vue'
+import SettingsButton from '../components/SettingsButton.vue'
+import { Fab } from '../layouts'
 
 const router = useRouter()
 const route = useRoute()

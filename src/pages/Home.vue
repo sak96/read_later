@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { invokeParseLogError } from '@/composables/useTauri'
-import type { ArticleEntry } from '@/types'
-import ArticleCard from '@/components/ArticleCard.vue'
-import SettingsButton from '@/components/SettingsButton.vue'
-import { Fab } from '@/layouts'
+import { invokeParseLogError } from '../composables/useTauri'
+import type { ArticleEntry } from '../types'
+import ArticleCard from '../components/ArticleCard.vue'
+import SettingsButton from '../components/SettingsButton.vue'
+import { Fab } from '../layouts'
 
 const router = useRouter()
 const articles = ref<ArticleEntry[]>([])

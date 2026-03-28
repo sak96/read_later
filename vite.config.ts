@@ -6,11 +6,7 @@ const host = process.env.TAURI_DEV_HOST
 
 export default defineConfig({
   plugins: [vue()],
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src'),
-    },
-  },
+  resolve: {},
   clearScreen: false,
   server: {
     port: 5173,

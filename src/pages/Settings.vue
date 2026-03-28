@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, inject } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { getSetting, setSetting } from '@/composables/useSettings'
-import HomeButton from '@/components/HomeButton.vue'
-import ImportButton from '@/components/ImportButton.vue'
-import ExportButton from '@/components/ExportButton.vue'
-import SpeakRate from '@/components/SpeakRate.vue'
-import { Fab } from '@/layouts'
+import { getSetting, setSetting } from '../composables/useSettings'
+import HomeButton from '../components/HomeButton.vue'
+import ImportButton from '../components/ImportButton.vue'
+import ExportButton from '../components/ExportButton.vue'
+import SpeakRate from '../components/SpeakRate.vue'
+import { Fab } from '../layouts'
 
 type Theme = 'light' | 'dark' | 'system'
 
