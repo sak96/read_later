@@ -11,11 +11,8 @@ Use APK from [releases.](https://github.com/sak96/read_later/releases)
 ## Setup
 
 ```bash
-cargo install wasm-bindgen-cli@0.2.106 wasm-opt@0.116.1 tauri-cli@2.9.5 trunk@0.21.14
-```
-
-```bash
-rustup target add wasm32-unknown-unknown
+npm install --package-lock
+cargo install tauri-cli@2.9.5
 ```
 
 ## Development
