@@ -6,8 +6,8 @@
   "build": {
     "removeUnusedCommands": true,
     "frontendDist": "../../dist",
-    "devUrl": "http://localhost:8080",
-    "beforeDevCommand": "npm run dev -- --host",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
   },
   "app": {
