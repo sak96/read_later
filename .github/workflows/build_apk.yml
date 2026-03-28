@@ -21,7 +21,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ steps.build_tool_versions.outputs.rust }}
-          targets: wasm32-unknown-unknown,aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.build_tool_versions.outputs.node }}
 
       - name: Cache the rust details
         uses: Swatinem/rust-cache@v2
@@ -32,7 +37,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cargo install wasm-bindgen-cli@0.2.106 wasm-opt@0.116.1 tauri-cli@2.9.5 trunk@0.21.14
+          cargo install tauri-cli@2.9.5
 
       - name: Set up JDK
         uses: actions/setup-java@v5
