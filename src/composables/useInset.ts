@@ -47,7 +47,7 @@ export async function setInset(): Promise<void> {
 			document.documentElement.style.setProperty('--safe-area-inset-bottom', `${bottomInset?.inset}px`);
 		}
 		onKeyboardShown(() => {
-			document.documentElement.style.setProperty('--safe-area-inset-bottom', `0px`);
+			document.documentElement.style.setProperty('--safe-area-inset-bottom', '0px');
 		});
 		onKeyboardHidden(() => {
 			document.documentElement.style.setProperty('--safe-area-inset-bottom', `${bottomInset?.inset}px`);

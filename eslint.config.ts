@@ -32,7 +32,15 @@ export default [
                         'vue/no-side-effects-in-computed-properties': 'off',
                         'no-unused-vars': 'off',
                         'no-undef': 'off',
-                        'indent': ["error", "tab"],
+                        'no-multiple-empty-lines': ['error', { 'max': 1, 'maxEOF': 0 }],
+                        'padding-line-between-statements': [
+                                'error',
+                                { 'blankLine': 'always', 'prev': 'directive', 'next': '*' },
+                                { 'blankLine': 'always', 'prev': 'import', 'next': '*' },
+                                { 'blankLine': 'any', 'prev': '*', 'next': '*' }
+                        ],
+                        'quotes': ['error', 'single', { 'avoidEscape': true }],
+                        'indent': ['error', 'tab'],
                 }
         },
         {
@@ -57,9 +65,17 @@ export default [
                         }
                 },
                 rules: {
-                        'indent': ["error", "tab"],
                         'no-unused-vars': 'off',
-                        'no-undef': 'off'
+                        'no-undef': 'off',
+                        'no-multiple-empty-lines': ['error', { 'max': 1, 'maxEOF': 0 }],
+                        'padding-line-between-statements': [
+                                'error',
+                                { 'blankLine': 'always', 'prev': 'directive', 'next': '*' },
+                                { 'blankLine': 'always', 'prev': 'import', 'next': '*' },
+                                { 'blankLine': 'any', 'prev': '*', 'next': '*' }
+                        ],
+                        'quotes': ['error', 'single', { 'avoidEscape': true }],
+                        'indent': ['error', 'tab'],
                 }
         }
 ] satisfies Linter.Config[];

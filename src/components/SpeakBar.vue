@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { getSetting } from '../composables/useSettings'
-import { speak, stop, isSpeaking, getVoices, Voice } from "tauri-plugin-tts-api";
+import { speak, stop, isSpeaking, getVoices, Voice } from 'tauri-plugin-tts-api';
 import SpeakRate from './SpeakRate.vue'
 
 const props = defineProps<{
@@ -22,11 +22,9 @@ async function loadTtsSetting() {
 	ttsEnabled.value = value === 'true'
 }
 
-
 async function loadVoices() {
 	languages.value = await getVoices()
 }
-
 
 async function onLanguageChange(event: Event) {
 	const target = event.target as HTMLSelectElement
@@ -57,17 +55,17 @@ function findVisibleParaId(): number {
 }
 
 function scrollToTop() {
-	const para = props.divRef.querySelector(".current_para")
+	const para = props.divRef.querySelector('.current_para')
 	para?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 function scrollToCenter() {
-	const para = props.divRef.querySelector(".current_para")
+	const para = props.divRef.querySelector('.current_para')
 	para?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
 
 function extractParaText(): string | null {
-	const para = props.divRef.querySelector(".current_para")
+	const para = props.divRef.querySelector('.current_para')
 	return para?.textContent || null
 }
 
@@ -122,7 +120,7 @@ watch(checkpoint, (newId) => {
 	props.divRef.querySelectorAll('.current_para').forEach(
 		el => {
 			if (!el.classList.contains(paraId.slice(1))) {
-				el.classList.remove("current_para")
+				el.classList.remove('current_para')
 			}
 		}
 	)
