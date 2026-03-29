@@ -38,6 +38,7 @@ jobs:
       - name: Install dependencies
         run: |
           cargo install tauri-cli@2.9.5
+          npm ci
 
       - name: Set up JDK
         uses: actions/setup-java@v5
