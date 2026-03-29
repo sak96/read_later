@@ -16,6 +16,7 @@ const rate = ref(1.0)
 const ttsEnabled = ref(true)
 const languages = ref<Voice[]>([])
 const selectedIndex = ref<number | null>(null)
+const voiceId = ref<string | null>(null)
 
 async function loadTtsSetting() {
   const value = await getSetting('tts')
@@ -60,7 +61,8 @@ function loadModeClass(newMode: ViewMode) {
 async function onLanguageChange(event: Event) {
   const target = event.target as HTMLSelectElement
   const index = parseInt(target.value)
-  selectedIndex.value = index
+  const voice = index !== null ? languages.value[index] : null
+  voiceId.value = voice?.id ?? null
 }
 
 function switchMode() {
@@ -111,16 +113,14 @@ async function runReader() {
   if (mode.value !== 'reader') return
   const paraText = extractParaText()
   if (paraText !== null) {
-    const text = paraText.replace(/\s+/g, ' ').trim()
+    const text = paraText.split(' ').filter(Boolean).join(' ')
     scrollToCenter()
     try {
-      const voice = selectedIndex.value !== null ? languages.value[selectedIndex.value] : null
-      const voiceId = voice?.id ?? null
       await speak({
         text,
         rate: rate.value,
         language: '',
-        voiceId: voiceId,
+        voiceId: voiceId.value,
         pitch: 1,
         volume: 1,
         queueMode: 'flush',
