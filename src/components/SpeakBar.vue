@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
-import { getSetting } from '../composables/useSettings'
+import { getSetting, setSetting } from '../composables/useSettings'
 import { speak, stop, isSpeaking, getVoices, Voice } from 'tauri-plugin-tts-api';
 import SpeakRate from './SpeakRate.vue'
 
@@ -19,7 +19,12 @@ const selectedIndex = ref<number | null>(null)
 
 async function loadTtsSetting() {
 	const value = await getSetting('tts')
-	ttsEnabled.value = value === 'true'
+	if (value == null) {
+		setSetting('tts', 'true')
+		loadTtsSetting()
+	} else {
+		ttsEnabled.value = value === 'true'
+	}
 }
 
 async function loadVoices() {

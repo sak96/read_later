@@ -37,7 +37,12 @@ async function loadVersion() {
 
 async function loadTtsSetting() {
 	const value = await getSetting('tts')
-	ttsEnabled.value = value === 'true'
+	if (value == null) {
+		setSetting('tts', 'true')
+		loadTtsSetting()
+	} else {
+		ttsEnabled.value = value === 'true'
+	}
 }
 
 async function onThemeChange(newTheme: Theme) {
