@@ -5,7 +5,7 @@
   "identifier": "io.github.sak.read.it.later",
   "build": {
     "removeUnusedCommands": true,
-    "frontendDist": "../../dist",
+    "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
