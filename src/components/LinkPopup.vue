@@ -10,7 +10,7 @@ const emit = defineEmits<{
 }>()
 
 async function openExternal(url: string) {
-	await invokeNoParseLogError('open_url', { url })
+	await invokeNoParseLogError('plugin:opener|open_url', { url })
 	emit('close')
 }
 

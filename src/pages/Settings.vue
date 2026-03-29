@@ -54,7 +54,7 @@ async function onTtsToggle() {
 }
 
 async function openExternalUrl(url: string) {
-	await invoke('open_url', { url })
+	await invoke('plugin:opener|open_url', { url })
 }
 
 onMounted(async () => {

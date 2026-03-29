@@ -25,7 +25,7 @@ function closeLinkPopup() {
 }
 
 async function openUrl(url: string) {
-	await invokeNoParseLogError('open_url', { url })
+	await invokeNoParseLogError('plugin:opener|open_url', { url })
 }
 
 function toggleDeleteModal() {
