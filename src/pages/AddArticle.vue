@@ -17,28 +17,29 @@ const progressBar = ref(false)
 const { updateAlertContext } = inject<AlertContext>('alert') || {}
 
 async function pasteFromClipboard() {
-	const text = await readClipboard()
-	if (text) {
-		urlInput.value = text
-	}
+  const text = await readClipboard()
+  if (text) {
+    urlInput.value = text
+  }
 }
 
 async function onSubmit(e: Event) {
-	e.preventDefault()
-  
-	progressBar.value = true
-  
-	try {
-		const article = await invokeParse<Article>('add_article', { url: urlInput.value })
-		router.replace({ name: 'article', params: { id: article.id } })
-	} catch (err) {
-		updateAlertContext?.('error', `Failed to add article: ${err}`)
-		progressBar.value = false
-	}
+  e.preventDefault()
+
+  progressBar.value = true
+
+  try {
+    const article = await invokeParse<Article>('add_article', { url: urlInput.value })
+    router.replace({ name: 'article', params: { id: article.id } })
+  }
+  catch (err) {
+    updateAlertContext?.('error', `Failed to add article: ${err}`)
+    progressBar.value = false
+  }
 }
 
 onMounted(() => {
-	urlInput.value = decodeURIComponent((route.query?.shared as string) || '');
+  urlInput.value = decodeURIComponent((route.query?.shared as string) || '')
 })
 </script>
 
@@ -46,18 +47,26 @@ onMounted(() => {
   <article>
     <div v-if="progressBar">
       <blockquote>{{ urlInput }}</blockquote>
-      <article aria-busy="true"></article>
+      <article aria-busy="true" />
     </div>
 
-    <form v-else class="container page" @submit="onSubmit">
+    <form
+      v-else
+      class="container page"
+      @submit="onSubmit"
+    >
       <input
-        type="url"
         v-model="urlInput"
+        type="url"
         placeholder="https://example.com/article"
         required
-      />
+      >
       <div role="group">
-        <button class="outline" type="button" @click="pasteFromClipboard">
+        <button
+          class="outline"
+          type="button"
+          @click="pasteFromClipboard"
+        >
           <i class="ti ti-clipboard">&#x100cc;</i>
         </button>
         <div role="group">

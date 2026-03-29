@@ -5,7 +5,8 @@ defineSlots<{
 </script>
 
 <template>
-  <div style="
+  <div
+    style="
     position: fixed;
     bottom: var(--safe-area-inset-bottom, 0);
     right: 0em;
@@ -14,7 +15,8 @@ defineSlots<{
     display: flex;
     flex-direction: column;
     gap: 5px;
-  ">
-    <slot></slot>
+  "
+  >
+    <slot />
   </div>
 </template>

@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 function goToSettings() {
-	router.push({ name: 'settings' })
+  router.push({ name: 'settings' })
 }
 </script>
 

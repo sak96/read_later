@@ -12,55 +12,62 @@ const articles = ref<ArticleEntry[]>([])
 const loading = ref(false)
 
 async function fetchArticles() {
-	if (loading.value) return
-  
-	loading.value = true
-	const data = await invokeParseLogError<ArticleEntry[]>('get_articles', { offset: articles.value.length })
-  
-	if (data) {
-		if (data.length === 0) {
-			if (articles.value.length === 0) {
-				router.push({ name: 'addArticle' })
-			}
-		} else {
-			articles.value.push(...data)
-		}
-	}
-	loading.value = false
+  if (loading.value) return
+
+  loading.value = true
+  const data = await invokeParseLogError<ArticleEntry[]>('get_articles', { offset: articles.value.length })
+
+  if (data) {
+    if (data.length === 0) {
+      if (articles.value.length === 0) {
+        router.push({ name: 'addArticle' })
+      }
+    }
+    else {
+      articles.value.push(...data)
+    }
+  }
+  loading.value = false
 }
 
 function onScroll(e: Event) {
-	const target = e.target as HTMLElement
-	const scrollTop = target.scrollTop
-	const scrollHeight = target.scrollHeight
-	const clientHeight = target.clientHeight
-  
-	if (scrollTop + clientHeight > scrollHeight - 100) {
-		fetchArticles()
-	}
+  const target = e.target as HTMLElement
+  const scrollTop = target.scrollTop
+  const scrollHeight = target.scrollHeight
+  const clientHeight = target.clientHeight
+
+  if (scrollTop + clientHeight > scrollHeight - 100) {
+    fetchArticles()
+  }
 }
 
 function goToAddArticle() {
-	router.push({ name: 'addArticle' })
+  router.push({ name: 'addArticle' })
 }
 
 onMounted(() => {
-	fetchArticles()
+  fetchArticles()
 })
 </script>
 
 <template>
-  <main class="container page" @scroll="onScroll">
+  <main
+    class="container page"
+    @scroll="onScroll"
+  >
     <div class="container">
-      <ArticleCard 
-        v-for="article in articles" 
-        :key="article.id" 
-        :article="article" 
+      <ArticleCard
+        v-for="article in articles"
+        :key="article.id"
+        :article="article"
       />
     </div>
   </main>
 
-  <article v-if="loading" aria-busy="true"></article>
+  <article
+    v-if="loading"
+    aria-busy="true"
+  />
 
   <Fab>
     <button @click="goToAddArticle">

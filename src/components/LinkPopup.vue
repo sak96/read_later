@@ -10,12 +10,12 @@ const emit = defineEmits<{
 }>()
 
 async function openExternal(url: string) {
-	await invokeNoParseLogError('plugin:opener|open_url', { url })
-	emit('close')
+  await invokeNoParseLogError('plugin:opener|open_url', { url })
+  emit('close')
 }
 
 function close() {
-	emit('close')
+  emit('close')
 }
 </script>
 
@@ -23,12 +23,21 @@ function close() {
   <dialog :open="!!url">
     <article v-if="url">
       <header>
-        <button aria-label="Close" @click="close" rel="prev"></button>
-        <h2 class="ti ti-world-www">&#xf38f;</h2>
+        <button
+          aria-label="Close"
+          rel="prev"
+          @click="close"
+        />
+        <h2 class="ti ti-world-www">
+          &#xf38f;
+        </h2>
       </header>
       <strong>{{ url }}</strong>
       <footer>
-        <button type="button" @click="openExternal(url)">
+        <button
+          type="button"
+          @click="openExternal(url)"
+        >
           <i class="ti ti-check">&#xea5e;</i>
         </button>
       </footer>

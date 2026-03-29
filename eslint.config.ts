@@ -1,81 +1,27 @@
-import pluginVue from 'eslint-plugin-vue';
-import vueParser from 'vue-eslint-parser';
-import parserTs from '@typescript-eslint/parser';
-import type { Linter } from 'eslint';
+import { defineConfigWithVueTs, vueTsConfigs } from "@vue/eslint-config-typescript";
+import vuePlugin from "eslint-plugin-vue";
+import tseslint from "typescript-eslint";
+import stylistic from "@stylistic/eslint-plugin";
 
-export default [
+export default defineConfigWithVueTs(
+        // TypeScript base
+        tseslint.configs.recommended,
+        // tseslint.configs.recommendedTypeChecked,
+
+        // Vue plugin flat config
+        vuePlugin.configs["flat/recommended"],
+
+        // Vue + TS integration
+        vueTsConfigs.recommended,
+        // vueTsConfigs.recommendedTypeChecked,
+
+        // Stylistic rules (should come last)
+        stylistic.configs.recommended,
+
+        // Custom rule overrides
         {
-                files: ['src/**/*.vue'],
-                ignores: ['node_modules', 'dist', '.git'],
-                languageOptions: {
-                        ecmaVersion: 'latest' as const,
-                        sourceType: 'module' as const,
-                        parser: vueParser,
-                        parserOptions: {
-                                parser: parserTs
-                        },
-                        globals: {
-                                console: 'readonly' as const,
-                                window: 'readonly' as const,
-                                document: 'readonly' as const,
-                                fetch: 'readonly' as const
-                        }
-                },
-                plugins: {
-                        vue: pluginVue,
-                },
                 rules: {
-                        ...pluginVue.configs.base.rules,
-                        ...pluginVue.configs['vue3-essential'].rules,
-                        'vue/comment-directive': 'off',
-                        'vue/multi-word-component-names': 'off',
-                        'vue/no-side-effects-in-computed-properties': 'off',
-                        'no-unused-vars': 'off',
-                        'no-undef': 'off',
-                        'no-multiple-empty-lines': ['error', { 'max': 1, 'maxEOF': 0 }],
-                        'padding-line-between-statements': [
-                                'error',
-                                { 'blankLine': 'always', 'prev': 'directive', 'next': '*' },
-                                { 'blankLine': 'always', 'prev': 'import', 'next': '*' },
-                                { 'blankLine': 'any', 'prev': '*', 'next': '*' }
-                        ],
-                        'quotes': ['error', 'single', { 'avoidEscape': true }],
-                        'indent': ['error', 'tab'],
-                }
-        },
-        {
-                files: ['src/**/*.ts'],
-                ignores: ['node_modules', 'dist', '.git'],
-                languageOptions: {
-                        ecmaVersion: 'latest' as const,
-                        sourceType: 'module' as const,
-                        parser: parserTs,
-                        globals: {
-                                console: 'readonly' as const,
-                                window: 'readonly' as const,
-                                document: 'readonly' as const,
-                                fetch: 'readonly' as const,
-                                vi: 'readonly' as const,
-                                describe: 'readonly' as const,
-                                it: 'readonly' as const,
-                                beforeEach: 'readonly' as const,
-                                afterEach: 'readonly' as const,
-                                MockInstance: 'readonly' as const,
-                                Mock: 'readonly' as const
-                        }
+                        'vue/multi-word-component-names': 'off', // disable multi-word component names globally
                 },
-                rules: {
-                        'no-unused-vars': 'off',
-                        'no-undef': 'off',
-                        'no-multiple-empty-lines': ['error', { 'max': 1, 'maxEOF': 0 }],
-                        'padding-line-between-statements': [
-                                'error',
-                                { 'blankLine': 'always', 'prev': 'directive', 'next': '*' },
-                                { 'blankLine': 'always', 'prev': 'import', 'next': '*' },
-                                { 'blankLine': 'any', 'prev': '*', 'next': '*' }
-                        ],
-                        'quotes': ['error', 'single', { 'avoidEscape': true }],
-                        'indent': ['error', 'tab'],
-                }
         }
-] satisfies Linter.Config[];
+);

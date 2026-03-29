@@ -22,13 +22,13 @@ export interface Setting {
   default_value: string
 }
 
-export type IntentEvent = 
-  | { TextIntent: string }
-  | 'Empty'
+export type IntentEvent
+  = | { TextIntent: string }
+    | 'Empty'
 
-export type FetchProgress = 
-  | { Downloading: string }
-  | { Parsing: string }
+export type FetchProgress
+  = | { Downloading: string }
+    | { Parsing: string }
 
 export interface GetInsetResponse {
   top: number

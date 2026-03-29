@@ -4,30 +4,30 @@ import { RouterView } from 'vue-router'
 import { useRouter } from 'vue-router'
 import { Alert, Theme } from './layouts'
 import { setInset } from './composables/useInset'
-import { popIntentQueueAndExtractText } from 'tauri-plugin-mobile-sharetarget-api';
-import { platform } from '@tauri-apps/plugin-os';
-import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import { popIntentQueueAndExtractText } from 'tauri-plugin-mobile-sharetarget-api'
+import { platform } from '@tauri-apps/plugin-os'
+import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 
-let focusUnlistener = ref<UnlistenFn | null>(null);
+const focusUnlistener = ref<UnlistenFn | null>(null)
 const router = useRouter()
-const currentPlatform: string = platform();
+const currentPlatform: string = platform()
 
 onMounted(async () => {
-	focusUnlistener.value = await listen(
-		currentPlatform === 'android' ? 'tauri://focus' : 'new-intent',
-		async () => {
-			let url = await popIntentQueueAndExtractText();
-			if (url) {
-				router.replace({ name: 'addArticle', query: {shared: url} })
-			}
-		}
-	);
-	await setInset();
+  focusUnlistener.value = await listen(
+    currentPlatform === 'android' ? 'tauri://focus' : 'new-intent',
+    async () => {
+      const url = await popIntentQueueAndExtractText()
+      if (url) {
+        router.replace({ name: 'addArticle', query: { shared: url } })
+      }
+    },
+  )
+  await setInset()
 })
 
 onUnmounted(() => {
-	focusUnlistener.value?.();
-});
+  focusUnlistener.value?.()
+})
 </script>
 
 <template>

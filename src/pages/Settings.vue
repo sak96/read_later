@@ -10,61 +10,63 @@ import { Fab } from '../layouts'
 
 type Theme = 'light' | 'dark' | 'system'
 
-const themeContext = inject<{ mode: Theme; setMode: (mode: Theme) => void }>('theme')
+const themeContext = inject<{ mode: Theme, setMode: (mode: Theme) => void }>('theme')
 
 const version = ref('N/A')
 const ttsEnabled = ref(true)
 
-const themes: Array<{ value: Theme; icon: string; code: string }> = [
-	{ value: 'light', icon: 'ti-sun', code: '\uf6a9' },
-	{ value: 'dark', icon: 'ti-moon', code: '\ueaf8' },
-	{ value: 'system', icon: 'ti-device-desktop-cog', code: '\uf862' },
+const themes: Array<{ value: Theme, icon: string, code: string }> = [
+  { value: 'light', icon: 'ti-sun', code: '\uf6a9' },
+  { value: 'dark', icon: 'ti-moon', code: '\ueaf8' },
+  { value: 'system', icon: 'ti-device-desktop-cog', code: '\uf862' },
 ]
 
 const infos = [
-	{ url: 'https://github.com/sak96/read_later', icon: 'ti-brand-github', code: '\uec1c' },
-	{ url: 'https://github.com/sak96/read_later/issues', icon: 'ti-bug', code: '\uea48' },
+  { url: 'https://github.com/sak96/read_later', icon: 'ti-brand-github', code: '\uec1c' },
+  { url: 'https://github.com/sak96/read_later/issues', icon: 'ti-bug', code: '\uea48' },
 ]
 
 async function loadVersion() {
-	try {
-		const v = await invoke<string>('plugin:app|version')
-		if (v) version.value = v
-	} catch {
-		// Ignore
-	}
+  try {
+    const v = await invoke<string>('plugin:app|version')
+    if (v) version.value = v
+  }
+  catch {
+    // Ignore
+  }
 }
 
 async function loadTtsSetting() {
-	const value = await getSetting('tts')
-	if (value == null) {
-		setSetting('tts', 'true')
-		loadTtsSetting()
-	} else {
-		ttsEnabled.value = value === 'true'
-	}
+  const value = await getSetting('tts')
+  if (value == null) {
+    setSetting('tts', 'true')
+    loadTtsSetting()
+  }
+  else {
+    ttsEnabled.value = value === 'true'
+  }
 }
 
 async function onThemeChange(newTheme: Theme) {
-	if (themeContext) {
-		themeContext.setMode(newTheme)
-	}
-	await setSetting('theme', newTheme)
+  if (themeContext) {
+    themeContext.setMode(newTheme)
+  }
+  await setSetting('theme', newTheme)
 }
 
 async function onTtsToggle() {
-	const newState = !ttsEnabled.value
-	ttsEnabled.value = newState
-	await setSetting('tts', newState.toString())
+  const newState = !ttsEnabled.value
+  ttsEnabled.value = newState
+  await setSetting('tts', newState.toString())
 }
 
 async function openExternalUrl(url: string) {
-	await invoke('plugin:opener|open_url', { url })
+  await invoke('plugin:opener|open_url', { url })
 }
 
 onMounted(async () => {
-	await loadVersion()
-	await loadTtsSetting()
+  await loadVersion()
+  await loadTtsSetting()
 })
 </script>
 
@@ -87,14 +89,29 @@ onMounted(async () => {
         </label>
       </fieldset>
 
-      <fieldset >
+      <fieldset>
         <div role="group">
           <tr style="background-color: var(--pico-mark-background-color)">
-            <th><h2 class="ti ti-volume">&#xeb51;</h2></th>
-            <td><input name="terms" type="checkbox" role="switch" @change="onTtsToggle" :checked="ttsEnabled" /></td>
+            <th>
+              <h2 class="ti ti-volume">
+                &#xeb51;
+              </h2>
+            </th>
+            <td>
+              <input
+                name="terms"
+                type="checkbox"
+                role="switch"
+                :checked="ttsEnabled"
+                @change="onTtsToggle"
+              >
+            </td>
           </tr>
           <div role="group">
-            <SpeakRate :modelValue="1" @update:modelValue="() => {}" />
+            <SpeakRate
+              :model-value="1"
+              @update:model-value="() => {}"
+            />
           </div>
         </div>
       </fieldset>
