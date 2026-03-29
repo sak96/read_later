@@ -32,6 +32,32 @@ async function loadVoices() {
   languages.value = await getVoices()
 }
 
+function loadCurrentPara(newId: number) {
+  const paraId = `.tts_para_${newId}`
+  const para = props.divRef.querySelector(paraId)
+  para?.classList.add('current_para')
+  props.divRef.querySelectorAll('.current_para').forEach(
+    (el) => {
+      if (!el.classList.contains(paraId.slice(1))) {
+        el.classList.remove('current_para')
+      }
+    },
+  )
+  console.log('the current path', props.divRef.querySelector('.current_para')?.textContent)
+}
+
+function loadModeClass(newMode: ViewMode) {
+  if (newMode === 'reader') {
+    runReader()
+    props.divRef?.classList.remove('view')
+    props.divRef?.classList.add('reader')
+  }
+  else {
+    props.divRef?.classList.remove('reader')
+    props.divRef?.classList.add('view')
+  }
+}
+
 async function onLanguageChange(event: Event) {
   const target = event.target as HTMLSelectElement
   const index = parseInt(target.value)
@@ -101,7 +127,9 @@ async function runReader() {
         queueMode: 'flush',
       })
     }
-    catch (err) { console.error(err) }
+    catch (err) {
+      console.error(err)
+    }
     while (await isSpeaking()) {
       await new Promise(resolve => setTimeout(resolve, 1000))
     }
@@ -117,34 +145,16 @@ async function runReader() {
   }
 }
 
-watch(mode, (newMode) => {
-  if (newMode === 'reader') {
-    runReader()
-    props.divRef?.classList.remove('view')
-    props.divRef?.classList.add('reader')
-  }
-  else {
-    props.divRef?.classList.remove('reader')
-    props.divRef?.classList.add('view')
-  }
-})
+watch(mode, loadModeClass)
 
-watch(checkpoint, (newId) => {
-  const paraId = `.tts_para_${newId}`
-  const para = props.divRef.querySelector(paraId)
-  para?.classList.add('current_para')
-  props.divRef.querySelectorAll('.current_para').forEach(
-    (el) => {
-      if (!el.classList.contains(paraId.slice(1))) {
-        el.classList.remove('current_para')
-      }
-    },
-  )
-})
+watch(checkpoint, loadCurrentPara)
 
-onMounted(() => {
+onMounted(async () => {
   loadTtsSetting()
   loadVoices()
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  loadModeClass(mode.value)
+  loadCurrentPara(0)
 })
 
 onUnmounted(() => {
