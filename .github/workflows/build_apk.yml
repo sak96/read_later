@@ -65,15 +65,15 @@ jobs:
         run: |
           export NDK_HOME=$ANDROID_NDK
           cargo tauri android build  --split-per-abi
-          mkdir dist
-          find  src-tauri/gen/android/app/build/outputs/apk/ -iname *-release.apk -exec cp {} dist \;
-          find  src-tauri/gen/android/app/build/outputs/bundle/ -iname *-release.aab -exec cp {} dist \;
+          mkdir assets
+          find  src-tauri/gen/android/app/build/outputs/apk/ -iname *-release.apk -exec cp {} assets \;
+          find  src-tauri/gen/android/app/build/outputs/bundle/ -iname *-release.aab -exec cp {} assets \;
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/*
+            assets/*
             LICENSE.md
             PRIVACY_POLICY.md
           generate_release_notes: true
