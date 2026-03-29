@@ -43,7 +43,6 @@ function loadCurrentPara(newId: number) {
       }
     },
   )
-  console.log('the current path', props.divRef.querySelector('.current_para')?.textContent)
 }
 
 function loadModeClass(newMode: ViewMode) {
