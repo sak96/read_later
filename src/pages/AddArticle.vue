@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, inject } from 'vue'
+import { ref, onMounted, inject, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { invokeParse } from '../composables/useTauri'
 import { readClipboard } from '../composables/useClipboard'
@@ -25,9 +25,7 @@ async function pasteFromClipboard() {
 
 async function onSubmit(e: Event) {
   e.preventDefault()
-
   progressBar.value = true
-
   try {
     const article = await invokeParse<Article>('add_article', { url: urlInput.value })
     router.replace({ name: 'article', params: { id: article.id } })
@@ -38,8 +36,23 @@ async function onSubmit(e: Event) {
   }
 }
 
+function setSharedUrl(url: string | null) {
+  urlInput.value = decodeURIComponent(url || '')
+}
+
+watch(
+  () => route.query,
+  (newQuery) => {
+    if (newQuery?.shared) {
+      setSharedUrl(newQuery?.shared as string)
+      router.replace({ query: { } })
+    }
+  },
+  { deep: true, immediate: true },
+)
+
 onMounted(() => {
-  urlInput.value = decodeURIComponent((route.query?.shared as string) || '')
+  setSharedUrl(route.query?.shared as string)
 })
 </script>
 
