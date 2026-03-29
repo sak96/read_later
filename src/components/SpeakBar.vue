@@ -51,9 +51,13 @@ function switchMode() {
 function findVisibleParaId(): number {
 	const paras = props.divRef.querySelectorAll('[class^="tts_para_"]')
 	for (let i = 0; i < paras.length; i++) {
-		const rect = paras[i].getBoundingClientRect()
-		if (rect.top >= 0 && rect.top < window.innerHeight / 2) {
-			return i
+		const paraId = `.tts_para_${i}`
+		const para = props.divRef.querySelector(paraId)
+		if (para) {
+			const rect = para.getBoundingClientRect()
+			if (rect.top >= 0 && rect.top < window.innerHeight / 2) {
+				return i
+			}
 		}
 	}
 	return 0
