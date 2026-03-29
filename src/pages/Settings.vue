@@ -91,27 +91,26 @@ onMounted(async () => {
 
       <fieldset>
         <div role="group">
-          <tr style="background-color: var(--pico-mark-background-color)">
-            <th>
-              <h2 class="ti ti-volume">
-                &#xeb51;
-              </h2>
-            </th>
-            <td>
-              <input
-                name="terms"
-                type="checkbox"
-                role="switch"
-                :checked="ttsEnabled"
-                @change="onTtsToggle"
-              >
-            </td>
-          </tr>
-          <div role="group">
-            <SpeakRate
-              :model-value="1"
-              @update:model-value="() => {}"
-            />
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <h2 class="ti ti-volume">
+              &#xeb51;
+            </h2>
+            <input
+              name="terms"
+              type="checkbox"
+              role="switch"
+              :checked="ttsEnabled"
+              @change="onTtsToggle"
+            >
+            <div
+              role="group"
+              style="flex: 1;"
+            >
+              <SpeakRate
+                :model-value="1"
+                @update:model-value="() => {}"
+              />
+            </div>
           </div>
         </div>
       </fieldset>

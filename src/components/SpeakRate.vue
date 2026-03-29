@@ -48,7 +48,7 @@ watch(() => props.modelValue, (val) => {
 
 <template>
   <div role="group">
-    <label style="display: flex; gap: 1em; padding-left: 1em; padding-right: 1em; justify-content: space-evenly; background-color: var(--pico-primary-background)">
+    <label style="display: flex; gap: 1em; padding-left: 1em; padding-right: 1em; min-height: 2.5em; justify-content: space-evenly; background-color: var(--pico-primary-background)">
       <b>{{ rate.toFixed(1) }}x</b>
       <input
         type="range"

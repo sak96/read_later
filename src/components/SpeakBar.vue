@@ -178,7 +178,7 @@ defineExpose({
             :selected="selectedIndex === null"
             disabled
           >
-            <i class="ti ti-language">&#xebbe;</i>
+            &#127757;
           </option>
           <option
             v-for="(lang, idx) in languages"
