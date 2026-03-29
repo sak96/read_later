@@ -58,6 +58,8 @@ function findVisibleParaId(): number {
     if (para) {
       const rect = para.getBoundingClientRect()
       if (rect.top >= 0 && rect.top < window.innerHeight / 2) {
+        props.divRef.querySelectorAll('.current_para').forEach(el => el.classList.remove('current_para'))
+        para.classList.add('current_para')
         return i
       }
     }
@@ -88,7 +90,7 @@ async function runReader() {
     scrollToCenter()
     try {
       const voice = selectedIndex.value !== null ? languages.value[selectedIndex.value] : null
-      const voiceId = voice?.id ?? ''
+      const voiceId = voice?.id ?? null
       await speak({
         text,
         rate: rate.value,
@@ -103,8 +105,8 @@ async function runReader() {
     while (await isSpeaking()) {
       await new Promise(resolve => setTimeout(resolve, 1000))
     }
-    checkpoint.value++
     if (mode.value === 'reader') {
+      checkpoint.value++
       setTimeout(runReader, 1000)
     }
   }
