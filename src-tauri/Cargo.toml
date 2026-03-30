@@ -24,7 +24,7 @@ html5ever = "0.36"
 url = "2.5.7"
 
 [target."cfg(any(target_os = \"android\", target_os = \"ios\"))".dependencies]
-tauri-plugin-mobile-sharetarget = { git = "https://github.com/sak96/tauri-plugin-mobile-sharetarget" }
+tauri-plugin-mobile-sharetarget = "2"
 tauri-plugin-safe-area-insets-css = "0.1"
 tauri-plugin-android-fs = "23.0.1"
 
