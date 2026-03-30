@@ -186,6 +186,7 @@ defineExpose({
           role="button"
           class="ti"
           @change="onLanguageChange"
+          style="text-align-last: center;"
         >
           <option
             :selected="selectedIndex === null"
