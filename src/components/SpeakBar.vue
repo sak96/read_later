@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { getSetting, setSetting } from '../composables/useSettings'
-import { speak, stop, isSpeaking, getVoices, Voice } from 'tauri-plugin-tts-api'
+import { onSpeechEvent, speak, stop, getVoices, Voice } from 'tauri-plugin-tts-api'
 import SpeakRate from './SpeakRate.vue'
 
 const props = defineProps<{
@@ -18,6 +18,7 @@ const languages = ref<Voice[]>([])
 const selectedIndex = ref<number | null>(null)
 const voiceId = ref<string | null>(null)
 
+const unlisten = ref<any | null>()
 async function loadTtsSetting() {
   const value = await getSetting('tts')
   if (value == null) {
@@ -129,13 +130,6 @@ async function runReader() {
     catch (err) {
       console.error(err)
     }
-    while (await isSpeaking()) {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-    }
-    if (mode.value === 'reader') {
-      checkpoint.value++
-      setTimeout(runReader, 1000)
-    }
   }
   else {
     mode.value = 'view'
@@ -152,11 +146,19 @@ onMounted(async () => {
   loadTtsSetting()
   loadVoices()
   await new Promise(resolve => setTimeout(resolve, 1000))
+  unlisten.value = await onSpeechEvent('speech:finish', (_) => {
+    if (mode.value === 'reader') {
+      // read the next tts para
+      checkpoint.value++
+      setTimeout(runReader, 0)
+    }
+  })
   loadModeClass(mode.value)
   loadCurrentPara(0)
 })
 
 onUnmounted(() => {
+  unlisten.value?.()
   stop()
 })
 

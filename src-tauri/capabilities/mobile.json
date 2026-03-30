@@ -25,7 +25,6 @@
     "tts:allow-speak",
     "tts:allow-stop",
     "tts:allow-get-voices",
-    "tts:allow-is-speaking",
     "safe-area-insets-css:default",
     "dialog:default",
     "http:default"
