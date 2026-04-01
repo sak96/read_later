@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch, inject, onMounted, onUnmounted } from 'vue'
 import { getSetting, setSetting } from '../composables/useSettings'
 import { onSpeechEvent, speak, stop, getVoices, Voice } from 'tauri-plugin-tts-api'
+import { SpeechEvent } from 'tauri-plugin-tts-api'
+import { type UnlistenFn } from '@tauri-apps/api/event'
+import type { AlertContext } from '../types'
 import SpeakRate from './SpeakRate.vue'
+const { updateAlertContext } = inject<AlertContext>('alert') || {}
 
 const props = defineProps<{
   divRef: HTMLElement
@@ -17,8 +21,10 @@ const ttsEnabled = ref(true)
 const languages = ref<Voice[]>([])
 const selectedIndex = ref<number | null>(null)
 const voiceId = ref<string | null>(null)
+const speechSuccessHandler = ref<UnlistenFn | null>()
+const speechErrorHandler = ref<UnlistenFn | null>()
+const speechInterruptedHandler = ref<UnlistenFn | null>()
 
-const unlisten = ref<any | null>()
 async function loadTtsSetting() {
   const value = await getSetting('tts')
   if (value == null) {
@@ -110,26 +116,35 @@ function extractParaText(): string | null {
   return para?.textContent || null
 }
 
+function handleSpeechSuccess(_: SpeechEvent) {
+  if (mode.value === 'reader') {
+    // read the next tts para
+    checkpoint.value++
+    setTimeout(runReader, 0)
+  }
+}
+
+function handleSpeechError(speechEvent: SpeechEvent) {
+  const err = speechEvent.reason || speechEvent.error || "unknown error";
+  updateAlertContext?.('error', `Failed to speak: ${err}`)
+  mode.value = 'view'
+}
+
 async function runReader() {
   if (mode.value !== 'reader') return
   const paraText = extractParaText()
   if (paraText !== null) {
     const text = paraText.split(' ').filter(Boolean).join(' ')
     scrollToCenter()
-    try {
-      await speak({
-        text,
-        rate: rate.value,
-        language: '',
-        voiceId: voiceId.value,
-        pitch: 1,
-        volume: 1,
-        queueMode: 'flush',
-      })
-    }
-    catch (err) {
-      console.error(err)
-    }
+    await speak({
+      text,
+      rate: rate.value,
+      language: '',
+      voiceId: voiceId.value,
+      pitch: 1,
+      volume: 1,
+      queueMode: 'flush',
+    })
   }
   else {
     mode.value = 'view'
@@ -146,19 +161,17 @@ onMounted(async () => {
   loadTtsSetting()
   loadVoices()
   await new Promise(resolve => setTimeout(resolve, 1000))
-  unlisten.value = await onSpeechEvent('speech:finish', (_) => {
-    if (mode.value === 'reader') {
-      // read the next tts para
-      checkpoint.value++
-      setTimeout(runReader, 0)
-    }
-  })
+  speechSuccessHandler.value = await onSpeechEvent('speech:finish', handleSpeechSuccess)
+  speechErrorHandler.value = await onSpeechEvent('speech:error', handleSpeechError)
+  speechInterruptedHandler.value = await onSpeechEvent('speech:interrupted', handleSpeechError)
   loadModeClass(mode.value)
   loadCurrentPara(0)
 })
 
 onUnmounted(() => {
-  unlisten.value?.()
+  speechSuccessHandler.value?.()
+  speechErrorHandler.value?.()
+  speechInterruptedHandler.value?.()
   stop()
 })
 
@@ -185,8 +198,8 @@ defineExpose({
         <select
           role="button"
           class="ti"
-          @change="onLanguageChange"
           style="text-align-last: center;"
+          @change="onLanguageChange"
         >
           <option
             :selected="selectedIndex === null"
