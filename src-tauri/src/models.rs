@@ -4,13 +4,11 @@ pub const DB_URL: &str = "sqlite:article_manager.db";
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, PartialEq, Clone)]
-#[cfg_attr(not(target_arch = "wasm32"), derive(sqlx::FromRow))]
+#[derive(Serialize, Deserialize, PartialEq, Clone, sqlx::FromRow)]
 pub struct ArticleId {
     pub id: i32,
 }
-#[derive(Serialize, Deserialize, PartialEq, Clone)]
-#[cfg_attr(not(target_arch = "wasm32"), derive(sqlx::FromRow))]
+#[derive(Serialize, Deserialize, PartialEq, Clone, sqlx::FromRow)]
 pub struct Article {
     pub id: i32,
     pub title: String,
@@ -18,8 +16,7 @@ pub struct Article {
     pub url: String,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Clone)]
-#[cfg_attr(not(target_arch = "wasm32"), derive(sqlx::FromRow))]
+#[derive(Serialize, Deserialize, PartialEq, Clone, sqlx::FromRow)]
 pub struct ArticleEntry {
     pub id: i32,
     pub url: String,
@@ -27,8 +24,7 @@ pub struct ArticleEntry {
     pub created_at: String,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Clone)]
-#[cfg_attr(not(target_arch = "wasm32"), derive(sqlx::FromRow))]
+#[derive(Serialize, Deserialize, PartialEq, Clone, sqlx::FromRow)]
 pub struct Setting {
     pub name: String,
     pub value: String,
