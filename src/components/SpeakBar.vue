@@ -116,7 +116,7 @@ function extractParaText(): string | null {
   return para?.textContent || null
 }
 
-function handleSpeechSuccess(_: SpeechEvent) {
+function handleSpeechSuccess() {
   if (mode.value === 'reader') {
     // read the next tts para
     checkpoint.value++

@@ -8,11 +8,7 @@ type Theme = typeof themes[number]
 const mode = ref<Theme>('system')
 
 async function loadTheme() {
-  let value = ''
-  try {
-    value = await getSetting('theme') || ''
-  }
-  catch (_) { }
+  const value = await getSetting('theme')
   if (value && themes.includes(value as Theme)) {
     mode.value = value as Theme
   }
