@@ -16,6 +16,7 @@
     "@tauri-apps/plugin-dialog": "^2.4.2",
     "@tauri-apps/plugin-fs": "^2.2.0",
     "@tauri-apps/plugin-os": "^2.3.2",
+    "@saurl/tauri-plugin-safe-area-insets-css-api": "^0.1.0",
     "dompurify": "^3.3.3",
     "tauri-plugin-mobile-sharetarget-api": "^2.0.0",
     "tauri-plugin-tts-api": "^0.1.7",

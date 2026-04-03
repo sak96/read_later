@@ -3,8 +3,8 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterView } from 'vue-router'
 import { useRouter, useRoute } from 'vue-router'
 import { Alert, Theme } from './layouts'
-import { setInset } from './composables/useInset'
 import { popIntentQueueAndExtractText } from 'tauri-plugin-mobile-sharetarget-api'
+import '@saurl/tauri-plugin-safe-area-insets-css-api';
 import { platform } from '@tauri-apps/plugin-os'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 
@@ -31,7 +31,6 @@ onMounted(async () => {
     currentPlatform === 'android' ? 'tauri://focus' : 'new-intent',
     hanldeShare,
   )
-  await setInset()
   await hanldeShare()
 })
 
