@@ -2,6 +2,7 @@
 import { ref, onMounted, inject } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { getSetting, setSetting } from '../composables/useSettings'
+import { openUrl } from '@tauri-apps/plugin-opener'
 import HomeButton from '../components/HomeButton.vue'
 import ImportButton from '../components/ImportButton.vue'
 import ExportButton from '../components/ExportButton.vue'
@@ -58,10 +59,6 @@ async function onTtsToggle() {
   const newState = !ttsEnabled.value
   ttsEnabled.value = newState
   await setSetting('tts', newState.toString())
-}
-
-async function openExternalUrl(url: string) {
-  await invoke('plugin:opener|open_url', { url })
 }
 
 onMounted(async () => {
@@ -154,7 +151,7 @@ onMounted(async () => {
             <td>
               <a
                 class="outline"
-                @click="openExternalUrl('https://github.com/sak96/read_later/blob/master/PRIVACY_POLICY.md')"
+                @click="openUrl('https://github.com/sak96/read_later/blob/master/PRIVACY_POLICY.md')"
               >
                 Last Updated: December 7, 2025
               </a>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { invokeNoParseLogError } from '../composables/useTauri'
+import { openUrl } from '@tauri-apps/plugin-opener'
 
 defineProps<{
   url: string | null
@@ -8,11 +8,6 @@ defineProps<{
 const emit = defineEmits<{
   close: []
 }>()
-
-async function openExternal(url: string) {
-  await invokeNoParseLogError('plugin:opener|open_url', { url })
-  emit('close')
-}
 
 function close() {
   emit('close')
@@ -36,7 +31,7 @@ function close() {
       <footer>
         <button
           type="button"
-          @click="openExternal(url)"
+          @click="openUrl(url)"
         >
           <i class="ti ti-check">&#xea5e;</i>
         </button>

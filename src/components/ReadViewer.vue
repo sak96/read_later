@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import type { Article } from '../types'
 import { invokeNoParseLogError } from '../composables/useTauri'
+import { openUrl } from '@tauri-apps/plugin-opener'
 import DOMPurify from 'dompurify'
 import HomeButton from './HomeButton.vue'
 import LinkPopup from './LinkPopup.vue'
@@ -24,10 +25,6 @@ function handleLinkClick(href: string) {
 
 function closeLinkPopup() {
   externalUrl.value = null
-}
-
-async function openUrl(url: string) {
-  await invokeNoParseLogError('plugin:opener|open_url', { url })
 }
 
 function toggleDeleteModal() {
