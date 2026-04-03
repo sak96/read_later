@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, inject } from 'vue'
 import { setSetting } from '../composables/useSettings'
-import { version } from '@tauri-apps/plugin-os'
+import { getVersion } from '@tauri-apps/api/app'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import HomeButton from '../components/HomeButton.vue'
 import ImportButton from '../components/ImportButton.vue'
@@ -43,7 +43,7 @@ async function onTtsToggle() {
 }
 
 onMounted(async () => {
-  appVersion.value = version()
+  appVersion.value = await getVersion()
   ttsEnabled.value = await loadTtsSetting()
 })
 </script>
