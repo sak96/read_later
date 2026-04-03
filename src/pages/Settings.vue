@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, inject } from 'vue'
-import { getSetting, setSetting } from '../composables/useSettings'
+import { setSetting } from '../composables/useSettings'
 import { version } from '@tauri-apps/plugin-os'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import HomeButton from '../components/HomeButton.vue'
@@ -8,6 +8,7 @@ import ImportButton from '../components/ImportButton.vue'
 import ExportButton from '../components/ExportButton.vue'
 import SpeakRate from '../components/SpeakRate.vue'
 import { Fab } from '../layouts'
+import { loadTtsSetting } from '../composables/useTTS'
 
 type Theme = 'light' | 'dark' | 'system'
 
@@ -27,17 +28,6 @@ const infos = [
   { url: 'https://github.com/sak96/read_later/issues', icon: 'ti-bug', code: '\uea48' },
 ]
 
-async function loadTtsSetting() {
-  const value = await getSetting('tts')
-  if (value == null) {
-    setSetting('tts', 'true')
-    loadTtsSetting()
-  }
-  else {
-    ttsEnabled.value = value === 'true'
-  }
-}
-
 async function onThemeChange(newTheme: Theme) {
   if (themeContext) {
     themeContext.setMode(newTheme)
@@ -53,7 +43,7 @@ async function onTtsToggle() {
 
 onMounted(async () => {
   appVersion.value = version()
-  await loadTtsSetting()
+  ttsEnabled.value = await loadTtsSetting()
 })
 </script>
 

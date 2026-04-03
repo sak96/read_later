@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, watch, inject, onMounted, onUnmounted } from 'vue'
-import { getSetting, setSetting } from '../composables/useSettings'
 import { onSpeechEvent, speak, stop, getVoices, Voice } from 'tauri-plugin-tts-api'
 import { SpeechEvent } from 'tauri-plugin-tts-api'
 import { type UnlistenFn } from '@tauri-apps/api/event'
 import type { AlertContext } from '../types'
 import SpeakRate from './SpeakRate.vue'
+import { loadTtsSetting } from '../composables/useTTS'
 const { updateAlertContext } = inject<AlertContext>('alert') || {}
 
 const props = defineProps<{
@@ -24,17 +24,6 @@ const voiceId = ref<string | null>(null)
 const speechSuccessHandler = ref<UnlistenFn | null>()
 const speechErrorHandler = ref<UnlistenFn | null>()
 const speechInterruptedHandler = ref<UnlistenFn | null>()
-
-async function loadTtsSetting() {
-  const value = await getSetting('tts')
-  if (value == null) {
-    setSetting('tts', 'true')
-    loadTtsSetting()
-  }
-  else {
-    ttsEnabled.value = value === 'true'
-  }
-}
 
 async function loadVoices() {
   languages.value = await getVoices()
@@ -125,7 +114,7 @@ function handleSpeechSuccess() {
 }
 
 function handleSpeechError(speechEvent: SpeechEvent) {
-  const err = speechEvent.reason || speechEvent.error || "unknown error";
+  const err = speechEvent.reason || speechEvent.error || 'unknown error'
   updateAlertContext?.('error', `Failed to speak: ${err}`)
   mode.value = 'view'
 }
@@ -158,7 +147,7 @@ watch(mode, loadModeClass)
 watch(checkpoint, loadCurrentPara)
 
 onMounted(async () => {
-  loadTtsSetting()
+  ttsEnabled.value = await loadTtsSetting()
   loadVoices()
   await new Promise(resolve => setTimeout(resolve, 1000))
   speechSuccessHandler.value = await onSpeechEvent('speech:finish', handleSpeechSuccess)
