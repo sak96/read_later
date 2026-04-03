@@ -49,11 +49,13 @@ onMounted(async () => {
 </script>
 
 <template>
-  <article class="container page">
-    <form class="container">
-      <fieldset>
-        <label>
-          <h2 class="ti ti-palette">&#xeb01;</h2>
+  <main class="container page">
+    <article>
+      <form>
+        <fieldset>
+          <h2 class="ti ti-palette">
+            &#xeb01;&nbsp;<span data-i18n="theme" />
+          </h2>
           <div role="group">
             <button
               v-for="themeOption in themes"
@@ -64,87 +66,92 @@ onMounted(async () => {
               <i class="ti">{{ themeOption.code }}</i>
             </button>
           </div>
-        </label>
-      </fieldset>
-
-      <LocaleBar />
-      <fieldset>
-        <div role="group">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
+        </fieldset>
+        <hr>
+        <LocaleBar />
+        <hr>
+        <fieldset>
+          <div role="group">
             <h2 class="ti ti-volume">
-              &#xeb51;
+              &#xeb51;&nbsp;<span data-i18n="speech" />
             </h2>
-            <input
-              name="terms"
-              type="checkbox"
-              role="switch"
-              :checked="ttsEnabled"
-              @change="onTtsToggle"
-            >
-            <div
-              role="group"
-              style="flex: 1;"
-            >
-              <SpeakRate
-                :model-value="1"
-                @update:model-value="() => {}"
-              />
+            <div>
+              <input
+                name="terms"
+                type="checkbox"
+                role="switch"
+                :checked="ttsEnabled"
+                @change="onTtsToggle"
+              >
             </div>
           </div>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <label>
-          <h2 class="ti ti-database-exclamation">&#xfa13;</h2>
-          <small class="ti ti-alert-triangle">(beta) &#xea06;</small>
-          <div role="group">
-            <ImportButton />
-            <ExportButton />
+          <div
+            role="group"
+            style="flex: 1;"
+          >
+            <SpeakRate
+              :model-value="1"
+              @update:model-value="() => {}"
+            />
           </div>
-        </label>
-      </fieldset>
+        </fieldset>
+        <hr>
 
-      <fieldset>
-        <label>
-          <h2 class="ti ti-info-circle">&#xeac5;</h2>
-          <div role="group">
-            <button
-              v-for="info in infos"
-              :key="info.url"
-              type="button"
-              class="outline"
-              @click="openUrl(info.url)"
-            >
-              <i class="ti">{{ info.code }}</i>
-            </button>
-          </div>
-        </label>
-      </fieldset>
+        <fieldset>
+          <label>
+            <h2 class="ti ti-restore">
+              &#xfafd;&nbsp;<span data-i18n="restore" />
+            </h2>
+            <div role="group">
+              <ImportButton />
+              <ExportButton />
+            </div>
+          </label>
+        </fieldset>
+        <hr>
 
-      <table>
-        <tbody>
-          <tr>
-            <th><i class="ti ti-tag">Version #</i></th>
-            <td>{{ appVersion }}</td>
-          </tr>
-          <tr>
-            <th><i class="ti ti-file-text-shield">&#x100f2;</i></th>
-            <td>
-              <a
+        <fieldset>
+          <label>
+            <h2 class="ti ti-info-circle">
+              &#xeac5;&nbsp;<span data-i18n="about" />
+            </h2>
+            <div role="group">
+              <button
+                v-for="info in infos"
+                :key="info.url"
+                type="button"
                 class="outline"
-                @click="openUrl('https://github.com/sak96/read_later/blob/master/PRIVACY_POLICY.md')"
+                @click="openUrl(info.url)"
               >
-                Last Updated: December 7, 2025
-              </a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </form>
+                <i class="ti">{{ info.code }}</i>
+              </button>
+            </div>
+          </label>
+        </fieldset>
 
-    <Fab>
-      <HomeButton />
-    </Fab>
-  </article>
+        <table>
+          <tbody>
+            <tr>
+              <th data-i18n="version" />
+              <td>{{ appVersion }}</td>
+            </tr>
+            <tr>
+              <th data-i18n="privacy" />
+              <td>
+                <a
+                  class="outline"
+                  data-i18n="link"
+                  @click="openUrl('https://github.com/sak96/read_later/blob/master/PRIVACY_POLICY.md')"
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+
+      <Fab>
+        <HomeButton />
+      </Fab>
+    </article>
+  </main>
 </template>

@@ -13,24 +13,21 @@ async function onLocaleChange(event: Event) {
 <template>
   <template v-if="(localeContext?.locales.value.length) || 0 > 0">
     <fieldset>
-      <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <h2 class="ti ti-language">
-          &#xebbe;
-        </h2>
-        <p data-i18n="hello" />
-        <select
-          style="text-align-last: center;"
-          @change="onLocaleChange"
+      <h2 class="ti ti-language">
+        &#xebbe;&nbsp;<span data-i18n="locale" />
+      </h2>
+      <select
+        style="text-align-last: center;"
+        @change="onLocaleChange"
+      >
+        <option
+          v-for="locale in localeContext?.locales.value || []"
+          :key="locale"
+          :value="locale"
         >
-          <option
-            v-for="locale in localeContext?.locales.value || []"
-            :key="locale"
-            :value="locale"
-          >
-            {{ locale }}
-          </option>
-        </select>
-      </div>
+          {{ locale }}
+        </option>
+      </select>
     </fieldset>
   </template>
 </template>
