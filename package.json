@@ -11,12 +11,13 @@
     "lint": "eslint --fix src"
   },
   "dependencies": {
+    "@razein97/tauri-plugin-i18n": "^2.0.1",
+    "@saurl/tauri-plugin-safe-area-insets-css-api": "^0.1.0",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-clipboard-manager": "^2.2.3",
     "@tauri-apps/plugin-dialog": "^2.4.2",
     "@tauri-apps/plugin-opener": "^2.0.0",
     "@tauri-apps/plugin-os": "^2.3.2",
-    "@saurl/tauri-plugin-safe-area-insets-css-api": "^0.1.0",
     "dompurify": "^3.3.3",
     "tauri-plugin-mobile-sharetarget-api": "^2.0.0",
     "tauri-plugin-tts-api": "^0.1.7",

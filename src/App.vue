@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterView } from 'vue-router'
 import { useRouter, useRoute } from 'vue-router'
-import { Alert, Theme } from './layouts'
+import { Alert, Theme, Locale } from './layouts'
 import { popIntentQueueAndExtractText } from 'tauri-plugin-mobile-sharetarget-api'
 import '@saurl/tauri-plugin-safe-area-insets-css-api'
 import { platform } from '@tauri-apps/plugin-os'
@@ -42,7 +42,9 @@ onUnmounted(() => {
 <template>
   <Alert>
     <Theme>
-      <RouterView key="$router.fullPath" />
+      <Locale>
+        <RouterView key="$router.fullPath" />
+      </Locale>
     </Theme>
   </Alert>
 </template>

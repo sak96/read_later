@@ -1,3 +1,4 @@
+import { Ref } from 'vue'
 export interface ArticleId {
   id: number
 }
@@ -40,4 +41,10 @@ export type AlertStatus = 'success' | 'info' | 'error'
 
 export interface AlertContext {
   updateAlertContext: (status: AlertStatus, message: string) => void
+}
+
+export interface LocaleContext {
+  currentLocale: Ref<string>
+  locales: Ref<string[]>
+  updateLocale: (locale: string) => Promise<void>
 }

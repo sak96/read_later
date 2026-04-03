@@ -1,3 +1,4 @@
 export { default as Fab } from './Fab.vue'
 export { default as Alert } from './Alert.vue'
 export { default as Theme } from './Theme.vue'
+export { default as Locale } from './Locale.vue'

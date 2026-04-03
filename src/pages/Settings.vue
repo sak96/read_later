@@ -7,6 +7,7 @@ import HomeButton from '../components/HomeButton.vue'
 import ImportButton from '../components/ImportButton.vue'
 import ExportButton from '../components/ExportButton.vue'
 import SpeakRate from '../components/SpeakRate.vue'
+import LocaleBar from '../components/LocaleBar.vue'
 import { Fab } from '../layouts'
 import { loadTtsSetting } from '../composables/useTTS'
 
@@ -66,6 +67,7 @@ onMounted(async () => {
         </label>
       </fieldset>
 
+      <LocaleBar />
       <fieldset>
         <div role="group">
           <div style="display: flex; align-items: center; gap: 0.5rem;">

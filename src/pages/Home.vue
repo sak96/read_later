@@ -10,7 +10,7 @@ import { Fab } from '../layouts'
 const router = useRouter()
 const articles = ref<ArticleEntry[]>([])
 const loading = ref(false)
-const search = ref("")
+const search = ref('')
 
 async function fetchArticles() {
   if (loading.value) return
@@ -66,8 +66,8 @@ onMounted(async () => {
     @scroll="onScroll"
   >
     <input
-      type="search"
       v-model="search"
+      type="search"
       placeholder="Search"
     >
     <div class="container">
