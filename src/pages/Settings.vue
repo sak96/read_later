@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, inject } from 'vue'
-import { invoke } from '@tauri-apps/api/core'
 import { getSetting, setSetting } from '../composables/useSettings'
+import { version } from '@tauri-apps/plugin-os'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import HomeButton from '../components/HomeButton.vue'
 import ImportButton from '../components/ImportButton.vue'
@@ -13,7 +13,7 @@ type Theme = 'light' | 'dark' | 'system'
 
 const themeContext = inject<{ mode: Theme, setMode: (mode: Theme) => void }>('theme')
 
-const version = ref('N/A')
+const appVersion = ref('N/A')
 const ttsEnabled = ref(true)
 
 const themes: Array<{ value: Theme, icon: string, code: string }> = [
@@ -26,16 +26,6 @@ const infos = [
   { url: 'https://github.com/sak96/read_later', icon: 'ti-brand-github', code: '\uec1c' },
   { url: 'https://github.com/sak96/read_later/issues', icon: 'ti-bug', code: '\uea48' },
 ]
-
-async function loadVersion() {
-  try {
-    const v = await invoke<string>('plugin:app|version')
-    if (v) version.value = v
-  }
-  catch {
-    // Ignore
-  }
-}
 
 async function loadTtsSetting() {
   const value = await getSetting('tts')
@@ -62,7 +52,7 @@ async function onTtsToggle() {
 }
 
 onMounted(async () => {
-  await loadVersion()
+  appVersion.value = version()
   await loadTtsSetting()
 })
 </script>
@@ -144,7 +134,7 @@ onMounted(async () => {
         <tbody>
           <tr>
             <th><i class="ti ti-tag">Version #</i></th>
-            <td>{{ version }}</td>
+            <td>{{ appVersion }}</td>
           </tr>
           <tr>
             <th><i class="ti ti-file-text-shield">&#x100f2;</i></th>
