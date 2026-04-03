@@ -28,7 +28,9 @@ jobs:
           echo "Frontend version: $FRONTEND_VERSION"
 
           # Check if all versions match
-          if [[ "$CARGO_TOML_VERSION" != "$TAURI_CONFIG_VERSION" ]] || [[ "$CARGO_TOML_VERSION" != "$TAURI_CONFIG_VERSION" ]]; || [[ "$FRONTEND_VERSION" != "$TAURI_CONFIG_VERSION" ]]; then
+          if [[ "$CARGO_TOML_VERSION" != "$TAURI_CONFIG_VERSION" || \
+                "$FRONTEND_VERSION" != "$TAURI_CONFIG_VERSION" || \
+                "$GIT_TAG_VERSION" != "$TAURI_CONFIG_VERSION" ]]; then
             echo "Error: Versions do not match!"
             exit 1
           fi
