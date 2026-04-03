@@ -112,7 +112,7 @@ onMounted(async () => {
               :key="info.url"
               type="button"
               class="outline"
-              @click="openExternalUrl(info.url)"
+              @click="openUrl(info.url)"
             >
               <i class="ti">{{ info.code }}</i>
             </button>
