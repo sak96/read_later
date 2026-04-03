@@ -295,3 +295,35 @@ fn process_node_url(node: &NodeRef, url: &str) {
         }
     }
 }
+
+pub fn build_snippet(body: &str, query: Option<&str>) -> String {
+    const SNIPPET_LENGTH: usize = 100;
+    const HALF_SNIPPET_LENGTH: usize = SNIPPET_LENGTH / 2;
+    match query {
+        None => format!(
+            "{} ...",
+            body.chars().take(SNIPPET_LENGTH).collect::<String>()
+        ),
+        Some(q) => {
+            let q_lower = q.to_lowercase();
+            let body_lower = body.to_lowercase();
+            if let Some(pos) = body_lower.find(&q_lower) {
+                let start = pos.saturating_sub(HALF_SNIPPET_LENGTH);
+                let end = (pos + q.len() + HALF_SNIPPET_LENGTH).min(body.len());
+                let snippet = &body[start..end];
+                // highlight first match (case-insensitive)
+                if let Some(rel_pos) = snippet.to_lowercase().find(&q_lower) {
+                    let before = &snippet[..rel_pos];
+                    let matched = &snippet[rel_pos..rel_pos + q.len()];
+                    let after = &snippet[rel_pos + q.len()..];
+
+                    format!("{}<mark>{}</mark>{}", before, matched, after)
+                } else {
+                    snippet.to_string()
+                }
+            } else {
+                body.chars().take(SNIPPET_LENGTH).collect()
+            }
+        }
+    }
+}

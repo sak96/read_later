@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { invokeParseLogError } from '../composables/useTauri'
 import type { ArticleEntry } from '../types'
@@ -10,16 +10,17 @@ import { Fab } from '../layouts'
 const router = useRouter()
 const articles = ref<ArticleEntry[]>([])
 const loading = ref(false)
+const search = ref("")
 
 async function fetchArticles() {
   if (loading.value) return
 
   loading.value = true
-  const data = await invokeParseLogError<ArticleEntry[]>('get_articles', { offset: articles.value.length })
+  const data = await invokeParseLogError<ArticleEntry[]>('get_articles', { offset: articles.value.length, query: query.value })
 
   if (data) {
     if (data.length === 0) {
-      if (articles.value.length === 0) {
+      if (articles.value.length === 0 && query.value === null) {
         router.push({ name: 'addArticle' })
       }
     }
@@ -45,8 +46,17 @@ function goToAddArticle() {
   router.push({ name: 'addArticle' })
 }
 
-onMounted(() => {
-  fetchArticles()
+const query = computed(() => {
+  return search.value.length >= 3 ? search.value : null
+})
+
+watch(query, async () => {
+  articles.value = []
+  await fetchArticles()
+})
+
+onMounted(async () => {
+  await fetchArticles()
 })
 </script>
 
@@ -55,6 +65,11 @@ onMounted(() => {
     class="container page"
     @scroll="onScroll"
   >
+    <input
+      type="search"
+      v-model="search"
+      placeholder="Search"
+    >
     <div class="container">
       <ArticleCard
         v-for="article in articles"

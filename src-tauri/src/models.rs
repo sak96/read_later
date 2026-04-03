@@ -21,6 +21,7 @@ pub struct ArticleEntry {
     pub id: i32,
     pub url: String,
     pub title: String,
+    pub snippet: String,
     pub created_at: String,
 }
 
@@ -56,6 +57,12 @@ pub fn get_migrations() -> Vec<Migration> {
             version: 2,
             description: "add_article_url",
             sql: include_str!("../migrations/2025-11-29-000000_add_article_url.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 3,
+            description: "add_text_content",
+            sql: include_str!("../migrations/2026-04-03-000000_add_text_content.sql"),
             kind: MigrationKind::Up,
         },
     ]

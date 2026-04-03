@@ -13,7 +13,6 @@ const title = computed(() => {
   if (props.article.title) {
     return { text: props.article.title, loaded: true }
   }
-
   try {
     const url = new URL(props.article.url)
     const pathParts = url.pathname.split('/').filter(s => s.length > 0)
@@ -39,13 +38,15 @@ function goToArticle() {
     style="cursor: pointer;"
     @click="goToArticle"
   >
-    <h3>
+    <h5>
       <i
         v-if="!title.loaded"
         class="ti ti-loader"
       >&#xeca3;</i>
       {{ title.text }}
-    </h3>
+    </h5>
     <p><small>{{ article.created_at }}</small></p>
+    <!-- eslint-disable-next-line vue/no-v-html -->
+    <p><small><div v-html="article.snippet" /></small></p>
   </article>
 </template>

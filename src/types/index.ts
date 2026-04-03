@@ -13,6 +13,7 @@ export interface ArticleEntry {
   id: number
   url: string
   title: string
+  snippet: string
   created_at: string
 }
 

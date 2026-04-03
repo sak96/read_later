@@ -1,5 +1,5 @@
 use crate::models::*;
-use crate::parse::process_html;
+use crate::parse::{build_snippet, process_html};
 pub use import_export::*;
 use readabilityrs::Readability;
 use sqlx::{query, query_as, query_scalar};
@@ -14,17 +14,40 @@ const CHROME_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Apple
 pub async fn get_articles(
     db_instances: State<'_, DbInstances>,
     offset: usize,
+    query: Option<String>,
 ) -> Result<Vec<ArticleEntry>, String> {
     let instances = db_instances.0.read().await;
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
-        tauri_plugin_sql::DbPool::Sqlite(pool) => query_as::<_, ArticleEntry>(
-            "SELECT id, url, title, datetime(created_at, 'localtime') created_at FROM articles ORDER BY created_at DESC limit $1, 100",
-        )
-        .bind(offset.to_string())
-        .fetch_all(pool)
-        .await
-        .map_err(|e| e.to_string()),
+        tauri_plugin_sql::DbPool::Sqlite(pool) => {
+            let query: Option<&str> = query.as_ref().filter(|s| s.len() >= 3).map(|s| s.as_str());
+            let mut articles = sqlx::query_as::<_, ArticleEntry>(
+                r#"
+                SELECT id, url, title, text_content as snippet,
+                       datetime(created_at, 'localtime') as created_at
+                FROM articles
+                WHERE (
+                    ?1 IS NULL
+                    OR LOWER(title) LIKE '%' || LOWER(?1) || '%'
+                    OR LOWER(text_content)  LIKE '%' || LOWER(?1) || '%'
+                )
+                ORDER BY created_at DESC
+                LIMIT 100 OFFSET ?2
+               "#,
+            )
+            .bind(query)
+            .bind(offset.to_string())
+            .fetch_all(pool)
+            .await
+            .map_err(|e| e.to_string())?;
+
+            // attach snippet
+            for article in &mut articles {
+                article.snippet = build_snippet(&article.snippet, query);
+            }
+
+            Ok(articles)
+        }
     }
 }
 
@@ -73,15 +96,17 @@ pub async fn get_article(
                     Some(v) => v,
                 };
                 let body = article_data.content.unwrap_or_default();
+                let text_content = article_data.text_content.unwrap_or_default();
 
                 // could be update
                 article = query_as::<_, Article>(
-                    "UPDATE articles SET title = $2, body = $3, url = $4 where id = $1 RETURNING id, title, body, created_at, url",
+                    "UPDATE articles SET title = $2, body = $3, url = $4, text_content = $5 where id = $1 RETURNING id, title, body, created_at, url",
                 )
                 .bind(article.id)
                 .bind(title)
                 .bind(body)
                 .bind(&article.url)
+                .bind(text_content)
                 .fetch_one(pool)
                 .await
                 .map_err(|e| e.to_string())?;
