@@ -53,8 +53,8 @@ watch(
 )
 
 onMounted(() => {
-const addArticle = I18n.getInstance().translate('add_article')
-urlInputPlaceholder.value  = addArticle + ": https://example.com/article"
+  const addArticle = I18n.getInstance().translate('add_article')
+  urlInputPlaceholder.value = addArticle + ': https://example.com/article'
   setSharedUrl(route.query?.shared as string)
 })
 </script>

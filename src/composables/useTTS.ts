@@ -7,8 +7,8 @@ export async function loadTtsSetting() {
   if (!ttsStatus.initialized) {
     await new Promise(resolve => setTimeout(resolve, 1000))
     ttsStatus = await isInitialized()
-
     if (!ttsStatus.initialized) {
+      console.error('TTS is not initialized. Disabling speech.')
       return false
     }
   }
