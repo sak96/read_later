@@ -23,6 +23,7 @@ async function onLocaleChange(event: Event) {
         <option
           v-for="locale in localeContext?.locales.value || []"
           :key="locale"
+          :selected="localeContext?.currentLocale.value == locale"
           :value="locale"
         >
           {{ locale }}
