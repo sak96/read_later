@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { invokeParseLogError } from '../composables/useTauri'
 import type { ArticleEntry } from '../types'
@@ -11,6 +11,7 @@ const router = useRouter()
 const articles = ref<ArticleEntry[]>([])
 const loading = ref(false)
 const search = ref('')
+let timeout: ReturnType<typeof setTimeout> | null = null
 
 async function fetchArticles() {
   if (loading.value) return
@@ -51,12 +52,23 @@ const query = computed(() => {
 })
 
 watch(query, async () => {
-  articles.value = []
-  await fetchArticles()
+  if (timeout) {
+    clearTimeout(timeout)
+  }
+  timeout = setTimeout(async () => {
+    articles.value = []
+    await fetchArticles()
+  }, 500)
 })
 
 onMounted(async () => {
   await fetchArticles()
+})
+
+onBeforeUnmount(() => {
+  if (timeout) {
+    clearTimeout(timeout)
+  }
 })
 </script>
 
