@@ -6,13 +6,14 @@ import { readClipboard } from '../composables/useClipboard'
 import type { Article, AlertContext } from '../types'
 import HomeButton from '../components/HomeButton.vue'
 import SettingsButton from '../components/SettingsButton.vue'
+import I18n from '@razein97/tauri-plugin-i18n'
 import { Fab } from '../layouts'
 
 const router = useRouter()
 const route = useRoute()
-
 const urlInput = ref('')
 const progressBar = ref(false)
+const urlInputPlaceholder = ref('')
 
 const { updateAlertContext } = inject<AlertContext>('alert') || {}
 
@@ -52,6 +53,8 @@ watch(
 )
 
 onMounted(() => {
+const addArticle = I18n.getInstance().translate('add_article')
+urlInputPlaceholder.value  = addArticle + ": https://example.com/article"
   setSharedUrl(route.query?.shared as string)
 })
 </script>
@@ -71,7 +74,7 @@ onMounted(() => {
       <input
         v-model="urlInput"
         type="url"
-        placeholder="https://example.com/article"
+        :placeholder="urlInputPlaceholder"
         required
       >
       <div role="group">

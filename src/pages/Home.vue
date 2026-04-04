@@ -5,12 +5,14 @@ import { invokeParseLogError } from '../composables/useTauri'
 import type { ArticleEntry } from '../types'
 import ArticleCard from '../components/ArticleCard.vue'
 import SettingsButton from '../components/SettingsButton.vue'
+import I18n from '@razein97/tauri-plugin-i18n'
 import { Fab } from '../layouts'
 
 const router = useRouter()
 const articles = ref<ArticleEntry[]>([])
 const loading = ref(false)
 const search = ref('')
+const searchPlaceholder = ref('')
 let timeout: ReturnType<typeof setTimeout> | null = null
 
 async function fetchArticles() {
@@ -62,6 +64,7 @@ watch(query, async () => {
 })
 
 onMounted(async () => {
+  searchPlaceholder.value = I18n.getInstance().translate('search')
   await fetchArticles()
 })
 
@@ -80,7 +83,7 @@ onBeforeUnmount(() => {
     <input
       v-model="search"
       type="search"
-      placeholder="Search"
+      :placeholder="searchPlaceholder"
     >
     <div class="container">
       <ArticleCard
