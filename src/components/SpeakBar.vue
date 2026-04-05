@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, inject, onMounted, onUnmounted } from 'vue'
 import { onSpeechEvent, speak, stop, getVoices, Voice } from 'tauri-plugin-tts-api'
-import { SpeechEvent } from 'tauri-plugin-tts-api'
+import { SpeechEvent, SpeechEventType } from 'tauri-plugin-tts-api'
 import { type UnlistenFn } from '@tauri-apps/api/event'
 import type { AlertContext } from '../types'
 import SpeakRate from './SpeakRate.vue'
@@ -25,7 +25,12 @@ const speechErrorHandler = ref<UnlistenFn | null>()
 const speechInterruptedHandler = ref<UnlistenFn | null>()
 
 async function loadVoices() {
-  languages.value = await getVoices()
+  try {
+    languages.value = await getVoices()
+  }
+  catch (e) {
+    console.error(`Failed to load voices: ${e}`)
+  }
 }
 
 function loadCurrentPara(newId: number) {
@@ -119,15 +124,21 @@ async function runReader() {
   if (paraText !== null) {
     const text = paraText.split(' ').filter(Boolean).join(' ')
     scrollTo('center')
-    await speak({
-      text,
-      rate: rate.value,
-      language: '',
-      voiceId: voiceId.value,
-      pitch: 1,
-      volume: 1,
-      queueMode: 'flush',
-    })
+    try {
+      await speak({
+        text,
+        rate: rate.value,
+        language: '',
+        voiceId: voiceId.value,
+        pitch: 1,
+        volume: 1,
+        queueMode: 'flush',
+      })
+    }
+    catch (e) {
+      updateAlertContext?.('error', `Failed to speak: ${e}`)
+      mode.value = 'view'
+    }
   }
   else {
     mode.value = 'view'
@@ -144,9 +155,22 @@ onMounted(async () => {
   ttsEnabled.value = await loadTtsSetting()
   loadVoices()
   await new Promise(resolve => setTimeout(resolve, 1000))
-  speechSuccessHandler.value = await onSpeechEvent('speech:finish', handleSpeechSuccess)
-  speechErrorHandler.value = await onSpeechEvent('speech:error', handleSpeechError)
-  speechInterruptedHandler.value = await onSpeechEvent('speech:interrupted', handleSpeechError)
+  const events: [SpeechEventType, (event: SpeechEvent) => void][] = [
+    ['speech:finish', handleSpeechSuccess],
+    ['speech:error', handleSpeechError],
+    ['speech:interrupted', handleSpeechError],
+  ]
+  for (const [eventName, handler] of events) {
+    try {
+      const unlisten = await onSpeechEvent(eventName, handler)
+      if (eventName === 'speech:finish') speechSuccessHandler.value = unlisten
+      else if (eventName === 'speech:error') speechErrorHandler.value = unlisten
+      else speechInterruptedHandler.value = unlisten
+    }
+    catch (e) {
+      console.error(`Failed to register ${eventName}: ${e}`)
+    }
+  }
   loadModeClass(mode.value)
   loadCurrentPara(0)
 })
