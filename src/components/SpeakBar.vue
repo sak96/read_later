@@ -19,7 +19,6 @@ const mode = ref<ViewMode>('view')
 const rate = ref(1.0)
 const ttsEnabled = ref(true)
 const languages = ref<Voice[]>([])
-const selectedIndex = ref<number | null>(null)
 const voiceId = ref<string | null>(null)
 const speechSuccessHandler = ref<UnlistenFn | null>()
 const speechErrorHandler = ref<UnlistenFn | null>()
@@ -191,7 +190,7 @@ defineExpose({
           @change="onLanguageChange"
         >
           <option
-            :selected="selectedIndex === null"
+            selected
             disabled
           >
             &#127757;
