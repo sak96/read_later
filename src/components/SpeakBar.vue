@@ -63,7 +63,7 @@ async function onLanguageChange(event: Event) {
 function switchMode() {
   if (mode.value === 'reader') {
     stop()
-    scrollToTop()
+    scrollTo('start')
     mode.value = 'view'
   }
   else {
@@ -89,14 +89,9 @@ function findVisibleParaId(): number {
   return 0
 }
 
-function scrollToTop() {
+function scrollTo(block: 'start' | 'center') {
   const para = props.divRef.querySelector('.current_para')
-  para?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
-function scrollToCenter() {
-  const para = props.divRef.querySelector('.current_para')
-  para?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  para?.scrollIntoView({ behavior: 'smooth', block })
 }
 
 function extractParaText(): string | null {
@@ -123,7 +118,7 @@ async function runReader() {
   const paraText = extractParaText()
   if (paraText !== null) {
     const text = paraText.split(' ').filter(Boolean).join(' ')
-    scrollToCenter()
+    scrollTo('center')
     await speak({
       text,
       rate: rate.value,
@@ -179,7 +174,7 @@ defineExpose({
       <button @click="switchMode">
         <i class="ti ti-volume">&#xeb51;</i>
       </button>
-      <button @click="scrollToTop">
+      <button @click="scrollTo('start')">
         <i class="ti ti-arrow-back">&#xea0c;</i>
       </button>
       <template v-if="languages.length > 0">
