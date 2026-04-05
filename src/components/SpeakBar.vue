@@ -101,7 +101,7 @@ function scrollTo(block: 'start' | 'center') {
 
 function extractParaText(): string | null {
   const para = props.divRef.querySelector('.current_para')
-  return para?.textContent || null
+  return para === null ? null : (para.textContent || '.')
 }
 
 function handleSpeechSuccess() {
