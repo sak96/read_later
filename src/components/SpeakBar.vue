@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, inject, onMounted, onUnmounted } from 'vue'
+import { ref, watch, inject, onMounted, onUnmounted, nextTick } from 'vue'
 import { onSpeechEvent, speak, stop, getVoices, Voice } from 'tauri-plugin-tts-api'
 import { SpeechEvent, SpeechEventType } from 'tauri-plugin-tts-api'
 import { type UnlistenFn } from '@tauri-apps/api/event'
@@ -154,7 +154,7 @@ watch(checkpoint, loadCurrentPara)
 onMounted(async () => {
   ttsEnabled.value = await loadTtsSetting()
   loadVoices()
-  await new Promise(resolve => setTimeout(resolve, 1000))
+  await nextTick()
   const events: [SpeechEventType, (event: SpeechEvent) => void][] = [
     ['speech:finish', handleSpeechSuccess],
     ['speech:error', handleSpeechError],
