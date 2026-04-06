@@ -76,7 +76,7 @@ dependencies = [
 
 [[package]]
 name = "article-manager"
-version = "0.1.26"
+version = "0.1.27"
 dependencies = [
  "html5ever 0.36.1",
  "kuchikikiki",
@@ -3962,9 +3962,7 @@ checksum = "20675572f6f24e9e76ef639bc5552774ed45f1c30e2951e1e99c59888861c539"
 
 [[package]]
 name = "readabilityrs"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3eb174b0af6c181a87d68b42800806657bfbdf88b566f819aaadb9d2a7b7699d"
+version = "0.1.3"
 dependencies = [
  "bitflags 2.10.0",
  "kuchikikiki",
