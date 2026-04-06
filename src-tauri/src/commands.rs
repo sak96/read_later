@@ -82,9 +82,13 @@ pub async fn get_article(
                     .await
                     .map_err(|e| e.to_string())?;
 
+                let options = readabilityrs::ReadabilityOptions::builder()
+                    .remove_title_from_content(true)
+                    .debug(true)
+                    .build();
                 // Readability is not send.
                 let article_data = {
-                    Readability::new(&html, Some(&article.url), None)
+                    Readability::new(&html, Some(&article.url), Some(options))
                         .map_err(|e| format!("Failed to parse: {:?}", e))?
                         .parse()
                         .ok_or("Failed to extract article")?
