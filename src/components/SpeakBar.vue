@@ -101,7 +101,7 @@ function scrollTo(block: 'start' | 'center') {
 
 function extractParaText(): string | null {
   const para = props.divRef.querySelector('.current_para')
-  return para === null ? null : (para.textContent || '.')
+  return para === null ? null : (para.textContent?.trim() || '')
 }
 
 function handleSpeechSuccess() {
@@ -114,7 +114,7 @@ function handleSpeechSuccess() {
 
 function handleSpeechError(speechEvent: SpeechEvent) {
   const err = speechEvent.reason || speechEvent.error || 'unknown error'
-  updateAlertContext?.('error', `Failed to speak: ${err}`)
+  updateAlertContext?.('error', `Failed to speak: ${JSON.stringify(err)}`)
   mode.value = 'view'
 }
 
@@ -125,18 +125,23 @@ async function runReader() {
     const text = paraText.split(' ').filter(Boolean).join(' ')
     scrollTo('center')
     try {
-      await speak({
-        text,
-        rate: rate.value,
-        language: '',
-        voiceId: voiceId.value,
-        pitch: 1,
-        volume: 1,
-        queueMode: 'flush',
-      })
+      if (text) {
+        await speak({
+          text,
+          rate: rate.value,
+          language: '',
+          voiceId: voiceId.value,
+          pitch: 1,
+          volume: 1,
+          queueMode: 'flush',
+        })
+      }
+      else {
+        handleSpeechSuccess()
+      }
     }
     catch (e) {
-      updateAlertContext?.('error', `Failed to speak: ${e}`)
+      updateAlertContext?.('error', `Failed to speak: ${JSON.stringify(e)}`)
       mode.value = 'view'
     }
   }
