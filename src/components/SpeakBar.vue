@@ -3,6 +3,7 @@ import { ref, watch, inject, onMounted, onUnmounted, nextTick } from 'vue'
 import { onSpeechEvent, speak, stop, getVoices, Voice } from 'tauri-plugin-tts-api'
 import { SpeechEvent, SpeechEventType } from 'tauri-plugin-tts-api'
 import { type UnlistenFn } from '@tauri-apps/api/event'
+import I18n from '@razein97/tauri-plugin-i18n'
 import { type as osType } from '@tauri-apps/plugin-os'
 import { startService, stopService } from 'tauri-plugin-background-service'
 import type { AlertContext } from '../types'
@@ -25,7 +26,7 @@ const voiceId = ref<string | null>(null)
 const speechSuccessHandler = ref<UnlistenFn | null>()
 const speechErrorHandler = ref<UnlistenFn | null>()
 const speechInterruptedHandler = ref<UnlistenFn | null>()
-const isMobile = ref(false)
+const readService = ref<string | null>(null)
 
 async function loadVoices() {
   try {
@@ -54,14 +55,14 @@ function loadModeClass(newMode: ViewMode) {
     runReader()
     props.divRef?.classList.remove('view')
     props.divRef?.classList.add('reader')
-    if (isMobile.value) {
-      startService({ serviceLabel: 'read-mode' }).catch(e => console.error('Failed to start background service:', e))
+    if (readService.value !== null) {
+      startService({ serviceLabel: readService.value }).catch(e => console.error('Failed to start background service:', e))
     }
   }
   else {
     props.divRef?.classList.remove('reader')
     props.divRef?.classList.add('view')
-    if (isMobile.value) {
+    if (readService.value !== null) {
       stopService().catch(e => console.error('Failed to stop background service:', e))
     }
   }
@@ -167,8 +168,10 @@ watch(checkpoint, loadCurrentPara)
 
 onMounted(async () => {
   ttsEnabled.value = await loadTtsSetting()
-  const type = await osType()
-  isMobile.value = type === 'android' || type === 'ios'
+  const type = osType()
+  if (type === 'android' || type === 'ios') {
+        readService.value =  I18n.getInstance().translate("reading_article")
+  }
   loadVoices()
   await nextTick()
   const events: [SpeechEventType, (event: SpeechEvent) => void][] = [
