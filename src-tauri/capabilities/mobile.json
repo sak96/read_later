@@ -30,6 +30,9 @@
     "tts:allow-is-initialized",
     "safe-area-insets-css:default",
     "dialog:default",
+    "background-service:allow-start",
+    "background-service:allow-stop",
+    "notification:allow-is-permission-granted",
     "http:default"
   ],
   "platforms": [

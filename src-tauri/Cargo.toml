@@ -28,6 +28,9 @@ url = "2.5.7"
 tauri-plugin-mobile-sharetarget = "2"
 tauri-plugin-safe-area-insets-css = "0.1"
 tauri-plugin-android-fs = "23.0.1"
+tauri-plugin-background-service = "0.2.2"
+tauri-plugin-notification = "2.0.0"
+async-trait = "0.1"
 
 [lib]
 name = "article_manager_lib"

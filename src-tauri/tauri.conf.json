@@ -41,6 +41,7 @@
       "preload": [
         "sqlite:article_manager.db"
       ]
-    }
+    },
+    "background-service": {}
   }
 }

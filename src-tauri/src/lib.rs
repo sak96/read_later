@@ -1,3 +1,5 @@
+#[cfg(mobile)]
+pub mod background_service;
 pub mod commands;
 pub mod models;
 pub mod parse;
@@ -21,6 +23,10 @@ pub fn run() {
     #[cfg(mobile)]
     {
         builder = builder
+            .plugin(tauri_plugin_notification::init())
+            .plugin(tauri_plugin_background_service::init_with_service(|| {
+                background_service::ReadModeService::new()
+            }))
             .plugin(tauri_plugin_android_fs::init())
             .plugin(tauri_plugin_safe_area_insets_css::init())
             .plugin(tauri_plugin_mobile_sharetarget::init());
