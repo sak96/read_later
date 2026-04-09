@@ -9,23 +9,24 @@ fn bundle_locales() {
     let out_dir = env::var("OUT_DIR").unwrap();
     let build_path = Path::new(&out_dir).parent().unwrap().parent().unwrap();
 
-    let bundle_path = build_path
+    let bundle_paths: Vec<_> = build_path
         .read_dir()
         .expect("Failed to read directory")
         .filter_map(|e| e.ok())
-        .find_map(|e| {
-            let p = e.path();
-            p.file_name()?
-                .to_str()?
-                .starts_with("tauri-plugin-i18n")
-                .then_some(p)
+        .filter(|e| {
+            e.path()
+                .file_name()
+                .and_then(|s| s.to_str())
+                .map(|s| s.starts_with("tauri-plugin-i18n"))
+                .unwrap_or(false)
         })
-        .map(|p| p.join("out").join("bundled_locales.rs"));
+        .map(|e| e.path().join("out").join("bundled_locales.rs"))
+        .collect();
 
-    let Some(bundle_path) = bundle_path else {
+    if bundle_paths.is_empty() {
         eprintln!("No tauri-plugin-i18n found, skipping");
         return;
-    };
+    }
 
     let manifest_dir = env::var("CARGO_MANIFEST_PATH").unwrap();
     let locales_path = Path::new(&manifest_dir).parent().unwrap().join("locales");
@@ -74,9 +75,11 @@ fn bundle_locales() {
     println!("cargo:info=Successfully bundled {} locale file(s)", count);
     code.push_str("    ]\n}\n");
 
-    if let Some(parent) = bundle_path.parent()
-        && parent.exists()
-    {
-        fs::write(&bundle_path, code).expect("Failed to write bundled_locales.rs");
+    for bundle_path in &bundle_paths {
+        if let Some(parent) = bundle_path.parent()
+            && parent.exists()
+        {
+            fs::write(bundle_path, &code).expect("Failed to write bundled_locales.rs");
+        }
     }
 }
