@@ -76,7 +76,7 @@ dependencies = [
 
 [[package]]
 name = "article-manager"
-version = "0.1.28"
+version = "0.1.29"
 dependencies = [
  "async-trait",
  "html5ever 0.36.1",
