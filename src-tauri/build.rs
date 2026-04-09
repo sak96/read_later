@@ -39,7 +39,9 @@ fn bundle_locales() {
 
     println!("cargo:rerun-if-changed={}", locales_path.display());
 
-    let mut code = String::from("pub fn get_bundled_data() -> Vec<(&'static str, &'static str, &'static str)> {\n    vec![\n");
+    let mut code = String::from(
+        "pub fn get_bundled_data() -> Vec<(&'static str, &'static str, &'static str)> {\n    vec![\n",
+    );
 
     let mut entries: Vec<_> = fs::read_dir(&locales_path)
         .expect("Failed to read locales")
@@ -72,9 +74,9 @@ fn bundle_locales() {
     println!("cargo:info=Successfully bundled {} locale file(s)", count);
     code.push_str("    ]\n}\n");
 
-    if let Some(parent) = bundle_path.parent() {
-        if parent.exists() {
-            fs::write(&bundle_path, code).expect("Failed to write bundled_locales.rs");
-        }
+    if let Some(parent) = bundle_path.parent()
+        && parent.exists()
+    {
+        fs::write(&bundle_path, code).expect("Failed to write bundled_locales.rs");
     }
 }
