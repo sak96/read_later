@@ -224,11 +224,6 @@ onUnmounted(() => {
   clear()
 })
 
-defineExpose({
-  mode,
-  checkpoint,
-  switchMode,
-})
 </script>
 
 <template>
