@@ -91,7 +91,10 @@ onMounted(() => {
 
     <aside style="position: sticky; bottom: var(--safe-area-inset-bottom, 0);">
       <nav>
-        <SpeakBar :div-ref="divRef!" />
+        <SpeakBar
+          :div-ref="divRef!"
+          :title="article.title"
+        />
         <div role="group">
           <HomeButton />
           <button @click="openUrl(article.url)">

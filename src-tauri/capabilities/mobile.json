@@ -30,6 +30,9 @@
     "tts:allow-is-initialized",
     "safe-area-insets-css:default",
     "dialog:default",
+    "media-session:allow-update-state",
+    "media-session:allow-clear",
+    "media-session:allow-register-listener",
     "http:default"
   ],
   "platforms": [

@@ -21,13 +21,14 @@ tauri-plugin-tts = "0.1.7"
 tauri-plugin-i18n = "2.0.2"
 sqlx = "0.8.0"
 kuchikikiki = "0.9"
-html5ever = "0.36"
+html5ever = "0.38"
 url = "2.5.7"
 
 [target."cfg(any(target_os = \"android\", target_os = \"ios\"))".dependencies]
 tauri-plugin-mobile-sharetarget = "2"
 tauri-plugin-safe-area-insets-css = "0.1"
 tauri-plugin-android-fs = "23.0.1"
+tauri-plugin-media-session = { git = "https://github.com/sak96/tauri-plugin-media-session" }
 
 [lib]
 name = "article_manager_lib"

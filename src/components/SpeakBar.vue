@@ -3,13 +3,16 @@ import { ref, watch, inject, onMounted, onUnmounted, nextTick } from 'vue'
 import { onSpeechEvent, speak, stop, getVoices, Voice } from 'tauri-plugin-tts-api'
 import { SpeechEvent, SpeechEventType } from 'tauri-plugin-tts-api'
 import { type UnlistenFn } from '@tauri-apps/api/event'
+import type { PluginListener } from '@tauri-apps/api/core'
 import type { AlertContext } from '../types'
 import SpeakRate from './SpeakRate.vue'
 import { loadTtsSetting } from '../composables/useTTS'
 const { updateAlertContext } = inject<AlertContext>('alert') || {}
+const alertContext = inject<AlertContext | null>('alert')
 
 const props = defineProps<{
   divRef: HTMLElement
+  title?: string
 }>()
 
 type ViewMode = 'view' | 'reader'
@@ -23,6 +26,7 @@ const voiceId = ref<string | null>(null)
 const speechSuccessHandler = ref<UnlistenFn | null>()
 const speechErrorHandler = ref<UnlistenFn | null>()
 const speechInterruptedHandler = ref<UnlistenFn | null>()
+const actionListener = ref<PluginListener | null>()
 
 async function loadVoices() {
   try {
@@ -46,13 +50,58 @@ function loadCurrentPara(newId: number) {
   )
 }
 
+async function loadSpeechHandlers() {
+  const events: [SpeechEventType, (event: SpeechEvent) => void][] = [
+    ['speech:finish', handleSpeechSuccess],
+    ['speech:error', handleSpeechError],
+    ['speech:interrupted', handleSpeechError],
+  ]
+  for (const [eventName, handler] of events) {
+    try {
+      const unlisten = await onSpeechEvent(eventName, handler)
+      if (eventName === 'speech:finish') speechSuccessHandler.value = unlisten
+      else if (eventName === 'speech:error') speechErrorHandler.value = unlisten
+      else speechInterruptedHandler.value = unlisten
+    }
+    catch (e) {
+      console.error(`Failed to register ${eventName}: ${e}`)
+    }
+  }
+}
+
+async function loadNotificationHandlers() {
+  try {
+    const unlisten = await onAction((event) => {
+      console.log(`${event.action} is triggered`)
+      switch (event.action) {
+        case 'play':
+          mode.value = 'reader'
+          break
+        case 'pause':
+        case 'stop':
+          mode.value = 'view'
+          stop()
+          break
+        default:
+          console.error('Unhandled media session action:', event.action)
+      }
+    })
+    actionListener.value = unlisten
+  }
+  catch (e) {
+    console.error('Failed to register media session action listener:', e)
+  }
+}
+
 function loadModeClass(newMode: ViewMode) {
   if (newMode === 'reader') {
+    updateState({ isPlaying: true, title: props.title })
     runReader()
     props.divRef?.classList.remove('view')
     props.divRef?.classList.add('reader')
   }
   else {
+    updateState({ isPlaying: false })
     props.divRef?.classList.remove('reader')
     props.divRef?.classList.add('view')
   }
@@ -160,22 +209,8 @@ onMounted(async () => {
   ttsEnabled.value = await loadTtsSetting()
   loadVoices()
   await nextTick()
-  const events: [SpeechEventType, (event: SpeechEvent) => void][] = [
-    ['speech:finish', handleSpeechSuccess],
-    ['speech:error', handleSpeechError],
-    ['speech:interrupted', handleSpeechError],
-  ]
-  for (const [eventName, handler] of events) {
-    try {
-      const unlisten = await onSpeechEvent(eventName, handler)
-      if (eventName === 'speech:finish') speechSuccessHandler.value = unlisten
-      else if (eventName === 'speech:error') speechErrorHandler.value = unlisten
-      else speechInterruptedHandler.value = unlisten
-    }
-    catch (e) {
-      console.error(`Failed to register ${eventName}: ${e}`)
-    }
-  }
+  loadSpeechHandlers()
+  loadNotificationHandlers()
   loadModeClass(mode.value)
   loadCurrentPara(0)
 })
@@ -185,6 +220,8 @@ onUnmounted(() => {
   speechErrorHandler.value?.()
   speechInterruptedHandler.value?.()
   stop()
+  actionListener.value?.unregister()
+  clear()
 })
 
 defineExpose({
