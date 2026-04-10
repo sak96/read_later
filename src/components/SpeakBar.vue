@@ -7,7 +7,7 @@ import type { PluginListener } from '@tauri-apps/api/core'
 import type { AlertContext } from '../types'
 import SpeakRate from './SpeakRate.vue'
 import { loadTtsSetting } from '../composables/useTTS'
-const { updateAlertContext } = inject<AlertContext>('alert') || {}
+import { updateState, clear, onAction } from '../composables/useMediaSession'
 const alertContext = inject<AlertContext | null>('alert')
 
 const props = defineProps<{
@@ -163,7 +163,7 @@ function handleSpeechSuccess() {
 
 function handleSpeechError(speechEvent: SpeechEvent) {
   const err = speechEvent.reason || speechEvent.error || 'unknown error'
-  updateAlertContext?.('error', `Failed to speak: ${JSON.stringify(err)}`)
+  alertContext?.updateAlertContext?.('error', `Failed to speak: ${JSON.stringify(err)}`)
   mode.value = 'view'
 }
 
@@ -190,7 +190,7 @@ async function runReader() {
       }
     }
     catch (e) {
-      updateAlertContext?.('error', `Failed to speak: ${JSON.stringify(e)}`)
+      alertContext?.updateAlertContext?.('error', `Failed to speak: ${JSON.stringify(e)}`)
       mode.value = 'view'
     }
   }

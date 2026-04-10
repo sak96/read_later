@@ -18,7 +18,7 @@ type PageMode
 
 const mode = ref<PageMode>({ type: 'fetching', progress: null })
 
-const { updateAlertContext } = inject<AlertContext>('alert') || {}
+const alertContext = inject<AlertContext | null>('alert')
 
 const onProgress = (progress: FetchProgress | null) => {
   mode.value = { type: 'fetching', progress }
@@ -33,7 +33,7 @@ async function loadArticle() {
     (channel as any).cleanupCallback()
   }
   catch (err) {
-    updateAlertContext?.('error', `Failed to fetch article: ${err}`)
+    alertContext?.updateAlertContext?.('error', `Failed to fetch article: ${err}`)
     await invokeNoParseLogError('delete_article', { id: props.id })
     router.push({ name: 'home' })
   }
@@ -41,7 +41,7 @@ async function loadArticle() {
 
 async function deleteArticle() {
   await invokeNoParseLogError('delete_article', { id: props.id })
-  updateAlertContext?.('success', 'Deleted article.')
+  alertContext?.updateAlertContext?.('success', 'Deleted article.')
   router.push({ name: 'home' })
 }
 

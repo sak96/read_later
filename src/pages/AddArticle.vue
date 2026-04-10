@@ -15,7 +15,7 @@ const urlInput = ref('')
 const progressBar = ref(false)
 const urlInputPlaceholder = ref('')
 
-const { updateAlertContext } = inject<AlertContext>('alert') || {}
+const alertContext = inject<AlertContext | null>('alert')
 
 async function pasteFromClipboard() {
   const text = await readClipboard()
@@ -32,7 +32,7 @@ async function onSubmit(e: Event) {
     router.replace({ name: 'article', params: { id: article.id } })
   }
   catch (err) {
-    updateAlertContext?.('error', `Failed to add article: ${err}`)
+    alertContext?.updateAlertContext?.('error', `Failed to add article: ${err}`)
     progressBar.value = false
   }
 }
