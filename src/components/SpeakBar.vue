@@ -190,8 +190,9 @@ onMounted(async () => {
   await initReading()
   await loadNotificationHandlers()
   await loadEventHandlers()
-  loadModeClass(mode.value)
+  props.divRef?.classList.add('view')
   loadCurrentPara(0)
+  window.scrollTo({ top: 0, left: 0, behavior: "instant" });
 })
 
 onUnmounted(() => {
