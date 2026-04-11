@@ -32,6 +32,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             crate::commands::get_articles,
             crate::commands::get_article,
+            crate::commands::get_article_count,
             crate::commands::add_article,
             crate::commands::delete_article,
             crate::commands::get_setting,

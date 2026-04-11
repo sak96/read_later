@@ -10,6 +10,7 @@ import SpeakRate from '../components/SpeakRate.vue'
 import LocaleBar from '../components/LocaleBar.vue'
 import { Fab } from '../layouts'
 import { loadTtsSetting } from '../composables/useTTS'
+import { invokeParseLogError } from '../composables/useTauri'
 
 type Theme = 'light' | 'dark' | 'system'
 
@@ -17,6 +18,7 @@ const themeContext = inject<{ mode: Theme, setMode: (mode: Theme) => void }>('th
 
 const appVersion = ref('N/A')
 const ttsEnabled = ref(true)
+const articleCount = ref(0)
 
 const themes: Array<{ value: Theme, icon: string, code: string }> = [
   { value: 'light', icon: 'ti-sun', code: '\uf6a9' },
@@ -43,6 +45,7 @@ async function onTtsToggle() {
 }
 
 onMounted(async () => {
+  articleCount.value = await invokeParseLogError<number>('get_article_count') || 0
   appVersion.value = await getVersion()
   ttsEnabled.value = await loadTtsSetting()
 })
@@ -101,12 +104,12 @@ onMounted(async () => {
           <label>
             <h2 class="ti ti-restore">
               &#xfafd;&nbsp;<span data-i18n="restore" />
-            </h2>
-            <div role="group">
-              <ImportButton />
-              <ExportButton />
-            </div>
-          </label>
+              ;&nbsp;<mark>({{ articleCount.toString() }})</mark>
+              <div role="group">
+                <ImportButton />
+                <ExportButton />
+              </div>
+            </h2></label>
         </fieldset>
         <hr>
 
