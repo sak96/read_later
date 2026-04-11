@@ -95,6 +95,7 @@ async function loadEventHandlers() {
       else {
         if (position !== undefined) {
           loadCurrentPara(position)
+          scrollTo('center')
         }
         mode.value = 'reader'
       }
