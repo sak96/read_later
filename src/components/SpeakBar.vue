@@ -3,7 +3,7 @@ import { ref, watch, inject, onMounted, onUnmounted, nextTick } from 'vue'
 import type { PluginListener } from '@tauri-apps/api/core'
 import { getVoices, Voice } from 'tauri-plugin-tts-api'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
-import { invoke } from '@tauri-apps/api/core'
+import { invokeNoParseLogError, invokeParseLogError } from '../composables/useTauri'
 import type { AlertContext } from '../types'
 import SpeakRate from './SpeakRate.vue'
 import { loadTtsSetting } from '../composables/useTTS'
@@ -56,7 +56,7 @@ function extractParaText(): string[] {
   return Array.from(paras).map(para => para?.textContent?.trim() || '.')
 }
 async function initReading() {
-  await invoke('init_reading', { rate: rate.value, title: props.title || 'Untitled', paragraphs: extractParaText() })
+  await invokeNoParseLogError('init_reading', { rate: rate.value, title: props.title || 'Untitled', paragraphs: extractParaText() })
 }
 
 async function loadNotificationHandlers() {
@@ -110,10 +110,10 @@ async function loadModeClass(newMode: ViewMode) {
     props.divRef?.classList.remove('view')
     props.divRef?.classList.add('reader')
     scrollTo('center')
-    await invoke('start_reading', { startPara: findVisibleParaId() })
+    await invokeNoParseLogError('start_reading', { startPara: findVisibleParaId() })
   }
   else {
-    await invoke('stop_reading')
+    await invokeNoParseLogError('stop_reading')
     props.divRef?.classList.remove('reader')
     props.divRef?.classList.add('view')
     scrollTo('start')
@@ -121,7 +121,7 @@ async function loadModeClass(newMode: ViewMode) {
 }
 
 async function handleRateUpdate(newRate: number) {
-  await invoke('change_rate', { rate: newRate })
+  await invokeNoParseLogError('change_rate', { rate: newRate })
   rate.value = newRate
 }
 
@@ -135,7 +135,7 @@ async function onLanguageChange(event: Event) {
   const index = parseInt(target.value)
   const voice = index !== null ? languages.value[index] : null
   voiceId.value = voice?.id ?? null
-  await invoke('set_voice_id', { voiceId: voiceId.value })
+  await invokeNoParseLogError('set_voice_id', { voiceId: voiceId.value })
 }
 
 async function switchMode() {
@@ -166,7 +166,8 @@ function findVisibleParaId(): number {
 }
 
 async function scrollOnFocus() {
-  const readState = await invoke<{ mode: 'view' | 'reader', position: number }>('get_read_state')
+  const readState = await invokeParseLogError<{ mode: 'view' | 'reader', position: number }>('get_read_state')
+  if (!readState) return
   if (readState.mode !== mode.value) {
     mode.value = readState.mode
   }
@@ -196,7 +197,7 @@ onMounted(async () => {
 onUnmounted(() => {
   notificationListener.value?.unregister()
   stateHandler.value?.()
-  invoke('cleanup_reading')
+  invokeNoParseLogError('cleanup_reading')
 })
 
 </script>
