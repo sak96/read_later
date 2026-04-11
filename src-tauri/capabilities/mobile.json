@@ -33,6 +33,7 @@
     "media-session:allow-update-state",
     "media-session:allow-clear",
     "media-session:allow-register-listener",
+    "media-session:allow-remove-listener",
     "http:default"
   ],
   "platforms": [

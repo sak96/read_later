@@ -5693,7 +5693,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-media-session"
 version = "0.2.4"
-source = "git+https://github.com/sak96/tauri-plugin-media-session#256e8565d70ebc552e6f3b52db770abd34bbc2f1"
+source = "git+https://github.com/sak96/tauri-plugin-media-session?rev=6132ca7c6875644a1e5da22062a289d056603c5f#6132ca7c6875644a1e5da22062a289d056603c5f"
 dependencies = [
  "serde",
  "tauri",
