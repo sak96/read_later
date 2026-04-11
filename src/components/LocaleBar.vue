@@ -13,9 +13,9 @@ async function onLocaleChange(event: Event) {
 <template>
   <template v-if="(localeContext?.locales.value.length) || 0 > 0">
     <fieldset>
-      <h2 class="ti ti-language">
+      <h4 class="ti ti-language">
         &#xebbe;&nbsp;<span data-i18n="locale" />
-      </h2>
+      </h4>
       <select
         style="text-align-last: center;"
         @change="onLocaleChange"

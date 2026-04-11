@@ -56,9 +56,9 @@ onMounted(async () => {
     <article>
       <form>
         <fieldset>
-          <h2 class="ti ti-palette">
+          <h4 class="ti ti-palette">
             &#xeb01;&nbsp;<span data-i18n="theme" />
-          </h2>
+          </h4>
           <div role="group">
             <button
               v-for="themeOption in themes"
@@ -75,9 +75,9 @@ onMounted(async () => {
         <hr>
         <fieldset>
           <div role="group">
-            <h2 class="ti ti-volume">
+            <h4 class="ti ti-volume">
               &#xeb51;&nbsp;<span data-i18n="speech" />
-            </h2>
+            </h4>
             <div>
               <input
                 name="terms"
@@ -102,22 +102,22 @@ onMounted(async () => {
 
         <fieldset>
           <label>
-            <h2 class="ti ti-restore">
+            <h4 class="ti ti-restore">
               &#xfafd;&nbsp;<span data-i18n="restore" />
               ;&nbsp;<mark>({{ articleCount.toString() }})</mark>
               <div role="group">
                 <ImportButton />
                 <ExportButton />
               </div>
-            </h2></label>
+            </h4></label>
         </fieldset>
         <hr>
 
         <fieldset>
           <label>
-            <h2 class="ti ti-info-circle">
+            <h4 class="ti ti-info-circle">
               &#xeac5;&nbsp;<span data-i18n="about" />
-            </h2>
+            </h4>
             <div role="group">
               <button
                 v-for="info in infos"
