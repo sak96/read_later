@@ -27,6 +27,7 @@ pub fn run() {
             .plugin(tauri_plugin_mobile_sharetarget::init());
     }
     builder
+        .manage(commands::speakbar::SpeakBarState::default())
         .setup(|_app| Ok(()))
         .invoke_handler(tauri::generate_handler![
             crate::commands::get_articles,
@@ -37,6 +38,13 @@ pub fn run() {
             crate::commands::set_setting,
             crate::commands::pick_import_file,
             crate::commands::pick_export_file,
+            crate::commands::init_reading,
+            crate::commands::start_reading,
+            crate::commands::stop_reading,
+            crate::commands::change_rate,
+            crate::commands::get_read_state,
+            crate::commands::set_voice_id,
+            crate::commands::cleanup_reading,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

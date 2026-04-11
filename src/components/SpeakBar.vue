@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { ref, watch, inject, onMounted, onUnmounted, nextTick } from 'vue'
-import { onSpeechEvent, speak, stop, getVoices, Voice } from 'tauri-plugin-tts-api'
-import { SpeechEvent, SpeechEventType } from 'tauri-plugin-tts-api'
-import { type UnlistenFn } from '@tauri-apps/api/event'
 import type { PluginListener } from '@tauri-apps/api/core'
+import { getVoices, Voice } from 'tauri-plugin-tts-api'
+import { listen, type UnlistenFn } from '@tauri-apps/api/event'
+import { invoke } from '@tauri-apps/api/core'
 import type { AlertContext } from '../types'
 import SpeakRate from './SpeakRate.vue'
 import { loadTtsSetting } from '../composables/useTTS'
-import { updateState, clear, onAction } from '../composables/useMediaSession'
+import { onAction } from '../composables/useMediaSession'
+import { platform } from '@tauri-apps/plugin-os'
+
 const alertContext = inject<AlertContext | null>('alert')
 
 const props = defineProps<{
@@ -17,16 +19,15 @@ const props = defineProps<{
 
 type ViewMode = 'view' | 'reader'
 
-const checkpoint = ref(0)
 const mode = ref<ViewMode>('view')
 const rate = ref(1.0)
 const ttsEnabled = ref(true)
 const languages = ref<Voice[]>([])
 const voiceId = ref<string | null>(null)
-const speechSuccessHandler = ref<UnlistenFn | null>()
-const speechErrorHandler = ref<UnlistenFn | null>()
-const speechInterruptedHandler = ref<UnlistenFn | null>()
-const actionListener = ref<PluginListener | null>()
+const stateHandler = ref<UnlistenFn | null>()
+const notificationListener = ref<PluginListener | null>()
+const currentPlatform: string = platform()
+const focusUnlistener = ref<UnlistenFn | null>(null)
 
 async function loadVoices() {
   try {
@@ -50,29 +51,17 @@ function loadCurrentPara(newId: number) {
   )
 }
 
-async function loadSpeechHandlers() {
-  const events: [SpeechEventType, (event: SpeechEvent) => void][] = [
-    ['speech:finish', handleSpeechSuccess],
-    ['speech:error', handleSpeechError],
-    ['speech:interrupted', handleSpeechError],
-  ]
-  for (const [eventName, handler] of events) {
-    try {
-      const unlisten = await onSpeechEvent(eventName, handler)
-      if (eventName === 'speech:finish') speechSuccessHandler.value = unlisten
-      else if (eventName === 'speech:error') speechErrorHandler.value = unlisten
-      else speechInterruptedHandler.value = unlisten
-    }
-    catch (e) {
-      console.error(`Failed to register ${eventName}: ${e}`)
-    }
-  }
+function extractParaText(): string[] {
+  const paras = props.divRef.querySelectorAll('[class^="tts_para_"]')
+  return Array.from(paras).map(para => para?.textContent?.trim() || '.')
+}
+async function initReading() {
+  await invoke('init_reading', { rate: rate.value, title: props.title || 'Untitled', paragraphs: extractParaText() })
 }
 
 async function loadNotificationHandlers() {
   try {
     const unlisten = await onAction((event) => {
-      console.log(`${event.action} is triggered`)
       switch (event.action) {
         case 'play':
           mode.value = 'reader'
@@ -86,25 +75,59 @@ async function loadNotificationHandlers() {
           console.error('Unhandled media session action:', event.action)
       }
     })
-    actionListener.value = unlisten
+    notificationListener.value = unlisten
   }
   catch (e) {
     console.error('Failed to register media session action listener:', e)
   }
 }
 
-function loadModeClass(newMode: ViewMode) {
+async function loadEventHandlers() {
+  try {
+    stateHandler.value = await listen<{ position?: number, mode: 'view' | 'reader' }>('speakbar:state-changed', (event) => {
+      const { position, mode: newMode } = event.payload
+      if (newMode === 'view') {
+        mode.value = 'view'
+        if (position === undefined) {
+          alertContext?.updateAlertContext?.('error', 'Failed to speak')
+        }
+      }
+      else {
+        if (position !== undefined) {
+          loadCurrentPara(position)
+        }
+        mode.value = 'reader'
+      }
+    })
+  }
+  catch (e) {
+    console.error('Failed to register state-changed listener:', e)
+  }
+}
+
+async function loadModeClass(newMode: ViewMode) {
   if (newMode === 'reader') {
-    updateState({ isPlaying: true, title: props.title })
-    runReader()
     props.divRef?.classList.remove('view')
     props.divRef?.classList.add('reader')
+    scrollTo('center')
+    await invoke('start_reading', { startPara: findVisibleParaId() })
   }
   else {
-    updateState({ isPlaying: false })
+    await invoke('stop_reading')
     props.divRef?.classList.remove('reader')
     props.divRef?.classList.add('view')
+    scrollTo('start')
   }
+}
+
+async function handleRateUpdate(newRate: number) {
+  await invoke('change_rate', { rate: newRate })
+  rate.value = newRate
+}
+
+function scrollTo(block: 'start' | 'center') {
+  const para = props.divRef.querySelector('.current_para')
+  para?.scrollIntoView({ behavior: 'smooth', block })
 }
 
 async function onLanguageChange(event: Event) {
@@ -112,16 +135,15 @@ async function onLanguageChange(event: Event) {
   const index = parseInt(target.value)
   const voice = index !== null ? languages.value[index] : null
   voiceId.value = voice?.id ?? null
+  await invoke('set_voice_id', { voiceId: voiceId.value })
 }
 
-function switchMode() {
+async function switchMode() {
   if (mode.value === 'reader') {
-    stop()
-    scrollTo('start')
+    await nextTick()
     mode.value = 'view'
   }
   else {
-    checkpoint.value = findVisibleParaId()
     mode.value = 'reader'
   }
 }
@@ -143,85 +165,38 @@ function findVisibleParaId(): number {
   return 0
 }
 
-function scrollTo(block: 'start' | 'center') {
-  const para = props.divRef.querySelector('.current_para')
-  para?.scrollIntoView({ behavior: 'smooth', block })
-}
-
-function extractParaText(): string | null {
-  const para = props.divRef.querySelector('.current_para')
-  return para === null ? null : (para.textContent?.trim() || '')
-}
-
-function handleSpeechSuccess() {
-  if (mode.value === 'reader') {
-    // read the next tts para
-    checkpoint.value++
-    setTimeout(runReader, 0)
-  }
-}
-
-function handleSpeechError(speechEvent: SpeechEvent) {
-  const err = speechEvent.reason || speechEvent.error || 'unknown error'
-  alertContext?.updateAlertContext?.('error', `Failed to speak: ${JSON.stringify(err)}`)
-  mode.value = 'view'
-}
-
-async function runReader() {
-  if (mode.value !== 'reader') return
-  const paraText = extractParaText()
-  if (paraText !== null) {
-    const text = paraText.split(' ').filter(Boolean).join(' ')
-    scrollTo('center')
-    try {
-      if (text) {
-        await speak({
-          text,
-          rate: rate.value,
-          language: '',
-          voiceId: voiceId.value,
-          pitch: 1,
-          volume: 1,
-          queueMode: 'flush',
-        })
-      }
-      else {
-        handleSpeechSuccess()
-      }
-    }
-    catch (e) {
-      alertContext?.updateAlertContext?.('error', `Failed to speak: ${JSON.stringify(e)}`)
-      mode.value = 'view'
-    }
+async function scrollOnFocus() {
+  const readState = await invoke<{ mode: 'view' | 'reader', position: number }>('get_read_state')
+  if (readState.mode !== mode.value) {
+    mode.value = readState.mode
   }
   else {
-    mode.value = 'view'
-    stop()
-    return
+    loadCurrentPara(readState.position)
+    scrollTo(readState.mode === 'reader' ? 'center' : 'start')
   }
 }
 
 watch(mode, loadModeClass)
 
-watch(checkpoint, loadCurrentPara)
-
 onMounted(async () => {
+  focusUnlistener.value = await listen(
+    currentPlatform === 'android' ? 'tauri://focus' : 'new-intent',
+    scrollOnFocus,
+  )
   ttsEnabled.value = await loadTtsSetting()
   loadVoices()
   await nextTick()
-  loadSpeechHandlers()
-  loadNotificationHandlers()
+  await initReading()
+  await loadNotificationHandlers()
+  await loadEventHandlers()
   loadModeClass(mode.value)
   loadCurrentPara(0)
 })
 
 onUnmounted(() => {
-  speechSuccessHandler.value?.()
-  speechErrorHandler.value?.()
-  speechInterruptedHandler.value?.()
-  stop()
-  actionListener.value?.unregister()
-  clear()
+  notificationListener.value?.unregister()
+  stateHandler.value?.()
+  invoke('cleanup_reading')
 })
 
 </script>
@@ -270,7 +245,7 @@ onUnmounted(() => {
       </button>
       <SpeakRate
         :model-value="rate"
-        @update:model-value="rate = $event"
+        @update:model-value="handleRateUpdate"
       />
     </fieldset>
   </template>
