@@ -128,10 +128,18 @@ async function handleRateUpdate(newRate: number) {
 }
 
 function scrollTo(block: 'start' | 'center') {
-  const para = props.divRef.querySelector('.current_para')
-  para?.scrollIntoView({ behavior: 'smooth', block })
-}
+  const para = props.divRef.querySelector('.current_para') as HTMLElement | null
+  if (para) {
+    const isFirst = para.classList.contains('tts_para_0')
 
+    if (isFirst && block === 'start') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+    else {
+      para.scrollIntoView({ behavior: 'smooth', block })
+    }
+  }
+}
 async function onLanguageChange(event: Event) {
   const target = event.target as HTMLSelectElement
   const index = parseInt(target.value)
@@ -194,7 +202,7 @@ onMounted(async () => {
   await loadEventHandlers()
   props.divRef?.classList.add('view')
   loadCurrentPara(0)
-  window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  scrollTo('start')
 })
 
 onUnmounted(() => {
