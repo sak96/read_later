@@ -81,7 +81,11 @@ onMounted(() => {
             rel="prev"
             @click="toggleDeleteModal"
           />
-          <IconTrashX size="2em" />
+          <IconTrashX
+            size="2em"
+            style="margin-right: 1em"
+          />
+          <span data-i18n="delete_article" />
         </header>
         <strong>{{ article.title }}</strong>
         <footer>

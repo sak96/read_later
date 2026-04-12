@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { ArticleEntry } from '../types'
+import I18n from '@razein97/tauri-plugin-i18n'
 import { IconLoader } from '@tabler/icons-vue'
 
 const props = defineProps<{
@@ -22,11 +23,9 @@ const title = computed(() => {
       return { text: lastPart, loaded: false }
     }
   }
-  catch {
-    // Invalid URL
-  }
-
-  return { text: 'Untitled', loaded: false }
+  catch {}
+  const untitled = I18n.getInstance().translate('untitled')
+  return { text: untitled, loaded: false }
 })
 
 function goToArticle() {

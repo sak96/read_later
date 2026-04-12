@@ -24,7 +24,11 @@ function close() {
           rel="prev"
           @click="close"
         />
-        <IconWorldWww size="2em" />
+        <IconWorldWww
+          size="2em"
+          style="margin-right: 1em"
+        />
+        <span data-i18n="open_url" />
       </header>
       <strong>{{ url }}</strong>
       <footer>
