@@ -137,6 +137,14 @@ pub async fn add_article(
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
+            if let Ok(existing) = query_as::<_, Article>("SELECT id, title, body, created_at, url FROM articles WHERE url = ?")
+                .bind(&url)
+                .fetch_one(pool)
+                .await
+            {
+                return Ok(existing);
+            }
+
             let article = query_as::<_, Article>(
                 "INSERT INTO articles (title, body, url) VALUES ('', '', $1) RETURNING id, title, body, created_at, url",
             )
