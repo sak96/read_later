@@ -1,12 +1,21 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { resolve } from 'path'
+import path from 'path'
 
 const host = process.env.TAURI_DEV_HOST
+const platform = process.env.TAURI_ENV_PLATFORM
+
+const isMobile = platform === 'android' || platform === 'ios'
 
 export default defineConfig({
   plugins: [vue()],
-  resolve: {},
+  resolve: {
+    alias: {
+      '@/src/layouts/focus.vue': isMobile
+        ? path.resolve(__dirname, './src/layouts/Focus.mobile.vue')
+        : path.resolve(__dirname, './src/layouts/Focus.desktop.vue'),
+    },
+  },
   clearScreen: false,
   server: {
     port: 5173,
