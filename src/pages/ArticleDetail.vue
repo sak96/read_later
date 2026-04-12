@@ -36,14 +36,14 @@ async function loadArticle() {
   catch (err) {
     alertContext?.updateAlertContext?.('error', `Failed to fetch article: ${err}`)
     await invokeNoParseLogError('delete_article', { id: props.id })
-    router.push({ name: 'home' })
+    router.replace({ name: 'home' })
   }
 }
 
 async function deleteArticle() {
   await invokeNoParseLogError('delete_article', { id: props.id })
   alertContext?.updateAlertContext?.('success', 'Deleted article.')
-  router.push({ name: 'home' })
+  router.replace({ name: 'home' })
 }
 
 onMounted(async () => {
