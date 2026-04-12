@@ -4,8 +4,7 @@ import { setSetting } from '../composables/useSettings'
 import { getVersion } from '@tauri-apps/api/app'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import HomeButton from '../components/HomeButton.vue'
-import ImportButton from '../components/ImportButton.vue'
-import ExportButton from '../components/ExportButton.vue'
+import DataTransferButton from '../components/DataTransferButton.vue'
 import SpeakRate from '../components/SpeakRate.vue'
 import LocaleBar from '../components/LocaleBar.vue'
 import { Fab } from '../layouts'
@@ -113,8 +112,8 @@ onMounted(async () => {
               />
               <mark>({{ articleCount.toString() }})</mark>
               <div role="group">
-                <ImportButton />
-                <ExportButton />
+                <DataTransferButton type="import" />
+                <DataTransferButton type="export" />
               </div>
             </h4></label>
         </fieldset>
