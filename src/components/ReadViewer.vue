@@ -33,6 +33,11 @@ async function deleteArticle() {
   router.replace({ name: 'home' })
 }
 
+function openExternalUrl(url: string) {
+  openUrl(url)
+  externalUrl.value = null
+}
+
 function setLinkCallbacks() {
   if (!divRef.value) return
 
@@ -61,20 +66,23 @@ onMounted(() => {
     >
       <h1>{{ article.title }}</h1>
       <!-- eslint-disable-next-line vue/no-v-html -->
-      <div v-html="safeHtml" />
+      <div
+        class="article"
+        v-html="safeHtml"
+      />
     </article>
 
     <ConfirmModal
-      :icon="IconWorldWww"
+      :icon="Globe"
       i18n-key="open_url"
       :message="externalUrl ?? ''"
       :show="!!externalUrl"
-      @confirm="openUrl(externalUrl!)"
+      @confirm="openExternalUrl(externalUrl!)"
       @close="externalUrl = null"
     />
 
     <ConfirmModal
-      :icon="IconTrashX"
+      :icon="Trash2"
       i18n-key="delete_article"
       :message="article.title"
       :show="deleteModal"
