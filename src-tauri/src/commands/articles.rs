@@ -19,9 +19,9 @@ pub async fn get_articles(
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
             let query: Option<&str> = query.as_ref().filter(|s| s.len() >= 3).map(|s| s.as_str());
-            let mut articles = sqlx::query_as::<_, ArticleEntry>(
+            let rows = sqlx::query_as::<_, ArticleEntryRow>(
                 r#"
-                SELECT id, url, title, text_content as snippet,
+                SELECT id, url, title, text_content,
                        datetime(created_at, 'localtime') as created_at
                 FROM articles
                 WHERE (
@@ -39,10 +39,16 @@ pub async fn get_articles(
             .await
             .map_err(|e| e.to_string())?;
 
-            // attach snippet
-            for article in &mut articles {
-                article.snippet = build_snippet(&article.snippet, query);
-            }
+            let articles: Vec<ArticleEntry> = rows
+                .into_iter()
+                .map(|row| ArticleEntry {
+                    id: row.id,
+                    url: row.url,
+                    title: row.title,
+                    snippet: build_snippet(&row.text_content, query),
+                    created_at: row.created_at,
+                })
+                .collect();
 
             Ok(articles)
         }

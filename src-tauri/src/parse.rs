@@ -4,6 +4,8 @@ use kuchikikiki::traits::*;
 use kuchikikiki::{ElementData, NodeRef, parse_fragment};
 use std::cell::RefCell;
 
+use crate::models::Snippet;
+
 fn is_block_element(name: &str) -> bool {
     matches!(
         name,
@@ -296,33 +298,38 @@ fn process_node_url(node: &NodeRef, url: &str) {
     }
 }
 
-pub fn build_snippet(body: &str, query: Option<&str>) -> String {
+pub fn build_snippet(body: &str, query: Option<&str>) -> Snippet {
     const SNIPPET_LENGTH: usize = 100;
     const HALF_SNIPPET_LENGTH: usize = SNIPPET_LENGTH / 2;
     match query {
-        None => format!(
-            "{} ...",
-            body.chars().take(SNIPPET_LENGTH).collect::<String>()
-        ),
+        None => Snippet {
+            prefix: body.chars().take(SNIPPET_LENGTH).collect(),
+            match_text: None,
+            suffix: None,
+        },
         Some(q) => {
-            let q_lower = q.to_lowercase();
             let body_lower = body.to_lowercase();
-            if let Some(pos) = body_lower.find(&q_lower) {
-                let start = pos.saturating_sub(HALF_SNIPPET_LENGTH);
-                let end = (pos + q.len() + HALF_SNIPPET_LENGTH).min(body.len());
-                let snippet = &body[start..end];
-                // highlight first match (case-insensitive)
-                if let Some(rel_pos) = snippet.to_lowercase().find(&q_lower) {
-                    let before = &snippet[..rel_pos];
-                    let matched = &snippet[rel_pos..rel_pos + q.len()];
-                    let after = &snippet[rel_pos + q.len()..];
+            let q_lower = q.to_lowercase();
 
-                    format!("{}<mark>{}</mark>{}", before, matched, after)
-                } else {
-                    snippet.to_string()
-                }
-            } else {
-                body.chars().take(SNIPPET_LENGTH).collect()
+            if let Some(pos) = body_lower.find(&q_lower) {
+                // ⚠️ We cannot trust byte positions → approximate snippet
+                let snippet: String = body
+                    .chars()
+                    .skip(pos.saturating_sub(HALF_SNIPPET_LENGTH))
+                    .take(SNIPPET_LENGTH)
+                    .collect();
+
+                return Snippet {
+                    prefix: snippet,
+                    match_text: None, // avoid incorrect slicing
+                    suffix: None,
+                };
+            }
+
+            Snippet {
+                prefix: body.chars().take(SNIPPET_LENGTH).collect(),
+                match_text: None,
+                suffix: None,
             }
         }
     }

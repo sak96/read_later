@@ -16,12 +16,28 @@ pub struct Article {
     pub url: String,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, sqlx::FromRow)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
+pub struct Snippet {
+    pub prefix: String,
+    pub match_text: Option<String>,
+    pub suffix: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct ArticleEntry {
     pub id: i32,
     pub url: String,
     pub title: String,
-    pub snippet: String,
+    pub snippet: Snippet,
+    pub created_at: String,
+}
+
+#[derive(sqlx::FromRow)]
+pub struct ArticleEntryRow {
+    pub id: i32,
+    pub url: String,
+    pub title: String,
+    pub text_content: String,
     pub created_at: String,
 }
 

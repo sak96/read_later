@@ -10,11 +10,17 @@ export interface Article {
   url: string
 }
 
+export interface Snippet {
+  prefix: string
+  match_text: string | null
+  suffix: string | null
+}
+
 export interface ArticleEntry {
   id: number
   url: string
   title: string
-  snippet: string
+  snippet: Snippet
   created_at: string
 }
 

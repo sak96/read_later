@@ -49,7 +49,6 @@ function goToArticle() {
       </h5>
     </header>
     <p><small>{{ article.created_at }}</small></p>
-    <!-- eslint-disable-next-line vue/no-v-html -->
-    <p><small><div v-html="article.snippet" /></small></p>
+    <p><small>{{ article.snippet.prefix }}<mark v-if="article.snippet.match_text">{{ article.snippet.match_text }}</mark>{{ article.snippet.suffix || '' }}</small></p>
   </article>
 </template>
