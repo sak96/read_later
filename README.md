@@ -77,7 +77,7 @@ Distributed under the MIT License. See `LICENSE.md` for more information.
 ## Acknowledgment
 
 - [Pico Css](https://picocss.com/)
-- [Tabler icons](https://tabler.io/icons)
+- [Lucide icons](https://lucide.dev/icons/)
 - [Readability Library](https://github.com/theiskaa/readabilityrs)
 
 ## Works well with

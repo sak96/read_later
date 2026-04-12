@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IconHome } from '@tabler/icons-vue'
+import { Home } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -11,6 +11,6 @@ function goHome() {
 
 <template>
   <button @click="goHome">
-    <IconHome />
+    <Home />
   </button>
 </template>

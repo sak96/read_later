@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { invokeNoParseLogError } from '../composables/useTauri'
-import { IconUpload, IconDownload } from '@tabler/icons-vue'
+import { HardDriveDownload, HardDriveUpload } from 'lucide-vue-next'
 
 const props = defineProps<{
   type: 'import' | 'export'
@@ -24,7 +24,7 @@ async function handleClick() {
     :disabled="isLoading"
     @click.stop="handleClick"
   >
-    <IconUpload v-if="type === 'import'" />
-    <IconDownload v-else />
+    <HardDriveUpload v-if="type === 'import'" />
+    <HardDriveDownload v-else />
   </button>
 </template>

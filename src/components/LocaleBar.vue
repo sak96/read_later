@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject } from 'vue'
 import type { LocaleContext } from '../types'
-import { IconLanguage } from '@tabler/icons-vue'
+import { Languages } from 'lucide-vue-next'
 
 const localeContext = inject<LocaleContext>('locale')
 
@@ -15,7 +15,7 @@ async function onLocaleChange(event: Event) {
   <template v-if="(localeContext?.locales.value.length) || 0 > 0">
     <fieldset>
       <h4>
-        <IconLanguage style="margin-right: 1em" />
+        <Languages style="margin-right: 1em" />
         <span data-i18n="locale" />
       </h4>
       <select

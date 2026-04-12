@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { IconSettingsFilled } from '@tabler/icons-vue'
+import { Settings } from 'lucide-vue-next'
 
 const router = useRouter()
 
@@ -11,6 +11,6 @@ function goToSettings() {
 
 <template>
   <button @click="goToSettings">
-    <IconSettingsFilled />
+    <Settings />
   </button>
 </template>

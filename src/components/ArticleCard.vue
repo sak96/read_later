@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { ArticleEntry } from '../types'
 import I18n from '@razein97/tauri-plugin-i18n'
-import { IconLoader } from '@tabler/icons-vue'
+import { Loader } from 'lucide-vue-next'
 
 const props = defineProps<{
   article: ArticleEntry
@@ -39,9 +39,8 @@ function goToArticle() {
     @click="goToArticle"
   >
     <header>
-      <IconLoader
+      <Loader
         v-if="!title?.loaded"
-        size="2em"
         style="margin-right: 1em"
       />
       <h5 style="display: inline-block">

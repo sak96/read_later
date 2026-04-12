@@ -9,7 +9,7 @@ import SpeakRate from './SpeakRate.vue'
 import { loadTtsSetting } from '../composables/useTTS'
 import { onAction } from '../composables/useMediaSession'
 import { platform } from '@tauri-apps/plugin-os'
-import { IconVolume, IconArrowBack, IconPlayerPause } from '@tabler/icons-vue'
+import { Speech, Undo2, Pause } from 'lucide-vue-next'
 
 const alertContext = inject<AlertContext | null>('alert')
 
@@ -220,10 +220,10 @@ onUnmounted(() => {
       role="group"
     >
       <button @click="switchMode">
-        <IconVolume />
+        <Speech />
       </button>
       <button @click="scrollTo('start')">
-        <IconArrowBack />
+        <Undo2 />
       </button>
       <template v-if="languages.length > 0">
         <select
@@ -253,7 +253,7 @@ onUnmounted(() => {
       role="group"
     >
       <button @click="switchMode">
-        <IconPlayerPause />
+        <Pause />
       </button>
       <SpeakRate
         :model-value="rate"

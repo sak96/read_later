@@ -8,7 +8,7 @@ import HomeButton from '../components/HomeButton.vue'
 import SettingsButton from '../components/SettingsButton.vue'
 import I18n from '@razein97/tauri-plugin-i18n'
 import { Fab } from '../layouts'
-import { IconClipboard, IconDeviceFloppy } from '@tabler/icons-vue'
+import { Clipboard, Save } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
@@ -84,11 +84,11 @@ onMounted(() => {
           type="button"
           @click="pasteFromClipboard"
         >
-          <IconClipboard />
+          <Clipboard />
         </button>
         <div role="group">
           <button type="submit">
-            <IconDeviceFloppy />
+            <Save />
           </button>
         </div>
       </div>

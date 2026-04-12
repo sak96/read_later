@@ -10,7 +10,7 @@ import LocaleBar from '../components/LocaleBar.vue'
 import { Fab } from '../layouts'
 import { loadTtsSetting } from '../composables/useTTS'
 import { invokeParseLogError } from '../composables/useTauri'
-import { IconDeviceDesktopCog, IconInfoCircle, IconRestore, IconVolume, Icon, IconMoon, IconPalette, IconSun, IconBug, IconBrandGithub } from '@tabler/icons-vue'
+import { MonitorCog, Sun, Moon, CodeXml, Bug, Palette, Speech, Archive, Info } from 'lucide-vue-next'
 
 type Theme = 'light' | 'dark' | 'system'
 
@@ -20,15 +20,15 @@ const appVersion = ref('N/A')
 const ttsEnabled = ref(true)
 const articleCount = ref(0)
 
-const themes: Array<{ value: Theme, icon: Icon }> = [
-  { value: 'light', icon: IconSun },
-  { value: 'dark', icon: IconMoon },
-  { value: 'system', icon: IconDeviceDesktopCog },
+const themes = [
+  { value: 'light' as Theme, icon: Sun },
+  { value: 'dark' as Theme, icon: Moon },
+  { value: 'system' as Theme, icon: MonitorCog },
 ]
 
 const infos = [
-  { url: 'https://github.com/sak96/read_later', icon: IconBrandGithub },
-  { url: 'https://github.com/sak96/read_later/issues', icon: IconBug },
+  { url: 'https://github.com/sak96/read_later', icon: CodeXml },
+  { url: 'https://github.com/sak96/read_later/issues', icon: Bug },
 ]
 
 async function onThemeChange(newTheme: Theme) {
@@ -57,7 +57,7 @@ onMounted(async () => {
       <form>
         <fieldset>
           <h4>
-            <IconPalette style="margin-right: 1em" />
+            <Palette style="margin-right: 1em" />
             <span data-i18n="theme" />
           </h4>
           <div role="group">
@@ -77,7 +77,7 @@ onMounted(async () => {
         <fieldset>
           <div role="group">
             <h4>
-              <IconVolume style="margin-right: 1em" />
+              <Speech style="margin-right: 1em" />
               <span data-i18n="speech" />
             </h4>
             <div>
@@ -105,7 +105,7 @@ onMounted(async () => {
         <fieldset>
           <label>
             <h4>
-              <IconRestore style="margin-right: 1em" />
+              <Archive style="margin-right: 1em" />
               <span
                 data-i18n="restore"
                 style="margin-right: 1em"
@@ -122,7 +122,7 @@ onMounted(async () => {
         <fieldset>
           <label>
             <h4>
-              <IconInfoCircle style="margin-right: 1em" />
+              <Info style="margin-right: 1em" />
               <span data-i18n="about" />
             </h4>
             <div role="group">

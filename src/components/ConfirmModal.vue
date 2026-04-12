@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
-import { IconX, IconCheck } from '@tabler/icons-vue'
+import { X, Check } from 'lucide-vue-next'
 
 defineProps<{
   icon: Component
@@ -37,10 +37,10 @@ const emit = defineEmits<{
           class="secondary"
           @click="emit('close')"
         >
-          <IconX />
+          <X />
         </button>
         <button @click="emit('confirm')">
-          <IconCheck />
+          <Check />
         </button>
       </footer>
     </article>

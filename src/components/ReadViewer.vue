@@ -8,7 +8,7 @@ import DOMPurify from 'dompurify'
 import HomeButton from './HomeButton.vue'
 import ConfirmModal from './ConfirmModal.vue'
 import SpeakBar from './SpeakBar.vue'
-import { IconTrashX, IconWorldWww } from '@tabler/icons-vue'
+import { Trash2, Globe } from 'lucide-vue-next'
 
 const props = defineProps<{
   article: Article
@@ -65,11 +65,12 @@ onMounted(() => {
       class="page reader_view overflow-auto"
     >
       <h1>{{ article.title }}</h1>
-      <!-- eslint-disable-next-line vue/no-v-html -->
+      <!-- eslint-disable vue/no-v-html -->
       <div
         class="article"
         v-html="safeHtml"
       />
+      <!-- eslint-enable vue/no-v-html -->
     </article>
 
     <ConfirmModal
@@ -99,13 +100,13 @@ onMounted(() => {
         <div role="group">
           <HomeButton />
           <button @click="openUrl(article.url)">
-            <IconWorldWww />
+            <Globe />
           </button>
           <button
             class="secondary"
             @click="toggleDeleteModal"
           >
-            <IconTrashX />
+            <Trash2 />
           </button>
         </div>
       </nav>
