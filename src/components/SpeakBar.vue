@@ -9,6 +9,7 @@ import SpeakRate from './SpeakRate.vue'
 import { loadTtsSetting } from '../composables/useTTS'
 import { onAction } from '../composables/useMediaSession'
 import { platform } from '@tauri-apps/plugin-os'
+import { IconVolume, IconArrowBack, IconPlayerPause } from '@tabler/icons-vue'
 
 const alertContext = inject<AlertContext | null>('alert')
 
@@ -193,7 +194,7 @@ onMounted(async () => {
   await loadEventHandlers()
   props.divRef?.classList.add('view')
   loadCurrentPara(0)
-  window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
 })
 
 onUnmounted(() => {
@@ -211,10 +212,10 @@ onUnmounted(() => {
       role="group"
     >
       <button @click="switchMode">
-        <i class="ti ti-volume">&#xeb51;</i>
+        <IconVolume />
       </button>
       <button @click="scrollTo('start')">
-        <i class="ti ti-arrow-back">&#xea0c;</i>
+        <IconArrowBack />
       </button>
       <template v-if="languages.length > 0">
         <select
@@ -227,7 +228,7 @@ onUnmounted(() => {
             selected
             disabled
           >
-            &#127757;
+            &#127760;
           </option>
           <option
             v-for="(lang, idx) in languages"
@@ -244,7 +245,7 @@ onUnmounted(() => {
       role="group"
     >
       <button @click="switchMode">
-        <i class="ti ti-player-pause">&#xf690;</i>
+        <IconPlayerPause />
       </button>
       <SpeakRate
         :model-value="rate"

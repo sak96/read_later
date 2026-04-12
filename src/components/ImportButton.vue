@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { invokeNoParseLogError } from '../composables/useTauri'
+import { IconUpload } from '@tabler/icons-vue'
 
 const isImporting = ref(false)
 
@@ -17,6 +18,6 @@ async function importData() {
     :aria-busy="isImporting"
     @click="importData"
   >
-    <i class="ti ti-upload">&#xeb47;</i>
+    <IconUpload />
   </button>
 </template>

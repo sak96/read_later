@@ -8,6 +8,7 @@ import DOMPurify from 'dompurify'
 import HomeButton from './HomeButton.vue'
 import LinkPopup from './LinkPopup.vue'
 import SpeakBar from './SpeakBar.vue'
+import { IconTrashX, IconX, IconCheck, IconWorldWww } from '@tabler/icons-vue'
 
 const props = defineProps<{
   article: Article
@@ -74,16 +75,24 @@ onMounted(() => {
 
     <dialog :open="deleteModal">
       <article>
-        <h2><strong class="ti ti-trash-x">&#xf784;: {{ article.title }}</strong></h2>
+        <header>
+          <button
+            aria-label="Close"
+            rel="prev"
+            @click="toggleDeleteModal"
+          />
+          <IconTrashX size="2em" />
+        </header>
+        <strong>{{ article.title }}</strong>
         <footer>
           <button
             class="secondary"
             @click="toggleDeleteModal"
           >
-            <i class="ti ti-x">&#xeb55;</i>
+            <IconX />
           </button>
           <button @click="deleteArticle">
-            <i class="ti ti-check">&#xea5e;</i>
+            <IconCheck />
           </button>
         </footer>
       </article>
@@ -98,13 +107,13 @@ onMounted(() => {
         <div role="group">
           <HomeButton />
           <button @click="openUrl(article.url)">
-            <i class="ti ti-world-www">&#xf38f;</i>
+            <IconWorldWww />
           </button>
           <button
             class="secondary"
             @click="toggleDeleteModal"
           >
-            <i class="ti ti-trash-x">&#xf784;</i>
+            <IconTrashX />
           </button>
         </div>
       </nav>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { invokeNoParseLogError } from '../composables/useTauri'
+import { IconDownload } from '@tabler/icons-vue'
 
 const isExporting = ref(false)
 
@@ -17,6 +18,6 @@ async function exportData() {
     :aria-busy="isExporting"
     @click="exportData"
   >
-    <i class="ti ti-download">&#xea96;</i>
+    <IconDownload />
   </button>
 </template>

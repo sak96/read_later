@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { ArticleEntry } from '../types'
+import { IconLoader } from '@tabler/icons-vue'
 
 const props = defineProps<{
   article: ArticleEntry
@@ -38,13 +39,16 @@ function goToArticle() {
     style="cursor: pointer;"
     @click="goToArticle"
   >
-    <h5>
-      <i
-        v-if="!title.loaded"
-        class="ti ti-loader"
-      >&#xeca3;</i>
-      {{ title.text }}
-    </h5>
+    <header>
+      <IconLoader
+        v-if="!title?.loaded"
+        size="2em"
+        style="margin-right: 1em"
+      />
+      <h5 style="display: inline-block">
+        {{ title?.text }}
+      </h5>
+    </header>
     <p><small>{{ article.created_at }}</small></p>
     <!-- eslint-disable-next-line vue/no-v-html -->
     <p><small><div v-html="article.snippet" /></small></p>

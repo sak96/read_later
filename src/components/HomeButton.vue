@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { IconHome } from '@tabler/icons-vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -10,6 +11,6 @@ function goHome() {
 
 <template>
   <button @click="goHome">
-    <i class="ti ti-home">&#xeac1;</i>
+    <IconHome />
   </button>
 </template>

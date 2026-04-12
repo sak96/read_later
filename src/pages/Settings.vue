@@ -11,6 +11,7 @@ import LocaleBar from '../components/LocaleBar.vue'
 import { Fab } from '../layouts'
 import { loadTtsSetting } from '../composables/useTTS'
 import { invokeParseLogError } from '../composables/useTauri'
+import { IconDeviceDesktopCog, IconInfoCircle, IconRestore, IconVolume, Icon, IconMoon, IconPalette, IconSun, IconBug, IconBrandGithub } from '@tabler/icons-vue'
 
 type Theme = 'light' | 'dark' | 'system'
 
@@ -20,15 +21,15 @@ const appVersion = ref('N/A')
 const ttsEnabled = ref(true)
 const articleCount = ref(0)
 
-const themes: Array<{ value: Theme, icon: string, code: string }> = [
-  { value: 'light', icon: 'ti-sun', code: '\uf6a9' },
-  { value: 'dark', icon: 'ti-moon', code: '\ueaf8' },
-  { value: 'system', icon: 'ti-device-desktop-cog', code: '\uf862' },
+const themes: Array<{ value: Theme, icon: Icon }> = [
+  { value: 'light', icon: IconSun },
+  { value: 'dark', icon: IconMoon },
+  { value: 'system', icon: IconDeviceDesktopCog },
 ]
 
 const infos = [
-  { url: 'https://github.com/sak96/read_later', icon: 'ti-brand-github', code: '\uec1c' },
-  { url: 'https://github.com/sak96/read_later/issues', icon: 'ti-bug', code: '\uea48' },
+  { url: 'https://github.com/sak96/read_later', icon: IconBrandGithub },
+  { url: 'https://github.com/sak96/read_later/issues', icon: IconBug },
 ]
 
 async function onThemeChange(newTheme: Theme) {
@@ -56,8 +57,9 @@ onMounted(async () => {
     <article>
       <form>
         <fieldset>
-          <h4 class="ti ti-palette">
-            &#xeb01;&nbsp;<span data-i18n="theme" />
+          <h4>
+            <IconPalette style="margin-right: 1em" />
+            <span data-i18n="theme" />
           </h4>
           <div role="group">
             <button
@@ -66,7 +68,7 @@ onMounted(async () => {
               :class="themeContext?.mode === themeOption.value ? 'primary' : 'outline'"
               @click="onThemeChange(themeOption.value)"
             >
-              <i class="ti">{{ themeOption.code }}</i>
+              <component :is="themeOption.icon" />
             </button>
           </div>
         </fieldset>
@@ -75,8 +77,9 @@ onMounted(async () => {
         <hr>
         <fieldset>
           <div role="group">
-            <h4 class="ti ti-volume">
-              &#xeb51;&nbsp;<span data-i18n="speech" />
+            <h4>
+              <IconVolume style="margin-right: 1em" />
+              <span data-i18n="speech" />
             </h4>
             <div>
               <input
@@ -102,9 +105,13 @@ onMounted(async () => {
 
         <fieldset>
           <label>
-            <h4 class="ti ti-restore">
-              &#xfafd;&nbsp;<span data-i18n="restore" />
-              ;&nbsp;<mark>({{ articleCount.toString() }})</mark>
+            <h4>
+              <IconRestore style="margin-right: 1em" />
+              <span
+                data-i18n="restore"
+                style="margin-right: 1em"
+              />
+              <mark>({{ articleCount.toString() }})</mark>
               <div role="group">
                 <ImportButton />
                 <ExportButton />
@@ -115,8 +122,9 @@ onMounted(async () => {
 
         <fieldset>
           <label>
-            <h4 class="ti ti-info-circle">
-              &#xeac5;&nbsp;<span data-i18n="about" />
+            <h4>
+              <IconInfoCircle style="margin-right: 1em" />
+              <span data-i18n="about" />
             </h4>
             <div role="group">
               <button
@@ -126,7 +134,7 @@ onMounted(async () => {
                 class="outline"
                 @click="openUrl(info.url)"
               >
-                <i class="ti">{{ info.code }}</i>
+                <component :is="info.icon" />
               </button>
             </div>
           </label>

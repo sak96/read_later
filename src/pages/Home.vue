@@ -7,6 +7,7 @@ import ArticleCard from '../components/ArticleCard.vue'
 import SettingsButton from '../components/SettingsButton.vue'
 import I18n from '@razein97/tauri-plugin-i18n'
 import { Fab } from '../layouts'
+import { IconBookmarkPlus } from '@tabler/icons-vue'
 
 const router = useRouter()
 const articles = ref<ArticleEntry[]>([])
@@ -101,7 +102,7 @@ onBeforeUnmount(() => {
 
   <Fab>
     <button @click="goToAddArticle">
-      <i class="ti ti-bookmark-plus">&#xfa60;</i>
+      <IconBookmarkPlus />
     </button>
     <div>
       <SettingsButton />

@@ -11,8 +11,10 @@
     "lint": "eslint --fix src"
   },
   "dependencies": {
+    "@picocss/pico": "^2.1.1",
     "@razein97/tauri-plugin-i18n": "^2.0.1",
     "@saurl/tauri-plugin-safe-area-insets-css-api": "^0.1.0",
+    "@tabler/icons-vue": "^3.41.1",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-clipboard-manager": "^2.2.3",
     "@tauri-apps/plugin-dialog": "^2.4.2",

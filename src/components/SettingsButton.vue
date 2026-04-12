@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { IconSettingsFilled } from '@tabler/icons-vue'
 
 const router = useRouter()
 
@@ -10,6 +11,6 @@ function goToSettings() {
 
 <template>
   <button @click="goToSettings">
-    <i class="ti ti-settings-filled">&#xf69e;</i>
+    <IconSettingsFilled />
   </button>
 </template>

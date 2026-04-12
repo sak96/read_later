@@ -5,6 +5,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { Alert, Theme, Locale } from './layouts'
 import { popIntentQueueAndExtractText } from 'tauri-plugin-mobile-sharetarget-api'
 import '@saurl/tauri-plugin-safe-area-insets-css-api'
+import '@picocss/pico/css/pico.min.css'
 import { platform } from '@tauri-apps/plugin-os'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 

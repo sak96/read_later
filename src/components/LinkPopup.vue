@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { openUrl } from '@tauri-apps/plugin-opener'
+import { IconCheck, IconWorldWww } from '@tabler/icons-vue'
 
 defineProps<{
   url: string | null
@@ -23,9 +24,7 @@ function close() {
           rel="prev"
           @click="close"
         />
-        <h2 class="ti ti-world-www">
-          &#xf38f;
-        </h2>
+        <IconWorldWww size="2em" />
       </header>
       <strong>{{ url }}</strong>
       <footer>
@@ -33,7 +32,7 @@ function close() {
           type="button"
           @click="openUrl(url)"
         >
-          <i class="ti ti-check">&#xea5e;</i>
+          <IconCheck />
         </button>
       </footer>
     </article>

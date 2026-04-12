@@ -5,6 +5,7 @@ import { invokeParse, invokeNoParseLogError } from '../composables/useTauri'
 import { Channel } from '@tauri-apps/api/core'
 import type { Article, FetchProgress, AlertContext } from '../types'
 import ReadViewer from '../components/ReadViewer.vue'
+import { IconTrashX, Icon, IconLoader, IconCloudDownload, IconDatabaseSearch } from '@tabler/icons-vue'
 
 const props = defineProps<{
   id: number
@@ -50,20 +51,16 @@ onMounted(async () => {
   await loadArticle()
 })
 
-function getProgressInfo(progress: FetchProgress | null): { icon: string, iconCode: string, title: string } {
-  if (!progress) {
-    return { icon: 'ti-loader', iconCode: '\ueca3', title: '...' }
+function getProgressInfo(progress: FetchProgress | null): { icon: Icon, title: string } {
+  if (progress) {
+    if ('Downloading' in progress) {
+      return { icon: IconCloudDownload, title: progress.Downloading }
+    }
+    if ('Parsing' in progress) {
+      return { icon: IconDatabaseSearch, title: progress.Parsing }
+    }
   }
-
-  if ('Downloading' in progress) {
-    return { icon: 'ti-cloud-download', iconCode: '\uea71', title: progress.Downloading }
-  }
-
-  if ('Parsing' in progress) {
-    return { icon: 'ti-database-search', iconCode: '\ufa18', title: progress.Parsing }
-  }
-
-  return { icon: 'ti-loader', iconCode: '\ueca3', title: '...' }
+  return { icon: IconLoader, title: '...' }
 }
 </script>
 
@@ -75,7 +72,7 @@ function getProgressInfo(progress: FetchProgress | null): { icon: string, iconCo
   >
     <article style="width: 100%;">
       <h2 class="ti">
-        {{ getProgressInfo(mode.progress).iconCode }}
+        {{ getProgressInfo(mode.progress).icon }}
         <p>{{ getProgressInfo(mode.progress).title }}</p>
       </h2>
       <progress />
@@ -87,7 +84,7 @@ function getProgressInfo(progress: FetchProgress | null): { icon: string, iconCo
           class="secondary"
           @click="deleteArticle"
         >
-          <i class="ti ti-trash-x">&#xf784;</i>
+          <IconTrashX />
         </button>
       </footer>
     </article>
