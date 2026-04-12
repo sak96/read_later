@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
-import Home from '../pages/Home.vue'
-import ArticleDetail from '../pages/ArticleDetail.vue'
-import Settings from '../pages/Settings.vue'
-import AddArticle from '../pages/AddArticle.vue'
+const Home = () => import('../pages/Home.vue')
+const ArticleDetail = () => import('../pages/ArticleDetail.vue')
+const Settings = () => import('../pages/Settings.vue')
+const AddArticle = () => import('../pages/AddArticle.vue')
 
 const routes = [
   {
