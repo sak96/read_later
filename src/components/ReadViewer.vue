@@ -6,9 +6,9 @@ import { invokeNoParseLogError } from '../composables/useTauri'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import DOMPurify from 'dompurify'
 import HomeButton from './HomeButton.vue'
-import LinkPopup from './LinkPopup.vue'
+import ConfirmModal from './ConfirmModal.vue'
 import SpeakBar from './SpeakBar.vue'
-import { IconTrashX, IconX, IconCheck, IconWorldWww } from '@tabler/icons-vue'
+import { IconTrashX, IconWorldWww } from '@tabler/icons-vue'
 
 const props = defineProps<{
   article: Article
@@ -16,16 +16,12 @@ const props = defineProps<{
 
 const router = useRouter()
 const divRef = ref<HTMLElement | null>(null)
-const deleteModal = ref(false)
 const externalUrl = ref<string | null>(null)
+const deleteModal = ref(false)
 const safeHtml = computed(() => DOMPurify.sanitize(props.article.body))
 
 function handleLinkClick(href: string) {
   externalUrl.value = href
-}
-
-function closeLinkPopup() {
-  externalUrl.value = null
 }
 
 function toggleDeleteModal() {
@@ -68,39 +64,23 @@ onMounted(() => {
       <div v-html="safeHtml" />
     </article>
 
-    <LinkPopup
-      :url="externalUrl"
-      @close="closeLinkPopup"
+    <ConfirmModal
+      :icon="IconWorldWww"
+      i18n-key="open_url"
+      :message="externalUrl ?? ''"
+      :show="!!externalUrl"
+      @confirm="openUrl(externalUrl!)"
+      @close="externalUrl = null"
     />
 
-    <dialog :open="deleteModal">
-      <article>
-        <header>
-          <button
-            aria-label="Close"
-            rel="prev"
-            @click="toggleDeleteModal"
-          />
-          <IconTrashX
-            size="2em"
-            style="margin-right: 1em"
-          />
-          <span data-i18n="delete_article" />
-        </header>
-        <strong>{{ article.title }}</strong>
-        <footer>
-          <button
-            class="secondary"
-            @click="toggleDeleteModal"
-          >
-            <IconX />
-          </button>
-          <button @click="deleteArticle">
-            <IconCheck />
-          </button>
-        </footer>
-      </article>
-    </dialog>
+    <ConfirmModal
+      :icon="IconTrashX"
+      i18n-key="delete_article"
+      :message="article.title"
+      :show="deleteModal"
+      @confirm="deleteArticle"
+      @close="deleteModal = false"
+    />
 
     <aside style="position: sticky; bottom: var(--safe-area-inset-bottom, 0);">
       <nav>
