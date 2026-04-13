@@ -88,6 +88,7 @@ jobs:
       - name: Build Tauri Android
         run: |
           export NDK_HOME=$ANDROID_NDK
+          export CARGOFLAGS="--locked"
           cargo tauri android build  --split-per-abi
           mkdir assets
           find  src-tauri/gen/android/app/build/outputs/apk/ -iname *-release.apk -exec cp {} assets \;
