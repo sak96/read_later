@@ -111,11 +111,12 @@ onMounted(async () => {
                 style="margin-right: 1em"
               />
               <mark>({{ articleCount.toString() }})</mark>
-              <div role="group">
-                <DataTransferButton type="import" />
-                <DataTransferButton type="export" />
-              </div>
-            </h4></label>
+            </h4>
+          </label>
+          <div role="group">
+            <DataTransferButton type="import" />
+            <DataTransferButton type="export" />
+          </div>
         </fieldset>
         <hr>
 
