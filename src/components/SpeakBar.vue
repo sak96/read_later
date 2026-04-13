@@ -133,7 +133,9 @@ function scrollTo(block: 'start' | 'center') {
     const isFirst = para.classList.contains('tts_para_0')
 
     if (isFirst && block === 'start') {
+      // NOTE: window scroll works for desktop props scroll works for android
       window.scrollTo({ top: 0, behavior: 'smooth' })
+      props.divRef.scrollTo({ top: 0, behavior: 'smooth' })
     }
     else {
       para.scrollIntoView({ behavior: 'smooth', block })
