@@ -67,7 +67,7 @@ function getProgressInfo(progress: FetchProgress | null): { icon: LucideIcon, ti
 <template>
   <main
     v-if="mode.type === 'fetching'"
-    class="container page"
+    class="page"
     style="display: flex; justify-content: center; align-items: center;"
   >
     <article style="width: 100%;">

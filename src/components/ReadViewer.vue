@@ -59,7 +59,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="container">
+  <div>
     <article
       ref="divRef"
       class="page reader_view overflow-auto"
