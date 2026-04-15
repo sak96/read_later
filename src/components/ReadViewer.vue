@@ -8,7 +8,8 @@ import DOMPurify from 'dompurify'
 import HomeButton from './HomeButton.vue'
 import ConfirmModal from './ConfirmModal.vue'
 import SpeakBar from './SpeakBar.vue'
-import { Trash2, Globe } from 'lucide-vue-next'
+import Fab from '../layouts/Fab.vue'
+import { ChevronDown, CircleChevronUp, Trash2, Globe } from 'lucide-vue-next'
 
 const props = defineProps<{
   article: Article
@@ -18,6 +19,7 @@ const router = useRouter()
 const divRef = ref<HTMLElement | null>(null)
 const externalUrl = ref<string | null>(null)
 const deleteModal = ref(false)
+const foldBar = ref(true)
 const safeHtml = computed(() => DOMPurify.sanitize(props.article.body))
 
 function handleLinkClick(href: string) {
@@ -91,14 +93,13 @@ onMounted(() => {
       @close="deleteModal = false"
     />
 
-    <aside style="position: sticky; bottom: var(--safe-area-inset-bottom, 0);">
-      <nav>
+    <aside v-if="!foldBar" style="position: sticky; bottom: var(--safe-area-inset-bottom, 0);">
+      <nav >
         <SpeakBar
           :div-ref="divRef!"
           :title="article.title"
         />
         <div role="group">
-          <HomeButton />
           <button @click="openUrl(article.url)">
             <Globe />
           </button>
@@ -108,8 +109,17 @@ onMounted(() => {
           >
             <Trash2 />
           </button>
+          <button @click="foldBar = true">
+            <ChevronDown />
+          </button>
         </div>
       </nav>
     </aside>
+    <Fab v-else>
+        <HomeButton />
+        <button @click="foldBar = false">
+          <CircleChevronUp  />
+        </button>
+    </Fab>
   </div>
 </template>
