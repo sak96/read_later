@@ -37,6 +37,12 @@ onMounted(async () => {
       @change="onLanguageChange"
     >
       <option
+        selected
+        disabled
+      >
+        &#127760;
+      </option>
+      <option
         v-for="(lang, idx) in languages"
         :key="lang.id"
         :value="idx"

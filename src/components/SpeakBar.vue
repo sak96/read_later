@@ -9,7 +9,9 @@ import LanguageSelect from './LanguageSelect.vue'
 import { loadTtsSetting } from '../composables/useTTS'
 import { onAction } from '../composables/useMediaSession'
 import { platform } from '@tauri-apps/plugin-os'
-import { Speech, Undo2, Pause } from 'lucide-vue-next'
+import { Speech, Undo2, Pause, ChevronDown, CircleChevronUp } from 'lucide-vue-next'
+import Fab from '../layouts/Fab.vue'
+import HomeButton from './HomeButton.vue'
 
 const alertContext = inject<AlertContext | null>('alert')
 
@@ -17,6 +19,8 @@ const props = defineProps<{
   divRef: HTMLElement
   title?: string
 }>()
+
+const foldBar = ref(true)
 
 type ViewMode = 'view' | 'reader'
 
@@ -198,30 +202,49 @@ onUnmounted(() => {
 
 <template>
   <template v-if="ttsEnabled">
-    <fieldset
-      v-if="mode === 'view'"
-      role="group"
+    <aside
+      v-if="!foldBar"
+      style="position: sticky; bottom: var(--safe-area-inset-bottom, 0);"
     >
-      <button @click="switchMode">
-        <Speech />
+      <nav>
+        <fieldset
+          v-if="mode === 'view'"
+          role="group"
+        >
+          <button @click="switchMode">
+            <Speech />
+          </button>
+          <button @click="scrollTo('start')">
+            <Undo2 />
+          </button>
+        </fieldset>
+        <fieldset
+          v-else
+          role="group"
+        >
+          <button @click="switchMode">
+            <Pause />
+          </button>
+          <SpeakRate
+            :model-value="rate"
+            @update:model-value="handleRateUpdate"
+          />
+        </fieldset>
+        <LanguageSelect />
+        <div role="group">
+          <slot />
+          <button @click="foldBar = true">
+            <ChevronDown />
+          </button>
+        </div>
+      </nav>
+    </aside>
+    <Fab v-else>
+      <button @click="foldBar = false">
+        <CircleChevronUp />
       </button>
-      <button @click="scrollTo('start')">
-        <Undo2 />
-      </button>
-    </fieldset>
-    <fieldset
-      v-else
-      role="group"
-    >
-      <button @click="switchMode">
-        <Pause />
-      </button>
-      <SpeakRate
-        :model-value="rate"
-        @update:model-value="handleRateUpdate"
-      />
-    </fieldset>
-    <LanguageSelect />
+      <HomeButton />
+    </Fab>
   </template>
 </template>
 <style>
