@@ -201,51 +201,50 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <template v-if="ttsEnabled">
-    <aside
-      v-if="!foldBar"
-      style="position: sticky; bottom: var(--safe-area-inset-bottom, 0);"
-    >
-      <nav>
-        <fieldset
-          v-if="mode === 'view'"
-          role="group"
-        >
-          <button @click="switchMode">
-            <Speech />
-          </button>
-          <button @click="scrollTo('start')">
-            <Undo2 />
-          </button>
-        </fieldset>
-        <fieldset
-          v-else
-          role="group"
-        >
-          <button @click="switchMode">
-            <Pause />
-          </button>
-          <SpeakRate
-            :model-value="rate"
-            @update:model-value="handleRateUpdate"
-          />
-        </fieldset>
-        <LanguageSelect />
-        <div role="group">
-          <slot />
-          <button @click="foldBar = true">
-            <ChevronDown />
-          </button>
-        </div>
-      </nav>
-    </aside>
-    <Fab v-else>
-      <button @click="foldBar = false">
-        <CircleChevronUp />
+  <aside
+    v-if="!foldBar"
+    style="position: sticky; bottom: var(--safe-area-inset-bottom, 0);"
+  >
+    <template v-if="ttsEnabled">
+      <SpeakRate
+        :model-value="rate"
+        @update:model-value="handleRateUpdate"
+      />
+      <LanguageSelect />
+    </template>
+    <div role="group">
+      <slot />
+      <button @click="foldBar = true">
+        <ChevronDown />
       </button>
-      <HomeButton />
-    </Fab>
-  </template>
+    </div>
+  </aside>
+  <Fab v-else>
+    <template v-if="ttsEnabled">
+      <template v-if="mode === 'view'">
+        <button
+          @click="scrollTo('start')"
+        >
+          <Undo2 />
+        </button>
+        <button
+          @click="switchMode"
+        >
+          <Speech />
+        </button>
+      </template>
+      <button
+        v-else
+        @click="switchMode"
+      >
+        <Pause />
+      </button>
+    </template>
+    <button @click="foldBar = false">
+      <CircleChevronUp />
+    </button>
+    <HomeButton />
+  </Fab>
 </template>
 <style>
  .reader .current_para {
