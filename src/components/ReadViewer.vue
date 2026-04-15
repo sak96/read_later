@@ -93,8 +93,11 @@ onMounted(() => {
       @close="deleteModal = false"
     />
 
-    <aside v-if="!foldBar" style="position: sticky; bottom: var(--safe-area-inset-bottom, 0);">
-      <nav >
+    <aside
+      v-if="!foldBar"
+      style="position: sticky; bottom: var(--safe-area-inset-bottom, 0);"
+    >
+      <nav>
         <SpeakBar
           :div-ref="divRef!"
           :title="article.title"
@@ -116,10 +119,10 @@ onMounted(() => {
       </nav>
     </aside>
     <Fab v-else>
-        <HomeButton />
-        <button @click="foldBar = false">
-          <CircleChevronUp  />
-        </button>
+      <HomeButton />
+      <button @click="foldBar = false">
+        <CircleChevronUp />
+      </button>
     </Fab>
   </div>
 </template>

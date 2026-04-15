@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, watch, inject, onMounted, onUnmounted, nextTick } from 'vue'
 import type { PluginListener } from '@tauri-apps/api/core'
-import { getVoices, Voice } from 'tauri-plugin-tts-api'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { invokeNoParseLogError, invokeParseLogError } from '../composables/useTauri'
 import type { AlertContext } from '../types'
 import SpeakRate from './SpeakRate.vue'
+import LanguageSelect from './LanguageSelect.vue'
 import { loadTtsSetting } from '../composables/useTTS'
 import { onAction } from '../composables/useMediaSession'
 import { platform } from '@tauri-apps/plugin-os'
@@ -23,21 +23,10 @@ type ViewMode = 'view' | 'reader'
 const mode = ref<ViewMode>('view')
 const rate = ref(1.0)
 const ttsEnabled = ref(true)
-const languages = ref<Voice[]>([])
-const voiceId = ref<string | null>(null)
 const stateHandler = ref<UnlistenFn | null>()
 const notificationListener = ref<PluginListener | null>()
 const currentPlatform: string = platform()
 const focusUnlistener = ref<UnlistenFn | null>(null)
-
-async function loadVoices() {
-  try {
-    languages.value = await getVoices()
-  }
-  catch (e) {
-    console.error(`Failed to load voices: ${e}`)
-  }
-}
 
 function loadCurrentPara(newId: number) {
   const paraId = `.tts_para_${newId}`
@@ -142,13 +131,6 @@ function scrollTo(block: 'start' | 'center') {
     }
   }
 }
-async function onLanguageChange(event: Event) {
-  const target = event.target as HTMLSelectElement
-  const index = parseInt(target.value)
-  const voice = index !== null ? languages.value[index] : null
-  voiceId.value = voice?.id ?? null
-  await invokeNoParseLogError('set_voice_id', { voiceId: voiceId.value })
-}
 
 async function switchMode() {
   if (mode.value === 'reader') {
@@ -197,7 +179,6 @@ onMounted(async () => {
     scrollOnFocus,
   )
   ttsEnabled.value = await loadTtsSetting()
-  loadVoices()
   await nextTick()
   await initReading()
   await loadNotificationHandlers()
@@ -227,28 +208,6 @@ onUnmounted(() => {
       <button @click="scrollTo('start')">
         <Undo2 />
       </button>
-      <template v-if="languages.length > 0">
-        <select
-          role="button"
-          class="ti"
-          style="text-align-last: center;"
-          @change="onLanguageChange"
-        >
-          <option
-            selected
-            disabled
-          >
-            &#127760;
-          </option>
-          <option
-            v-for="(lang, idx) in languages"
-            :key="lang.id"
-            :value="idx"
-          >
-            {{ lang.name }}
-          </option>
-        </select>
-      </template>
     </fieldset>
     <fieldset
       v-else
@@ -262,6 +221,7 @@ onUnmounted(() => {
         @update:model-value="handleRateUpdate"
       />
     </fieldset>
+    <LanguageSelect />
   </template>
 </template>
 <style>
