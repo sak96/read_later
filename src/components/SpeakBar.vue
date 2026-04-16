@@ -267,7 +267,7 @@ onUnmounted(() => {
           rel="prev"
           @click="showSettings = false"
         />
-        <span data-i18n="speech_settings"></span>
+        <span data-i18n="speech_settings" />
       </header>
       <template v-if="ttsEnabled">
         <label data-i18n="speech_rate" />
