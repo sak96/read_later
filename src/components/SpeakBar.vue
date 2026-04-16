@@ -6,10 +6,11 @@ import { invokeNoParseLogError, invokeParseLogError } from '../composables/useTa
 import type { AlertContext } from '../types'
 import SpeakRate from './SpeakRate.vue'
 import LanguageSelect from './LanguageSelect.vue'
+import SpeechSettingIcon from './SpeechSettingIcon.vue'
 import { loadTtsSetting } from '../composables/useTTS'
 import { onAction } from '../composables/useMediaSession'
 import { platform } from '@tauri-apps/plugin-os'
-import { Speech, Undo2, Pause, ChevronDown, CircleChevronUp } from 'lucide-vue-next'
+import { Speech, Undo2, Pause, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import Fab from '../layouts/Fab.vue'
 import HomeButton from './HomeButton.vue'
 
@@ -21,6 +22,7 @@ const props = defineProps<{
 }>()
 
 const foldBar = ref(true)
+const showSettings = ref(false)
 
 type ViewMode = 'view' | 'reader'
 
@@ -120,6 +122,11 @@ async function handleRateUpdate(newRate: number) {
   rate.value = newRate
 }
 
+function openSettings() {
+  foldBar.value = false
+  showSettings.value = true
+}
+
 function scrollTo(block: 'start' | 'center') {
   const para = props.divRef.querySelector('.current_para') as HTMLElement | null
   if (para) {
@@ -201,33 +208,17 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <aside
-    v-if="!foldBar"
-    style="position: sticky; bottom: var(--safe-area-inset-bottom, 0);"
-  >
-    <template v-if="ttsEnabled">
-      <SpeakRate
-        :model-value="rate"
-        @update:model-value="handleRateUpdate"
-      />
-      <LanguageSelect />
-    </template>
-    <div role="group">
-      <slot />
-      <button @click="foldBar = true">
-        <ChevronDown />
-      </button>
-    </div>
-  </aside>
-  <Fab v-else>
+  <Fab>
     <template v-if="ttsEnabled">
       <template v-if="mode === 'view'">
         <button
+          style="width: fit-content; align-self: flex-end;"
           @click="scrollTo('start')"
         >
           <Undo2 />
         </button>
         <button
+          style="width: fit-content; align-self: flex-end;"
           @click="switchMode"
         >
           <Speech />
@@ -240,11 +231,55 @@ onUnmounted(() => {
         <Pause />
       </button>
     </template>
-    <button @click="foldBar = false">
-      <CircleChevronUp />
+    <template v-if="foldBar">
+      <div>
+        <button
+          @click="foldBar = false"
+        >
+          <ChevronRight />
+        </button>
+        <slot />
+        <HomeButton />
+        <button
+          v-if="ttsEnabled"
+          @click="openSettings"
+        >
+          <SpeechSettingIcon />
+        </button>
+      </div>
+    </template>
+    <button
+      v-else
+      @click="foldBar = true"
+    >
+      <ChevronLeft />
     </button>
-    <HomeButton />
   </Fab>
+  <dialog
+    v-if="showSettings"
+    :open="showSettings"
+    @close="showSettings = false"
+  >
+    <article>
+      <header>
+        <button
+          aria-label="Close"
+          rel="prev"
+          @click="showSettings = false"
+        />
+        <span data-i18n="speech_settings"></span>
+      </header>
+      <template v-if="ttsEnabled">
+        <label data-i18n="speech_rate" />
+        <SpeakRate
+          :model-value="rate"
+          @update:model-value="handleRateUpdate"
+        />
+        <label data-i18n="speech_voice" />
+        <LanguageSelect />
+      </template>
+    </article>
+  </dialog>
 </template>
 <style>
  .reader .current_para {

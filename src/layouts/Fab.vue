@@ -14,6 +14,7 @@ defineSlots<{
     padding: 1em;
     display: flex;
     flex-direction: column;
+    align-content: flex-end;
     gap: 5px;
   "
   >
