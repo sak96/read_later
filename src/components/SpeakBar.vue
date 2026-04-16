@@ -226,6 +226,7 @@ onUnmounted(() => {
       </template>
       <button
         v-else
+        style="width: fit-content; align-self: flex-end;"
         @click="switchMode"
       >
         <Pause />
