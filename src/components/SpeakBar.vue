@@ -123,7 +123,7 @@ async function handleRateUpdate(newRate: number) {
 }
 
 function openSettings() {
-  foldBar.value = false
+  foldBar.value = true
   showSettings.value = true
 }
 
@@ -231,10 +231,10 @@ onUnmounted(() => {
         <Pause />
       </button>
     </template>
-    <template v-if="foldBar">
+    <template v-if="!foldBar">
       <div>
         <button
-          @click="foldBar = false"
+          @click="foldBar = true"
         >
           <ChevronRight />
         </button>
@@ -250,7 +250,7 @@ onUnmounted(() => {
     </template>
     <button
       v-else
-      @click="foldBar = true"
+      @click="foldBar = false"
     >
       <ChevronLeft />
     </button>
