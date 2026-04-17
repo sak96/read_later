@@ -28,6 +28,7 @@
     "tts:allow-stop",
     "tts:allow-get-voices",
     "tts:allow-is-initialized",
+    "tts:allow-register-listener",
     "safe-area-insets-css:default",
     "dialog:default",
     "media-session:allow-update-state",

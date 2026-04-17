@@ -191,6 +191,10 @@ onMounted(async () => {
     scrollOnFocus,
   )
   ttsEnabled.value = await loadTtsSetting()
+  // Ensure the native TTS event relay channel is set up before we start
+  // listening for speech:finish / speech:error. On mobile this registers the
+  // Kotlin → Rust → Tauri channel; on desktop it is a no-op.
+  await invokeNoParseLogError('plugin:tts|register_listener')
   await nextTick()
   await initReading()
   await loadNotificationHandlers()

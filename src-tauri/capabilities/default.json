@@ -27,6 +27,7 @@
     "tts:allow-stop",
     "tts:allow-get-voices",
     "tts:allow-is-initialized",
+    "tts:allow-register-listener",
     "dialog:default",
     "http:default"
   ]
