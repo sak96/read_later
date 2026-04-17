@@ -82,4 +82,4 @@ Distributed under the MIT License. See `LICENSE.md` for more information.
 
 ## Works well with
 
-- [SherpaTTS](f-droid.org/packages/org.woheller69.ttsengine/)
+- [SherpaTTS](https://f-droid.org/packages/org.woheller69.ttsengine/)
