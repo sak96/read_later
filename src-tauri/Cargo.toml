@@ -1,6 +1,6 @@
 [package]
 name = "article-manager"
-version = "0.1.38"
+version = "0.1.39"
 edition = "2024"
 
 [build-dependencies]
@@ -18,7 +18,7 @@ tauri-plugin-os = "2.3.2"
 tauri-plugin-http = "2"
 tauri-plugin-sql = { version = "2.3.1", features = ["sqlite"] }
 # tauri-plugin-tts = "0.1.7"
-tauri-plugin-tts = { path = "https://github.com/sak96/tauri-plugin-tts", rev = "deb8a69b744c4af0cab490d248479d109721af81" }
+tauri-plugin-tts = { git = "https://github.com/sak96/tauri-plugin-tts", rev = "deb8a69b744c4af0cab490d248479d109721af81" }
 tauri-plugin-i18n = "2.0.2"
 sqlx = "0.8.0"
 kuchikikiki = "0.9"
