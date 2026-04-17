@@ -19,6 +19,7 @@ async function handleClick() {
 
 <template>
   <button
+    class="outline"
     type="button"
     :aria-busy="isLoading"
     :disabled="isLoading"
