@@ -89,6 +89,8 @@ jobs:
         run: |
           export NDK_HOME=$ANDROID_NDK
           export CARGOFLAGS="--locked"
+          export RUSTFLAGS="--remap-path-prefix $PWD=. -C metadata=deadbeef"
+          export SOURCE_DATE_EPOCH=1700000000
           cargo tauri android build  --split-per-abi
           mkdir assets
           find  src-tauri/gen/android/app/build/outputs/apk/ -iname *-release.apk -exec cp {} assets \;
