@@ -7,10 +7,11 @@ import type { AlertContext } from '../types'
 import SpeakRate from './SpeakRate.vue'
 import LanguageSelect from './LanguageSelect.vue'
 import SpeechSettingIcon from './SpeechSettingIcon.vue'
+import ListenResetIcon from './ListenResetIcon.vue'
 import { loadTtsSetting } from '../composables/useTTS'
 import { onAction } from '../composables/useMediaSession'
 import { platform } from '@tauri-apps/plugin-os'
-import { Speech, Undo2, Pause, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { BookHeadphones, Pause, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import Fab from '../layouts/Fab.vue'
 import HomeButton from './HomeButton.vue'
 
@@ -208,20 +209,20 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Fab>
+  <Fab :class="{'transparent': foldBar }" >
     <template v-if="ttsEnabled">
       <template v-if="mode === 'view'">
         <button
           style="width: fit-content; align-self: flex-end;"
           @click="scrollTo('start')"
         >
-          <Undo2 />
+          <ListenResetIcon />
         </button>
         <button
           style="width: fit-content; align-self: flex-end;"
           @click="switchMode"
         >
-          <Speech />
+          <BookHeadphones />
         </button>
       </template>
       <button
@@ -290,5 +291,8 @@ onUnmounted(() => {
  .view .current_para {
      border: var(--pico-border-width) solid var(--pico-primary-hover);
      border-radius: var(--pico-border-radius);
+ }
+ .transparent * {
+   opacity: 0.75;
  }
 </style>
