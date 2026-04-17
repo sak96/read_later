@@ -258,7 +258,6 @@ onUnmounted(() => {
     </button>
   </Fab>
   <dialog
-    v-if="showSettings"
     :open="showSettings"
     @close="showSettings = false"
   >
