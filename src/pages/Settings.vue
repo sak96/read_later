@@ -6,6 +6,7 @@ import { openUrl } from '@tauri-apps/plugin-opener'
 import HomeButton from '../components/HomeButton.vue'
 import DataTransferButton from '../components/DataTransferButton.vue'
 import SpeakRate from '../components/SpeakRate.vue'
+import LanguageSelect from '../components/LanguageSelect.vue'
 import LocaleBar from '../components/LocaleBar.vue'
 import { Fab } from '../layouts'
 import { loadTtsSetting } from '../composables/useTTS'
@@ -99,6 +100,7 @@ onMounted(async () => {
               @update:model-value="() => {}"
             />
           </div>
+          <LanguageSelect />
         </fieldset>
         <hr>
 
