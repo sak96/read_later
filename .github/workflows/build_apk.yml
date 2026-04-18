@@ -91,7 +91,7 @@ jobs:
           export CARGOFLAGS="--locked"
           export RUSTFLAGS="--remap-path-prefix $PWD=. -C metadata=deadbeef"
           export SOURCE_DATE_EPOCH=1700000000
-          cargo tauri android build  --split-per-abi
+          cargo tauri android build --split-per-abi --target aarch64
           mkdir assets
           find  src-tauri/gen/android/app/build/outputs/apk/ -iname *-release.apk -exec cp {} assets \;
           find  src-tauri/gen/android/app/build/outputs/bundle/ -iname *-release.aab -exec cp {} assets \;
