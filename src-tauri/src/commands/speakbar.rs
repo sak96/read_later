@@ -86,6 +86,11 @@ pub async fn init_reading(
     #[cfg(any(target_os = "android", target_os = "ios"))]
     let _ = update_media_session(&app).await;
 
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    app.tts()
+        .setup_event_relay(&app.clone())
+        .map_err(|e| e.to_string())?;
+
     let listener_finish = {
         let app_clone = app.clone();
         app_clone.clone().listen("tts://speech:finish", {
