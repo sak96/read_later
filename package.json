@@ -8,7 +8,8 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
-    "lint": "eslint --fix src"
+    "lint": "eslint --fix src",
+    "version": "node scripts/sync-version.cjs && npm install && cd src-tauri && cargo check"
   },
   "dependencies": {
     "@picocss/pico": "^2.1.1",
