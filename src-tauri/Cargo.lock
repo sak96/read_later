@@ -93,7 +93,7 @@ checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 
 [[package]]
 name = "article-manager"
-version = "0.1.39"
+version = "0.1.40"
 dependencies = [
  "html5ever 0.38.0",
  "kuchikikiki",
@@ -5792,7 +5792,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-tts"
 version = "0.1.7"
-source = "git+https://github.com/sak96/tauri-plugin-tts?rev=deb8a69b744c4af0cab490d248479d109721af81#deb8a69b744c4af0cab490d248479d109721af81"
+source = "git+https://github.com/sak96/tauri-plugin-tts?rev=75ef0fef39117b5fe3abd01dcb2ddbe07919c7ac#75ef0fef39117b5fe3abd01dcb2ddbe07919c7ac"
 dependencies = [
  "log",
  "serde",
