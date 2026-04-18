@@ -83,11 +83,6 @@ pub async fn init_reading(
     *state.rate.write().map_err(|e| e.to_string())? = rate;
     *state.current_position.write().map_err(|e| e.to_string())? = 0;
 
-    #[cfg(any(target_os = "android", target_os = "ios"))]
-    app.tts()
-        .setup_event_relay(&app.clone())
-        .map_err(|e| e.to_string())?;
-
     let listener_finish = {
         let app_clone = app.clone();
         app_clone.clone().listen("tts://speech:finish", {

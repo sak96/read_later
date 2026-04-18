@@ -17,7 +17,7 @@ tauri-plugin-dialog = "^2.4.2"
 tauri-plugin-os = "2.3.2"
 tauri-plugin-http = "2"
 tauri-plugin-sql = { version = "2.3.1", features = ["sqlite"] }
-tauri-plugin-tts = "0.1.8"
+tauri-plugin-tts = "0.1.9"
 tauri-plugin-i18n = "2.0.2"
 sqlx = "0.8.0"
 kuchikikiki = "0.9"
