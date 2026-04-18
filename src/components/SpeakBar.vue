@@ -200,10 +200,10 @@ onMounted(async () => {
   scrollTo('start')
 })
 
-onUnmounted(() => {
-  notificationListener.value?.unregister()
-  stateHandler.value?.()
-  invokeNoParseLogError('cleanup_reading')
+onUnmounted(async () => {
+  await notificationListener.value?.unregister()
+  await stateHandler.value?.()
+  await invokeNoParseLogError('cleanup_reading')
 })
 
 </script>

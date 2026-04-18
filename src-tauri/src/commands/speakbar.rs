@@ -84,9 +84,6 @@ pub async fn init_reading(
     *state.current_position.write().map_err(|e| e.to_string())? = 0;
 
     #[cfg(any(target_os = "android", target_os = "ios"))]
-    let _ = update_media_session(&app).await;
-
-    #[cfg(any(target_os = "android", target_os = "ios"))]
     app.tts()
         .setup_event_relay(&app.clone())
         .map_err(|e| e.to_string())?;
@@ -272,7 +269,7 @@ async fn stop_reading_internal(
     *state.is_playing.write().map_err(|e| e.to_string())? = false;
 
     #[cfg(any(target_os = "android", target_os = "ios"))]
-    let _ = update_media_session(&app).await;
+    let _ = app.media_session().clear();
 
     app.emit(
         "speakbar:state-changed",
