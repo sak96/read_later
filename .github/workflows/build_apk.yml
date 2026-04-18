@@ -19,7 +19,7 @@ jobs:
           CARGO_TOML_VERSION=$(sed -n '/^version/ s/.*"\([^"]*\)".*/\1/p' src-tauri/Cargo.toml)
           GIT_TAG_VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')
           TAURI_CONFIG_VERSION=$(sed -n '/"version"/ s/.*"\([^"]*\)"[^"]*,.*/\1/p' src-tauri/tauri.conf.json)
-          FRONTEND_VERSION=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' package.json)
+          FRONTEND_VERSION=$(sed -n 's/.*"version": *"\([0-9.]*\)".*/\1/p' package.json)
 
           # Print versions
           echo "Cargo.toml version: $CARGO_TOML_VERSION"
