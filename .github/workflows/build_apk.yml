@@ -51,6 +51,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ steps.build_tool_versions.outputs.node }}
+          cache: 'npm'
 
       - name: Cache the rust details
         uses: Swatinem/rust-cache@v2
@@ -58,6 +59,7 @@ jobs:
           cache-targets: true
           cache-workspace-crates: true
           cache-bin: true
+          workspaces: src-tauri
 
       - name: Install dependencies
         run: |
