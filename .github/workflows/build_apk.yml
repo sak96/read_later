@@ -60,6 +60,7 @@ jobs:
           cache-workspace-crates: true
           cache-bin: true
           workspaces: src-tauri
+          save-if: true
 
       - name: Install dependencies
         run: |
