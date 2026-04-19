@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, inject } from 'vue'
-import { setSetting } from '../composables/useSettings'
+import { getSetting, setSetting } from '../composables/useSettings'
 import { getVersion } from '@tauri-apps/api/app'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import HomeButton from '../components/HomeButton.vue'
@@ -19,6 +19,7 @@ const themeContext = inject<{ mode: Theme, setMode: (mode: Theme) => void }>('th
 
 const appVersion = ref('N/A')
 const ttsEnabled = ref(true)
+const tutorialEnabled = ref(true)
 const articleCount = ref(0)
 
 const themes = [
@@ -45,10 +46,18 @@ async function onTtsToggle() {
   await setSetting('tts', newState.toString())
 }
 
+async function onTutorialToggle() {
+  const newState = !tutorialEnabled.value
+  tutorialEnabled.value = newState
+  await setSetting('tutorial_speak_bar_shown', newState ? 'false' : 'true')
+}
+
 onMounted(async () => {
   articleCount.value = await invokeParseLogError<number>('get_article_count') || 0
   appVersion.value = await getVersion()
   ttsEnabled.value = await loadTtsSetting()
+  const tutorialSetting = await getSetting('tutorial_speak_bar_shown')
+  tutorialEnabled.value = tutorialSetting !== 'true'
 })
 </script>
 
@@ -88,6 +97,20 @@ onMounted(async () => {
                 role="switch"
                 :checked="ttsEnabled"
                 @change="onTtsToggle"
+              >
+            </div>
+          </div>
+          <div role="group">
+            <h4>
+              <span data-i18n="tutorial_enabled" />
+            </h4>
+            <div>
+              <input
+                name="tutorial"
+                type="checkbox"
+                role="switch"
+                :checked="tutorialEnabled"
+                @change="onTutorialToggle"
               >
             </div>
           </div>
