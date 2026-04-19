@@ -5,7 +5,7 @@ import { BookHeadphones, ChevronLeft, ArrowRight, ChevronRight, Globe, Trash2, H
 import SpeechSettingIcon from './SpeechSettingIcon.vue'
 import ListenResetIcon from './ListenResetIcon.vue'
 
-const props = defineProps<{
+defineProps<{
   foldBar: boolean
 }>()
 

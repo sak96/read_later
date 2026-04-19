@@ -223,7 +223,7 @@ onUnmounted(async () => {
     @dismiss="dismissTutorial"
     @update-fold-bar="expandForTutorial"
   />
-  <Fab :class="{'transparent': foldBar }" >
+  <Fab :class="{'transparent': foldBar }">
     <template v-if="ttsEnabled">
       <template v-if="mode === 'view'">
         <button
