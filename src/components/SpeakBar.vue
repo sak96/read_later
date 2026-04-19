@@ -14,6 +14,7 @@ import { platform } from '@tauri-apps/plugin-os'
 import { BookHeadphones, Pause, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import Fab from '../layouts/Fab.vue'
 import HomeButton from './HomeButton.vue'
+import TutorialSpeakBar from './TutorialSpeakBar.vue'
 
 const alertContext = inject<AlertContext | null>('alert')
 
@@ -128,6 +129,14 @@ function openSettings() {
   showSettings.value = true
 }
 
+function dismissTutorial() {
+  foldBar.value = true
+}
+
+function expandForTutorial() {
+  foldBar.value = false
+}
+
 function scrollTo(block: 'start' | 'center') {
   const para = props.divRef.querySelector('.current_para') as HTMLElement | null
   if (para) {
@@ -209,6 +218,11 @@ onUnmounted(async () => {
 </script>
 
 <template>
+  <TutorialSpeakBar
+    :fold-bar="foldBar"
+    @dismiss="dismissTutorial"
+    @update-fold-bar="expandForTutorial"
+  />
   <Fab :class="{'transparent': foldBar }" >
     <template v-if="ttsEnabled">
       <template v-if="mode === 'view'">
