@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { getSetting, setSetting } from '../composables/useSettings'
-import { BookHeadphones, ChevronLeft, ArrowRight, ChevronRight, Globe, Trash2, Home } from 'lucide-vue-next'
+import { BookHeadphones, ChevronLeft, ArrowRight, ChevronRight, Globe, Trash2, Home, Pause } from 'lucide-vue-next'
 import SpeechSettingIcon from './SpeechSettingIcon.vue'
 import ListenResetIcon from './ListenResetIcon.vue'
 
@@ -54,6 +54,10 @@ async function goNext() {
         <div>
           <BookHeadphones />
           <small data-i18n="tutorial_speak" />
+        </div>
+        <div>
+          <Pause />
+          <small data-i18n="tutorial_pause" />
         </div>
         <div>
           <ChevronLeft />
