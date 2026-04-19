@@ -106,6 +106,9 @@ async function goNext() {
 </template>
 
 <style>
+.tutorial::backdrop,
+.tutorial::before,
+.tutorial::after,
 .tutorial {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
