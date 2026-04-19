@@ -22,9 +22,6 @@ onMounted(async () => {
   if (tutorialShown !== 'true') {
     shownTutorial.value = true
   }
-  else {
-    await setSetting('tutorial_speak_bar_shown', 'false')
-  }
 })
 
 async function dismiss() {
