@@ -63,6 +63,10 @@ async function goNext() {
           <ChevronLeft />
           <small data-i18n="tutorial_expand" />
         </div>
+        <hr />
+        <div>
+          <small data-i18n="tutorial_scroll" />
+        </div>
       </template>
       <template v-else>
         <div>
