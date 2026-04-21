@@ -99,19 +99,11 @@ jobs:
           find  src-tauri/gen/android/app/build/outputs/apk/ -iname *-release.apk -exec cp {} assets \;
           find  src-tauri/gen/android/app/build/outputs/bundle/ -iname *-release.aab -exec cp {} assets \;
 
-      - name: Create dist tar
-        run: tar -czf dist.tar.gz dist/
-
-      - name: Create target tar
-        run: tar -cJf target.tar.gz src-tauri/target/
-
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             assets/*
-            dist.tar.gz
-            target.tar.gz
             LICENSE.md
             PRIVACY_POLICY.md
           generate_release_notes: true
