@@ -92,7 +92,7 @@ jobs:
         run: |
           export NDK_HOME=$ANDROID_NDK
           export CARGOFLAGS="--locked"
-          export RUSTFLAGS="--remap-path-prefix $PWD=. -C metadata=deadbeef"
+          export RUSTFLAGS='--remap-path-prefix $PWD=. -C metadata=deadbeef'
           export SOURCE_DATE_EPOCH=1700000000
           cargo tauri android build --split-per-abi --target aarch64
           mkdir assets
