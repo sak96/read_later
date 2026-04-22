@@ -62,11 +62,9 @@ cargo tauri android build  --split-per-abi
 |![tts](fastlane/metadata/android/en-US/images/phoneScreenshots/3_tts.png)|![settings](fastlane/metadata/android/en-US/images/phoneScreenshots/4_settings.png)|
 |![light](fastlane/metadata/android/en-US/images/phoneScreenshots/5_light.png)|![dark](fastlane/metadata/android/en-US/images/phoneScreenshots/6_dark.png)|
 
-## Roadmap
+## Star History
 
-- image handling during offline.
-- keep awake during tts.
-- create [issue](https://github.com/sak96/read_later/issues) for more features
+[![Star History Chart](https://api.star-history.com/chart?repos=sak96/read_later&type=date&legend=top-left)](https://www.star-history.com/?repos=sak96%2Fread_later&type=date&legend=top-left)
 
 ## License
 
