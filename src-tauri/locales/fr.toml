@@ -27,3 +27,5 @@ tutorial_scroll = "La lecture commence par le premier paragraphe et fait défile
 tutorial_enabled = "Tutoriel"
 tutorial_dismiss = "Ignorer"
 tutorial_next = "Suivant"
+font_scale = "Taille de police"
+speech_enable = "Activer la parole"

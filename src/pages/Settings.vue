@@ -7,6 +7,7 @@ import HomeButton from '../components/HomeButton.vue'
 import DataTransferButton from '../components/DataTransferButton.vue'
 import SpeakRate from '../components/SpeakRate.vue'
 import LanguageSelect from '../components/LanguageSelect.vue'
+import FontScale from '../components/FontScale.vue'
 import LocaleBar from '../components/LocaleBar.vue'
 import { Fab } from '../layouts'
 import { loadTtsSetting } from '../composables/useTTS'
@@ -94,59 +95,56 @@ onMounted(async () => {
         <LocaleBar />
         <hr>
         <fieldset>
-          <div role="group">
-            <h4>
-              <Speech style="margin-right: 1em" />
-              <span data-i18n="speech" />
-            </h4>
-            <div>
-              <input
-                name="terms"
-                type="checkbox"
-                role="switch"
-                :checked="ttsEnabled"
-                @change="onTtsToggle"
-              >
-            </div>
-          </div>
-          <div role="group">
-            <h4>
-              <span data-i18n="tutorial_enabled" />
-            </h4>
-            <div>
-              <input
-                name="tutorial"
-                type="checkbox"
-                role="switch"
-                :checked="tutorialEnabled"
-                @change="onTutorialToggle"
-              >
-            </div>
-          </div>
-          <div role="group">
-            <h4>
-              <span data-i18n="experimental_fetcher" />
-            </h4>
-            <div>
-              <input
-                name="iframeFetcher"
-                type="checkbox"
-                role="switch"
-                :checked="iframeFetcherEnabled"
-                @change="onIframeFetcherToggle"
-              >
-            </div>
-          </div>
-          <div
-            role="group"
-            style="flex: 1;"
-          >
-            <SpeakRate
-              :model-value="1"
-              @update:model-value="() => {}"
-            />
-          </div>
+          <h4>
+            <Speech style="margin-right: 1em" />
+            <span data-i18n="speech" />
+          </h4>
+          <table>
+            <tbody>
+              <tr>
+                <th data-i18n="speech_enabled" />
+                <td>
+                  <input
+                    name="terms"
+                    type="checkbox"
+                    role="switch"
+                    :checked="ttsEnabled"
+                    @change="onTtsToggle"
+                  >
+                </td>
+              </tr>
+              <tr>
+                <th data-i18n="tutorial_enabled" />
+                <td>
+                  <input
+                    name="tutorial"
+                    type="checkbox"
+                    role="switch"
+                    :checked="tutorialEnabled"
+                    @change="onTutorialToggle"
+                  >
+                </td>
+              </tr>
+              <tr>
+                <th data-i18n="experimental_fetcher" />
+                <td>
+                  <input
+                    name="iframeFetcher"
+                    type="checkbox"
+                    role="switch"
+                    :checked="iframeFetcherEnabled"
+                    @change="onIframeFetcherToggle"
+                  >
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <SpeakRate
+            :model-value="1"
+            @update:model-value="() => {}"
+          />
           <LanguageSelect />
+          <FontScale :target="null" />
         </fieldset>
         <hr>
 

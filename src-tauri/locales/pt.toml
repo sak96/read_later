@@ -27,3 +27,5 @@ tutorial_scroll = "A leitura começa pelo parágrafo superior e rola automaticam
 tutorial_enabled = "Tutorial"
 tutorial_dismiss = "Dispensar"
 tutorial_next = "Próximo"
+font_scale = "Escala da fonte"
+speech_enable = "Ativar fala"

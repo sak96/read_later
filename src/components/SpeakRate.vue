@@ -33,7 +33,7 @@ async function onChange(event: Event) {
   const target = event.target as HTMLInputElement
   const newRate = parseFloat(target.value)
   rate.value = newRate
-  await setSetting('rate', newRate.toString())
+  await setSetting('rate', newRate.toFixed(1))
   emit('update:modelValue', newRate)
 }
 
@@ -47,6 +47,7 @@ watch(() => props.modelValue, (val) => {
 </script>
 
 <template>
+  <label data-i18n="speech_rate" />
   <div
     style="text-align-last: center;"
     group="role"

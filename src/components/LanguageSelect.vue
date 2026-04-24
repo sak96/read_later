@@ -45,24 +45,27 @@ onMounted(async () => {
 
 <template>
   <template v-if="languages.length > 0">
-    <select
-      :value="selectedIndex >= 0 ? selectedIndex : ''"
-      style="text-align-last: center;"
-      @change="onLanguageChange"
-    >
-      <option
-        value=""
-        disabled
+    <label data-i18n="speech_voice" />
+    <div>
+      <select
+        :value="selectedIndex >= 0 ? selectedIndex : ''"
+        style="text-align-last: center;"
+        @change="onLanguageChange"
       >
-        &#127760;
-      </option>
-      <option
-        v-for="(lang, idx) in languages"
-        :key="lang.id"
-        :value="idx"
-      >
-        {{ lang.name }}
-      </option>
-    </select>
+        <option
+          value=""
+          disabled
+        >
+          &#127760;
+        </option>
+        <option
+          v-for="(lang, idx) in languages"
+          :key="lang.id"
+          :value="idx"
+        >
+          {{ lang.name }}
+        </option>
+      </select>
+    </div>
   </template>
 </template>

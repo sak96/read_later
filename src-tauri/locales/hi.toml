@@ -27,3 +27,8 @@ tutorial_scroll = "पढ़ना सबसे ऊपर वाले पैर
 tutorial_enabled = "ट्यूटोरियल"
 tutorial_dismiss = "खारिज करें"
 tutorial_next = "अगला"
+
+src-tauri/locales/hi.toml
+
+font_scale = "फ़ॉन्ट आकार"
+speech_enable = "वाक् सक्षम करें"

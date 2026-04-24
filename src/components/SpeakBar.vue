@@ -15,6 +15,7 @@ import { BookHeadphones, Pause, ChevronLeft, ChevronRight } from 'lucide-vue-nex
 import Fab from '../layouts/Fab.vue'
 import HomeButton from './HomeButton.vue'
 import TutorialSpeakBar from './TutorialSpeakBar.vue'
+import FontScale from './FontScale.vue'
 
 const alertContext = inject<AlertContext | null>('alert')
 
@@ -257,7 +258,6 @@ onUnmounted(async () => {
         <slot />
         <HomeButton />
         <button
-          v-if="ttsEnabled"
           @click="openSettings"
         >
           <SpeechSettingIcon />
@@ -285,14 +285,13 @@ onUnmounted(async () => {
         <span data-i18n="speech_settings" />
       </header>
       <template v-if="ttsEnabled">
-        <label data-i18n="speech_rate" />
         <SpeakRate
           :model-value="rate"
           @update:model-value="handleRateUpdate"
         />
-        <label data-i18n="speech_voice" />
         <LanguageSelect />
       </template>
+      <FontScale :target="divRef" />
     </article>
   </dialog>
 </template>
