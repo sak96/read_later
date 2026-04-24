@@ -27,3 +27,4 @@ tutorial_scroll = "Reading starts from the top-most paragraph and automatically 
 tutorial_enabled = "Tutorial"
 tutorial_dismiss = "Dismiss"
 tutorial_next = "Next"
+experimental_fetcher = "Experimental fetcher"

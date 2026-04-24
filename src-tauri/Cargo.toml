@@ -36,6 +36,7 @@ crate-type = ["staticlib", "cdylib", "lib"]
 
 [package.metadata.rust-analyzer]
 cargo.targetDir = "target/analyzer/tauri"
+cargo.target = "aarch64-linux-android"
 cargo.allTargets = false
 procMacro.enable = false
 check.workspace = false

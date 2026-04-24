@@ -11,7 +11,7 @@
     "beforeBuildCommand": "npm run build"
   },
   "app": {
-    "withGlobalTauri": false,
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "Read Later",

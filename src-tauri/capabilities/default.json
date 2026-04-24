@@ -5,18 +5,36 @@
   "windows": [
     "main"
   ],
+  "remote": {
+    "urls": [
+      "https://*",
+      "http://*"
+    ]
+  },
   "permissions": [
+    {
+      "identifier": "core:event:allow-emit",
+      "allow": [
+        {
+          "url": "https://*:*"
+        },
+        {
+          "url": "http://*:*"
+        }
+      ]
+    },
     {
       "identifier": "http:default",
       "allow": [
         {
-          "url": "http://*"
+          "url": "https://*:*"
         },
         {
-          "url": "https://*"
+          "url": "http://*:*"
         }
       ]
     },
+    "core:webview:default",
     "core:default",
     "clipboard-manager:allow-read-text",
     "i18n:default",

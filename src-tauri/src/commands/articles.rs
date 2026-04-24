@@ -2,11 +2,78 @@ use crate::models::*;
 use crate::parse::{build_snippet, process_html};
 use readabilityrs::Readability;
 use sqlx::{query, query_as};
+use std::sync::mpsc;
+use tauri::{AppHandle, Listener, Manager, Runtime};
 use tauri::{State, ipc::Channel};
 use tauri_plugin_http::reqwest;
 use tauri_plugin_sql::DbInstances;
 
 const CHROME_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36";
+const HTML_FETCHER: &str = "html-fetcher";
+
+pub fn fetch_rendered_html<R: Runtime>(app: &AppHandle<R>, url: &str) -> Result<String, String> {
+    let (tx, rx) = mpsc::channel::<String>();
+
+    let app_handle = app.clone();
+
+    let listener_id = app.listen(HTML_FETCHER, move |event: tauri::Event| {
+        let payload_str = event.payload().to_string();
+
+        let parsed: Result<String, _> = serde_json::from_str(&payload_str);
+
+        match parsed {
+            Ok(json) => {
+                let _ = tx.send(json.to_string());
+            }
+            Err(err) => {
+                eprintln!("Failed to parse event payload: {err}");
+            }
+        }
+    });
+
+    let webview = app
+        .get_webview_window("main")
+        .ok_or("Failed to get main webview")?;
+
+    let navigate_js = format!(r#"window.location.href = "{}";"#, url);
+    webview.eval(&navigate_js).map_err(|e| e.to_string())?;
+
+    let webview_clone = webview.clone();
+    std::thread::spawn(move || {
+        let mut attempts = 0;
+        loop {
+            std::thread::sleep(std::time::Duration::from_millis(300));
+            attempts += 1;
+
+            let eval_result = webview_clone.eval(
+                r#"
+                (document.readyState === "complete" || document.readyState === "interactive")
+            "#,
+            );
+            if eval_result.is_ok() && attempts > 5 {
+                std::thread::sleep(std::time::Duration::from_millis(500));
+                let js = format!(
+                    r#"
+                    window.__TAURI__.event.emit("{}", document.documentElement ? document.documentElement.outerHTML : "");
+                    "#,
+                    HTML_FETCHER
+                );
+                let _ = webview_clone.eval(&js);
+                break;
+            }
+            if attempts > 100 {
+                break;
+            }
+        }
+    });
+
+    let result = rx.recv().map_err(|e| e.to_string())?;
+    app_handle.unlisten(listener_id);
+
+    webview.eval("history.back()").map_err(|e| e.to_string())?;
+
+    Ok(result)
+}
 
 #[tauri::command]
 pub async fn get_articles(
@@ -60,6 +127,7 @@ pub async fn get_article(
     id: i32,
     db_instances: State<'_, DbInstances>,
     on_progress: Channel<FetchProgress>,
+    app: tauri::AppHandle,
 ) -> Result<Article, String> {
     let instances = db_instances.0.read().await;
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
@@ -75,16 +143,29 @@ pub async fn get_article(
                 on_progress
                     .send(FetchProgress::Downloading(article.url.to_string()))
                     .map_err(|e| e.to_string())?;
-                let client = reqwest::Client::new();
-                let html = client
-                    .get(&article.url)
-                    .header(reqwest::header::USER_AGENT, CHROME_USER_AGENT)
-                    .send()
-                    .await
-                    .map_err(|e| e.to_string())?
-                    .text()
-                    .await
-                    .map_err(|e| e.to_string())?;
+
+                let html = match sqlx::query_as::<_, (String,)>(
+                    "SELECT value FROM settings WHERE name = 'iframe_fetcher'",
+                )
+                .fetch_one(pool)
+                .await
+                .ok()
+                .map(|r| r.0)
+                {
+                    Some(v) if v == "true" => fetch_rendered_html(&app, &article.url)?,
+                    _ => {
+                        let client = reqwest::Client::new();
+                        client
+                            .get(&article.url)
+                            .header(reqwest::header::USER_AGENT, CHROME_USER_AGENT)
+                            .send()
+                            .await
+                            .map_err(|e| e.to_string())?
+                            .text()
+                            .await
+                            .map_err(|e| e.to_string())?
+                    }
+                };
 
                 let options = readabilityrs::ReadabilityOptions::builder()
                     .remove_title_from_content(true)
@@ -137,10 +218,12 @@ pub async fn add_article(
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            if let Ok(existing) = query_as::<_, Article>("SELECT id, title, body, created_at, url FROM articles WHERE url = ?")
-                .bind(&url)
-                .fetch_one(pool)
-                .await
+            if let Ok(existing) = query_as::<_, Article>(
+                "SELECT id, title, body, created_at, url FROM articles WHERE url = ?",
+            )
+            .bind(&url)
+            .fetch_one(pool)
+            .await
             {
                 return Ok(existing);
             }

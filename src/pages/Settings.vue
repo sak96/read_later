@@ -20,6 +20,7 @@ const themeContext = inject<{ mode: Theme, setMode: (mode: Theme) => void }>('th
 const appVersion = ref('N/A')
 const ttsEnabled = ref(true)
 const tutorialEnabled = ref(true)
+const iframeFetcherEnabled = ref(false)
 const articleCount = ref(0)
 
 const themes = [
@@ -52,12 +53,20 @@ async function onTutorialToggle() {
   await setSetting('tutorial_speak_bar_shown', newState ? 'false' : 'true')
 }
 
+async function onIframeFetcherToggle() {
+  const newState = !!!iframeFetcherEnabled.value
+  iframeFetcherEnabled.value = newState
+  await setSetting('iframe_fetcher', newState.toString())
+}
+
 onMounted(async () => {
   articleCount.value = await invokeParseLogError<number>('get_article_count') || 0
   appVersion.value = await getVersion()
   ttsEnabled.value = await loadTtsSetting()
   const tutorialSetting = await getSetting('tutorial_speak_bar_shown')
   tutorialEnabled.value = tutorialSetting !== 'true'
+  const iframeFetcherSetting = await getSetting('iframe_fetcher')
+  iframeFetcherEnabled.value = iframeFetcherSetting === 'true'
 })
 </script>
 
@@ -111,6 +120,20 @@ onMounted(async () => {
                 role="switch"
                 :checked="tutorialEnabled"
                 @change="onTutorialToggle"
+              >
+            </div>
+          </div>
+          <div role="group">
+            <h4>
+              <span data-i18n="experimental_fetcher" />
+            </h4>
+            <div>
+              <input
+                name="iframeFetcher"
+                type="checkbox"
+                role="switch"
+                :checked="iframeFetcherEnabled"
+                @change="onIframeFetcherToggle"
               >
             </div>
           </div>
