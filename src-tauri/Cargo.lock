@@ -93,7 +93,7 @@ checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 
 [[package]]
 name = "article-manager"
-version = "0.1.53"
+version = "0.1.54"
 dependencies = [
  "html5ever 0.38.0",
  "kuchikikiki",
