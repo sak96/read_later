@@ -212,7 +212,7 @@ onMounted(async () => {
 
 onUnmounted(async () => {
   await notificationListener.value?.unregister()
-  await stateHandler.value?.()
+  stateHandler.value?.()
   await invokeNoParseLogError('cleanup_reading')
 })
 
@@ -248,28 +248,14 @@ onUnmounted(async () => {
         <Pause />
       </button>
     </template>
-    <template v-if="!foldBar">
-      <div>
-        <button
-          @click="foldBar = true"
-        >
-          <ChevronRight />
-        </button>
-        <slot />
-        <HomeButton />
-        <button
-          @click="openSettings"
-        >
-          <SpeechSettingIcon />
-        </button>
-      </div>
-    </template>
-    <button
-      v-else
-      @click="foldBar = false"
-    >
-      <ChevronLeft />
-    </button>
+    <HomeButton />
+    <div>
+      <button
+        @click="openSettings"
+      >
+        <SpeechSettingIcon />
+      </button>
+    </div>
   </Fab>
   <dialog
     :open="showSettings"
@@ -292,6 +278,9 @@ onUnmounted(async () => {
         <LanguageSelect />
       </template>
       <FontScale :target="divRef" />
+      <div role="group">
+        <slot />
+      </div>
     </article>
   </dialog>
 </template>
