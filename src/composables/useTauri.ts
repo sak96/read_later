@@ -13,7 +13,7 @@ export async function invokeParseLogError<T>(cmd: string, args?: Record<string, 
     return await invoke<T>(cmd, args)
   }
   catch (err) {
-    console.error(`\`${cmd}\` failed with error: ${err}`)
+    console.error(`\`${cmd}\` failed with args: ${JSON.stringify(args)} error: ${err}`)
     return null
   }
 }
