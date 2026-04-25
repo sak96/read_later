@@ -63,7 +63,7 @@ async function goNext() {
           <ChevronLeft />
           <small data-i18n="tutorial_expand" />
         </div>
-        <hr />
+        <hr>
         <div>
           <small data-i18n="tutorial_scroll" />
         </div>

@@ -29,10 +29,12 @@ watch(scale, async (val) => {
   const size = val === 0 ? 1 : val
   await setSetting('fontScale', size.toFixed(1))
 
+  /* eslint-disable vue/no-mutating-props */
   if (props.target) {
     props.target.style.fontSize = `${size}rem`
     props.target.style.padding = `${size}rem`
   }
+  /* eslint-enable vue/no-mutating-props */
 })
 </script>
 
