@@ -26,13 +26,13 @@ onMounted(() => {
 })
 
 watch(scale, async (val) => {
-  if (!props.target) return
-
   const size = val === 0 ? 1 : val
   await setSetting('fontScale', size.toFixed(1))
 
-  props.target.style.fontSize = `${size}rem`
-  props.target.style.padding = `${size}rem`
+  if (props.target) {
+    props.target.style.fontSize = `${size}rem`
+    props.target.style.padding = `${size}rem`
+  }
 })
 </script>
 
