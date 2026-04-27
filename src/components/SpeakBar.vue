@@ -11,7 +11,9 @@ import ListenResetIcon from './ListenResetIcon.vue'
 import { loadTtsSetting } from '../composables/useTTS'
 import { onAction } from '../composables/useMediaSession'
 import { platform } from '@tauri-apps/plugin-os'
-import { BookHeadphones, Pause } from 'lucide-vue-next'
+import { openUrl } from '@tauri-apps/plugin-opener'
+import ConfirmModal from './ConfirmModal.vue'
+import { BookHeadphones, Pause, Globe, Trash2 } from 'lucide-vue-next'
 import Fab from '../layouts/Fab.vue'
 import HomeButton from './HomeButton.vue'
 import TutorialSpeakBar from './TutorialSpeakBar.vue'
@@ -22,10 +24,17 @@ const alertContext = inject<AlertContext | null>('alert')
 const props = defineProps<{
   divRef: HTMLElement
   title?: string
+  articleId?: number
+  articleUrl?: string
+}>()
+
+const emit = defineEmits<{
+  deleted: []
 }>()
 
 const foldBar = ref(true)
 const showSettings = ref(false)
+const showDeleteModal = ref(false)
 
 type ViewMode = 'view' | 'reader'
 
@@ -130,6 +139,16 @@ function openSettings() {
   showSettings.value = true
 }
 
+async function deleteArticle() {
+  await invokeNoParseLogError('delete_article', { id: props.articleId! })
+  emit('deleted')
+}
+
+function toggleDeleteModal() {
+  showSettings.value = false
+  showDeleteModal.value = !showDeleteModal.value
+}
+
 function dismissTutorial() {
   foldBar.value = true
 }
@@ -228,13 +247,11 @@ onUnmounted(async () => {
     <template v-if="ttsEnabled">
       <template v-if="mode === 'view'">
         <button
-          style="width: fit-content; align-self: flex-end;"
           @click="scrollTo('start')"
         >
           <ListenResetIcon />
         </button>
         <button
-          style="width: fit-content; align-self: flex-end;"
           @click="switchMode"
         >
           <BookHeadphones />
@@ -242,13 +259,11 @@ onUnmounted(async () => {
       </template>
       <button
         v-else
-        style="width: fit-content; align-self: flex-end;"
         @click="switchMode"
       >
         <Pause />
       </button>
     </template>
-    <HomeButton />
     <div>
       <button
         @click="openSettings"
@@ -256,6 +271,7 @@ onUnmounted(async () => {
         <SpeechSettingIcon />
       </button>
     </div>
+    <HomeButton />
   </Fab>
   <dialog
     :open="showSettings"
@@ -279,10 +295,31 @@ onUnmounted(async () => {
       </template>
       <FontScale :target="divRef" />
       <div role="group">
-        <slot />
+        <button
+          v-if="articleUrl"
+          @click="openUrl(articleUrl)"
+        >
+          <Globe />
+        </button>
+        <button
+          v-if="articleId"
+          class="secondary"
+          @click="toggleDeleteModal"
+        >
+          <Trash2 />
+        </button>
       </div>
     </article>
   </dialog>
+  <ConfirmModal
+    v-if="articleId"
+    :icon="Trash2"
+    i18n-key="delete_article"
+    :message="title ?? ''"
+    :show="showDeleteModal"
+    @confirm="deleteArticle"
+    @close="showDeleteModal = false"
+  />
 </template>
 <style>
  .reader .current_para {
@@ -293,7 +330,7 @@ onUnmounted(async () => {
      border: var(--pico-border-width) solid var(--pico-primary-hover);
      border-radius: var(--pico-border-radius);
  }
- .transparent * {
-   opacity: 0.75;
+ .transparent button {
+   opacity: 0.5;
  }
 </style>
