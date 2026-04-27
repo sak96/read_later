@@ -12,6 +12,7 @@ import LocaleBar from '../components/LocaleBar.vue'
 import { Fab } from '../layouts'
 import { loadTtsSetting } from '../composables/useTTS'
 import { invokeParseLogError } from '../composables/useTauri'
+import { EXPERIMENTAL_FETCHER, TUTORIAL_SHOWN, TTS_ENABLED, THEME } from '../constants'
 import { MonitorCog, Sun, Moon, CodeXml, Bug, Palette, Speech, Archive, Info } from 'lucide-vue-next'
 
 type Theme = 'light' | 'dark' | 'system'
@@ -39,34 +40,34 @@ async function onThemeChange(newTheme: Theme) {
   if (themeContext) {
     themeContext.setMode(newTheme)
   }
-  await setSetting('theme', newTheme)
+  await setSetting(THEME, newTheme)
 }
 
 async function onTtsToggle() {
   const newState = !ttsEnabled.value
   ttsEnabled.value = newState
-  await setSetting('tts', newState.toString())
+  await setSetting(TTS_ENABLED, newState.toString())
 }
 
 async function onTutorialToggle() {
   const newState = !tutorialEnabled.value
   tutorialEnabled.value = newState
-  await setSetting('tutorial_speak_bar_shown', newState ? 'false' : 'true')
+  await setSetting(TUTORIAL_SHOWN, newState ? 'false' : 'true')
 }
 
 async function onIframeFetcherToggle() {
   const newState = !!!iframeFetcherEnabled.value
   iframeFetcherEnabled.value = newState
-  await setSetting('iframe_fetcher', newState.toString())
+  await setSetting(EXPERIMENTAL_FETCHER, newState.toString())
 }
 
 onMounted(async () => {
   articleCount.value = await invokeParseLogError<number>('get_article_count') || 0
   appVersion.value = await getVersion()
   ttsEnabled.value = await loadTtsSetting()
-  const tutorialSetting = await getSetting('tutorial_speak_bar_shown')
+  const tutorialSetting = await getSetting(TUTORIAL_SHOWN)
   tutorialEnabled.value = tutorialSetting !== 'true'
-  const iframeFetcherSetting = await getSetting('iframe_fetcher')
+  const iframeFetcherSetting = await getSetting(EXPERIMENTAL_FETCHER)
   iframeFetcherEnabled.value = iframeFetcherSetting === 'true'
 })
 </script>

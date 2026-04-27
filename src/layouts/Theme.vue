@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, provide, watch, onMounted } from 'vue'
 import { getSetting, setSetting } from '../composables/useSettings'
+import { THEME } from '../constants'
 
 const themes = ['dark', 'light', 'system'] as const
 type Theme = typeof themes[number]
@@ -8,12 +9,12 @@ type Theme = typeof themes[number]
 const mode = ref<Theme>('system')
 
 async function loadTheme() {
-  const value = await getSetting('theme')
+  const value = await getSetting(THEME)
   if (value && themes.includes(value as Theme)) {
     mode.value = value as Theme
   }
   else {
-    await setSetting('theme', 'system')
+    await setSetting(THEME, 'system')
     mode.value = 'system'
   }
 }
@@ -30,7 +31,7 @@ function applyTheme(newMode: Theme) {
 
 function setMode(newMode: Theme) {
   mode.value = newMode
-  setSetting('theme', newMode)
+  setSetting(THEME, newMode)
 }
 
 provide('theme', {

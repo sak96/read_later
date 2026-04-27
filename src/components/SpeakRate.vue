@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { getSetting, setSetting } from '../composables/useSettings'
+import { RATE } from '../constants'
 
 const props = defineProps<{
   modelValue: number
@@ -14,7 +15,7 @@ const RATES = [0.5, 1.0, 1.5, 2.0]
 const rate = ref(1.0)
 
 async function loadRate() {
-  const value = await getSetting('rate')
+  const value = await getSetting(RATE)
   if (value !== null) {
     const parsed = parseFloat(value)
     if (RATES.includes(parsed)) {
@@ -23,7 +24,7 @@ async function loadRate() {
     }
   }
   else {
-    await setSetting('rate', '1.0')
+    await setSetting(RATE, '1.0')
     rate.value = 1.0
     emit('update:modelValue', 1.0)
   }
@@ -33,7 +34,7 @@ async function onChange(event: Event) {
   const target = event.target as HTMLInputElement
   const newRate = parseFloat(target.value)
   rate.value = newRate
-  await setSetting('rate', newRate.toFixed(1))
+  await setSetting(RATE, newRate.toFixed(1))
   emit('update:modelValue', newRate)
 }
 

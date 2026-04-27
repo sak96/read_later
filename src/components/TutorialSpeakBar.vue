@@ -4,6 +4,7 @@ import { getSetting, setSetting } from '../composables/useSettings'
 import { BookHeadphones, ChevronLeft, ArrowRight, ChevronRight, Globe, Trash2, Home, Pause } from 'lucide-vue-next'
 import SpeechSettingIcon from './SpeechSettingIcon.vue'
 import ListenResetIcon from './ListenResetIcon.vue'
+import { TUTORIAL_SHOWN } from '../constants'
 
 defineProps<{
   foldBar: boolean
@@ -18,14 +19,14 @@ const shownTutorial = ref(false)
 const tutorialStage = ref(0)
 
 onMounted(async () => {
-  const tutorialShown = await getSetting('tutorial_speak_bar_shown')
+  const tutorialShown = await getSetting(TUTORIAL_SHOWN)
   if (tutorialShown !== 'true') {
     shownTutorial.value = true
   }
 })
 
 async function dismiss() {
-  await setSetting('tutorial_speak_bar_shown', 'true')
+  await setSetting(TUTORIAL_SHOWN, 'true')
   shownTutorial.value = false
   emit('dismiss')
 }

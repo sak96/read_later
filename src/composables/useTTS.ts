@@ -1,5 +1,6 @@
 import { isInitialized } from 'tauri-plugin-tts-api'
 import { getSetting, setSetting } from './useSettings'
+import { TTS_ENABLED } from '../constants'
 
 export async function loadTtsSetting() {
   // check initialization
@@ -14,9 +15,9 @@ export async function loadTtsSetting() {
   }
 
   // check settings
-  const value = await getSetting('tts')
+  const value = await getSetting(TTS_ENABLED)
   if (value == null) {
-    await setSetting('tts', 'true')
+    await setSetting(TTS_ENABLED, 'true')
     return true
   }
   return value === 'true'

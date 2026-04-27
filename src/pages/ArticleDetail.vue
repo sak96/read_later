@@ -53,11 +53,11 @@ onMounted(async () => {
 
 function getProgressInfo(progress: FetchProgress | null): { icon: LucideIcon, title: string } {
   if (progress) {
-    if ('Downloading' in progress) {
-      return { icon: CloudDownload, title: progress.Downloading }
+    if (progress.type === 'Downloading') {
+      return { icon: CloudDownload, title: progress.message }
     }
-    if ('Parsing' in progress) {
-      return { icon: DatabaseSearch, title: progress.Parsing }
+    if (progress.type === 'Parsing') {
+      return { icon: DatabaseSearch, title: progress.message }
     }
   }
   return { icon: Loader, title: '...' }

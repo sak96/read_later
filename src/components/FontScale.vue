@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, watch } from 'vue'
 import { getSetting, setSetting } from '../composables/useSettings'
+import { FONT_SCALE } from '../constants'
 
 const props = defineProps<{
   target: HTMLElement | null
@@ -9,14 +10,14 @@ const props = defineProps<{
 const scale = ref(1)
 
 async function loadScale() {
-  const value = await getSetting('fontScale')
+  const value = await getSetting(FONT_SCALE)
   console.log(value)
   if (value !== null) {
     const parsed = parseFloat(value)
     scale.value = parsed
   }
   else {
-    await setSetting('fontScale', '1.0')
+    await setSetting(FONT_SCALE, '1.0')
     scale.value = 1.0
   }
 }
@@ -27,7 +28,7 @@ onMounted(() => {
 
 watch(scale, async (val) => {
   const size = val === 0 ? 1 : val
-  await setSetting('fontScale', size.toFixed(1))
+  await setSetting(FONT_SCALE, size.toFixed(1))
 
   /* eslint-disable vue/no-mutating-props */
   if (props.target) {

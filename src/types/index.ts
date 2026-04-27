@@ -31,12 +31,12 @@ export interface Setting {
 }
 
 export type IntentEvent
-  = | { TextIntent: string }
-    | 'Empty'
+  = | { type: 'TextIntent', payload: string }
+    | { type: 'Empty' }
 
 export type FetchProgress
-  = | { Downloading: string }
-    | { Parsing: string }
+  = | { type: 'Downloading', message: string }
+    | { type: 'Parsing', message: string }
 
 export interface GetInsetResponse {
   top: number

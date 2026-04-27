@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, provide, computed } from 'vue'
 import type { AlertContext, AlertStatus } from '../types'
+import { ALERT_DURATION_MS } from '../constants'
 
 const message = ref<string | null>(null)
 const status = ref<AlertStatus>('info')
@@ -10,7 +11,7 @@ function updateAlertContext(newStatus: AlertStatus, newMessage: string) {
   message.value = newMessage
   setTimeout(() => {
     message.value = null
-  }, 5000)
+  }, ALERT_DURATION_MS)
 }
 
 provide<AlertContext>('alert', {

@@ -8,10 +8,12 @@ import SettingsButton from '../components/SettingsButton.vue'
 import I18n from '@razein97/tauri-plugin-i18n'
 import { Fab } from '../layouts'
 import { BookmarkPlus } from 'lucide-vue-next'
+import { SCROLL_THRESHOLD, SEARCH_DEBOUNCE_MS, MIN_SEARCH_LENGTH } from '../constants'
 
 const router = useRouter()
 const articles = ref<ArticleEntry[]>([])
 const loading = ref(false)
+const error = ref<string | null>(null)
 const search = ref('')
 const searchPlaceholder = ref('')
 let timeout: ReturnType<typeof setTimeout> | null = null
@@ -20,6 +22,7 @@ async function fetchArticles() {
   if (loading.value) return
 
   loading.value = true
+  error.value = null
   const data = await invokeParseLogError<ArticleEntry[]>('get_articles', { offset: articles.value.length, query: query.value })
 
   if (data) {
@@ -32,6 +35,9 @@ async function fetchArticles() {
       articles.value.push(...data)
     }
   }
+  else {
+    error.value = 'Failed to load articles'
+  }
   loading.value = false
 }
 
@@ -41,7 +47,7 @@ function onScroll(e: Event) {
   const scrollHeight = target.scrollHeight
   const clientHeight = target.clientHeight
 
-  if (scrollTop + clientHeight > scrollHeight - 100) {
+  if (scrollTop + clientHeight > scrollHeight - SCROLL_THRESHOLD) {
     fetchArticles()
   }
 }
@@ -51,7 +57,7 @@ function goToAddArticle() {
 }
 
 const query = computed(() => {
-  return search.value.length >= 3 ? search.value : null
+  return search.value.length >= MIN_SEARCH_LENGTH ? search.value : null
 })
 
 watch(query, async () => {
@@ -61,7 +67,7 @@ watch(query, async () => {
   timeout = setTimeout(async () => {
     articles.value = []
     await fetchArticles()
-  }, 500)
+  }, SEARCH_DEBOUNCE_MS)
 })
 
 onMounted(async () => {
@@ -92,7 +98,19 @@ onBeforeUnmount(() => {
         :key="article.id"
         :article="article"
       />
+      <p
+        v-if="!loading && articles.length === 0 && !error && query !== null"
+        class="center"
+      >
+        No results found
+      </p>
     </div>
+    <article
+      v-if="error"
+      class="error"
+    >
+      {{ error }}
+    </article>
   </main>
 
   <article
