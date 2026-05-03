@@ -1,4 +1,5 @@
-FROM ubuntu:jammy
+# Builder stage - tag as read_later-builder:latest
+FROM ubuntu:jammy AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -49,9 +50,12 @@ RUN git clone https://github.com/rust-lang/rustup.git -b ${RUSTUP_VERSION} /tmp/
 
 RUN cargo install tauri-cli@2.9.5
 
+# Final stage
+FROM builder
 
 RUN mkdir -p /home/runner/work/read_later/read_later
 WORKDIR /home/runner/work/read_later/read_later
+
 COPY --chown=runner:runner . .
 RUN chmod +x /home/runner/work/read_later/read_later/entrypoint.sh
 
