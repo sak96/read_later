@@ -31,6 +31,13 @@ pub struct ArticleEntry {
     pub snippet: Snippet,
     pub created_at: String,
 }
+#[derive(Serialize, Deserialize, PartialEq, Clone, sqlx::FromRow)]
+pub struct ArticleSync {
+    pub url: String,
+    pub created_at: String,
+    pub updated_at: String,
+    pub is_deleted: i32,
+}
 
 #[derive(sqlx::FromRow)]
 pub struct ArticleEntryRow {
