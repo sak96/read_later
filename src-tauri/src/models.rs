@@ -81,5 +81,11 @@ pub fn get_migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/2026-04-03-000000_add_text_content.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 4,
+            description: "add_article_sync",
+            sql: include_str!("../migrations/2026-05-23-000000_add_article_sync.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }

@@ -95,7 +95,7 @@ pub async fn get_articles(
                     ?1 IS NULL
                     OR LOWER(title) LIKE '%' || LOWER(?1) || '%'
                     OR LOWER(text_content)  LIKE '%' || LOWER(?1) || '%'
-                )
+                ) and is_deleted == 0
                 ORDER BY created_at DESC
                 LIMIT 100 OFFSET ?2
                "#,
@@ -133,12 +133,13 @@ pub async fn get_article(
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            let mut article =
-                query_as::<_, Article>("SELECT id, title, body, url FROM articles WHERE id = ?")
-                    .bind(id)
-                    .fetch_one(pool)
-                    .await
-                    .map_err(|e| e.to_string())?;
+            let mut article = query_as::<_, Article>(
+                "SELECT id, title, body, url FROM articles WHERE is_deleted == 0 and id = ?",
+            )
+            .bind(id)
+            .fetch_one(pool)
+            .await
+            .map_err(|e| e.to_string())?;
             if article.title.is_empty() {
                 on_progress
                     .send(FetchProgress::Downloading(article.url.to_string()))
@@ -218,8 +219,9 @@ pub async fn add_article(
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
+            // TODO: handle update only if required
             if let Ok(existing) = query_as::<_, Article>(
-                "SELECT id, title, body, created_at, url FROM articles WHERE url = ?",
+                "UPDATE articles SET title = '', body = '', text_content = '', is_deleted = 0, update_at = datetime('now') WHERE url = $1 RETURNING id, title, body, created_at, url",
             )
             .bind(&url)
             .fetch_one(pool)
@@ -247,10 +249,11 @@ pub async fn get_article_count(db_instances: State<'_, DbInstances>) -> Result<i
 
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM articles")
-                .fetch_one(pool)
-                .await
-                .map_err(|e| e.to_string())?;
+            let count: (i64,) =
+                sqlx::query_as("SELECT COUNT(*) FROM articles WHERE is_deleted == 0")
+                    .fetch_one(pool)
+                    .await
+                    .map_err(|e| e.to_string())?;
 
             Ok(count.0)
         }
@@ -263,7 +266,7 @@ pub async fn delete_article(id: i32, db_instances: State<'_, DbInstances>) -> Re
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            let result = query("DELETE FROM articles WHERE id = ?")
+            let result = query("UPDATE articles SET is_deleted = 1, update_at = datetime('now')  WHERE id = ? and is_deleted = 0")
                 .bind(id)
                 .execute(pool)
                 .await

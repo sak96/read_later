@@ -50,12 +50,12 @@ pub async fn pick_export_file(
         let instances = db_instances.0.read().await;
         let db = instances.get(DB_URL).ok_or("db not loaded")?;
         let urls = match db {
-            tauri_plugin_sql::DbPool::Sqlite(pool) => {
-                query_scalar::<_, String>("SELECT url FROM articles ORDER BY created_at")
-                    .fetch_all(pool)
-                    .await
-                    .map_err(|e| e.to_string())?
-            }
+            tauri_plugin_sql::DbPool::Sqlite(pool) => query_scalar::<_, String>(
+                "SELECT url FROM articles where is_deleted == 0 ORDER BY created_at",
+            )
+            .fetch_all(pool)
+            .await
+            .map_err(|e| e.to_string())?,
         };
         serde_json::to_writer(writer, &urls)
             .map_err(|e| format!("Failed to write to file: {e}"))?;
