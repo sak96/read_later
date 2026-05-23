@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { getSetting, setSetting } from '../composables/useSettings'
-import { Server, User, KeyRound, FolderRoot, X, Check, CloudSync, Pencil } from 'lucide-vue-next'
+import { RectangleEllipsis, Server, User, KeyRound, FolderRoot, X, Check, CloudSync, Pencil } from 'lucide-vue-next'
 import {
   WEBDAV_ENABLED,
   WEBDAV_URL,
@@ -9,6 +9,7 @@ import {
   WEBDAV_PASSWORD,
   WEBDAV_PATH,
   LAST_SYNCED_AT,
+  WEBDAV_AUTH_TYPE,
 } from '../constants'
 
 const webdavEnabled = ref(false)
@@ -18,6 +19,7 @@ const webdavForm = ref({
   username: '',
   password: '',
   path: '',
+  authType: 'basic',
 })
 
 const showWebdavDialog = ref(false)
@@ -40,6 +42,7 @@ async function submitWebdavSettings() {
   await setSetting(WEBDAV_USERNAME, webdavForm.value.username)
   await setSetting(WEBDAV_PASSWORD, webdavForm.value.password)
   await setSetting(WEBDAV_PATH, webdavForm.value.path)
+  await setSetting(WEBDAV_AUTH_TYPE, webdavForm.value.authType)
 
   // force resync
   await setSetting(LAST_SYNCED_AT, String(0))
@@ -53,6 +56,7 @@ onMounted(async () => {
   webdavForm.value.username = await getSetting(WEBDAV_USERNAME) || ''
   webdavForm.value.password = await getSetting(WEBDAV_PASSWORD) || ''
   webdavForm.value.path = await getSetting(WEBDAV_PATH) || ''
+  webdavForm.value.authType = await getSetting(WEBDAV_AUTH_TYPE) || 'basic'
 })
 
 </script>
@@ -112,22 +116,43 @@ onMounted(async () => {
         </label>
 
         <label>
-          <User />
-          <span data-i18n="webdav_username" />
-          <input
-            v-model="webdavForm.username"
-            type="text"
-          >
+          <KeyRound />
+          <span data-i18n="webdav_auth_type" />
+          <select v-model="webdavForm.authType">
+            <option
+              value="anonymous"
+              data-i18n="webdav_auth_anonymous"
+            />
+            <option
+              value="basic"
+              data-i18n="webdav_auth_basic"
+            />
+            <option
+              value="digest"
+              data-i18n="webdav_auth_digest"
+            />
+          </select>
         </label>
 
-        <label>
-          <KeyRound />
-          <span data-i18n="webdav_password" />
-          <input
-            v-model="webdavForm.password"
-            type="password"
-          >
-        </label>
+        <template v-if="webdavForm.authType !== 'anonymous'">
+          <label>
+            <User />
+            <span data-i18n="webdav_username" />
+            <input
+              v-model="webdavForm.username"
+              type="text"
+            >
+          </label>
+
+          <label>
+            <RectangleEllipsis />
+            <span data-i18n="webdav_password" />
+            <input
+              v-model="webdavForm.password"
+              type="password"
+            >
+          </label>
+        </template>
 
         <label>
           <FolderRoot />
