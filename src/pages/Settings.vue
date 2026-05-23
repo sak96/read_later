@@ -9,6 +9,7 @@ import SpeakRate from '../components/SpeakRate.vue'
 import LanguageSelect from '../components/LanguageSelect.vue'
 import FontScale from '../components/FontScale.vue'
 import LocaleBar from '../components/LocaleBar.vue'
+import WebdavSettings from '../components/WebdavSettings.vue'
 import { Fab } from '../layouts'
 import { loadTtsSetting } from '../composables/useTTS'
 import { invokeParseLogError } from '../composables/useTauri'
@@ -147,6 +148,9 @@ onMounted(async () => {
           <LanguageSelect />
           <FontScale :target="null" />
         </fieldset>
+        <hr>
+
+        <WebdavSettings />
         <hr>
 
         <fieldset>
