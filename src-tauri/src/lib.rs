@@ -46,6 +46,7 @@ pub fn run() {
             crate::commands::get_read_state,
             crate::commands::set_voice_id,
             crate::commands::cleanup_reading,
+            crate::commands::sync_articles,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -5,6 +5,7 @@ mod import_export;
 mod import_export_android;
 mod settings;
 pub mod speakbar;
+pub mod sync;
 
 pub use articles::*;
 
@@ -15,6 +16,6 @@ pub use import_export::*;
 pub use import_export_android::*;
 
 pub use settings::*;
-
 pub use speakbar::SpeakBarState;
 pub use speakbar::*;
+pub use sync::*;

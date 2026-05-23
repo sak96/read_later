@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
+const Splash = () => import('../pages/Splash.vue')
 const Home = () => import('../pages/Home.vue')
 const ArticleDetail = () => import('../pages/ArticleDetail.vue')
 const Settings = () => import('../pages/Settings.vue')
@@ -7,6 +8,11 @@ const AddArticle = () => import('../pages/AddArticle.vue')
 const routes = [
   {
     path: '/',
+    name: 'splash',
+    component: Splash,
+  },
+  {
+    path: '/home',
     name: 'home',
     component: Home,
   },
