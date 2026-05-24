@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { Volume, Settings } from 'lucide-vue-next'
+import { BookText, Settings } from 'lucide-vue-next'
 </script>
 
 <template>
-  <Volume>
+  <BookText>
     <Settings
       :size="12"
       x="12"
       y="12"
       absolute-stroke-width
     />
-  </Volume>
+  </BookText>
 </template>

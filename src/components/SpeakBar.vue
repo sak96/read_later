@@ -6,7 +6,7 @@ import { invokeNoParseLogError, invokeParseLogError } from '../composables/useTa
 import type { AlertContext } from '../types'
 import SpeakRate from './SpeakRate.vue'
 import LanguageSelect from './LanguageSelect.vue'
-import SpeechSettingIcon from './SpeechSettingIcon.vue'
+import ReaderSettingIcon from './ReaderSettingIcon.vue'
 import ListenResetIcon from './ListenResetIcon.vue'
 import { loadTtsSetting } from '../composables/useTTS'
 import { onAction } from '../composables/useMediaSession'
@@ -268,7 +268,7 @@ onUnmounted(async () => {
       <button
         @click="openSettings"
       >
-        <SpeechSettingIcon />
+        <ReaderSettingIcon />
       </button>
     </div>
     <HomeButton />

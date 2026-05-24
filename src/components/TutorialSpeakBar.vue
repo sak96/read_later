@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { getSetting, setSetting } from '../composables/useSettings'
 import { BookHeadphones, ChevronLeft, ArrowRight, ChevronRight, Globe, Trash2, Home, Pause } from 'lucide-vue-next'
-import SpeechSettingIcon from './SpeechSettingIcon.vue'
+import ReaderSettingIcon from './ReaderSettingIcon.vue'
 import ListenResetIcon from './ListenResetIcon.vue'
 import { TUTORIAL_SHOWN } from '../constants'
 
@@ -87,7 +87,7 @@ async function goNext() {
           <small data-i18n="tutorial_home" />
         </div>
         <div>
-          <SpeechSettingIcon />
+          <ReaderSettingIcon />
           <small data-i18n="tutorial_reader_settings" />
         </div>
       </template>
