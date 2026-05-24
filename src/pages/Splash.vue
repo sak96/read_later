@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Channel } from '@tauri-apps/api/core'
-import { invokeParse } from '../composables/useTauri'
+import { invokeNoParse } from '../composables/useTauri'
 import { CloudSync } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -23,7 +23,7 @@ const onProgress = (payload: SyncProgress) => {
 onMounted(async () => {
   try {
     const channel = new Channel<SyncProgress>(onProgress)
-   await invokeParse('sync_articles', { onProgress: channel })
+    await invokeNoParse('sync_articles', { progressChannel: channel });
     (channel as any).cleanupCallback()
     await router.push('/home')
   }
