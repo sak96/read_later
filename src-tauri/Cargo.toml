@@ -1,6 +1,6 @@
 [package]
 name = "article-manager"
-version = "0.1.56"
+version = "0.1.57"
 edition = "2024"
 
 [build-dependencies]
