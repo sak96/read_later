@@ -176,19 +176,28 @@ pub async fn sync_articles<R: Runtime>(
     db_instances: State<'_, DbInstances>,
     progress_channel: Channel<SyncProgress>,
 ) -> Result<(), String> {
-    let webdav_enabled =
-        get_setting("WEBDAV_ENABLED".to_string(), db_instances.clone()).await? == "true";
+    let webdav_enabled = get_setting("webdavEnabled".to_string(), db_instances.clone())
+        .await
+        .unwrap_or("false".to_string())
+        == "true";
     if !webdav_enabled {
         return Ok(());
     }
 
-    let url = get_setting("WEBDAV_URL".to_string(), db_instances.clone()).await?;
-    let username = get_setting("WEBDAV_USERNAME".to_string(), db_instances.clone()).await?;
-    let password = get_setting("WEBDAV_PASSWORD".to_string(), db_instances.clone()).await?;
-    let path = get_setting("WEBDAV_PATH".to_string(), db_instances.clone()).await?;
-    let auth_type = get_setting("WEBDAV_AUTH_TYPE".to_string(), db_instances.clone()).await?;
+    let url = get_setting("webdavUrl".to_string(), db_instances.clone()).await?;
+    let username = get_setting("webdavUsername".to_string(), db_instances.clone())
+        .await
+        .unwrap_or_default();
+    let password = get_setting("webdavPassword".to_string(), db_instances.clone())
+        .await
+        .unwrap_or_default();
+    let path = get_setting("webdavPath".to_string(), db_instances.clone())
+        .await
+        .unwrap_or_default();
+    let auth_type = get_setting("webdavAuthType".to_string(), db_instances.clone())
+        .await
+        .unwrap_or_default();
 
-    // ... (rest of the setup code)
     let client = setup_webdav_client(url, username, password, auth_type);
     let sync_path = format!("{}/.io.github.sak.read.it.later", &path);
 
