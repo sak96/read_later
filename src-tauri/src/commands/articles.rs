@@ -221,7 +221,7 @@ pub async fn add_article(
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
             // TODO: handle update only if required
             if let Ok(existing) = query_as::<_, Article>(
-                "UPDATE articles SET title = '', body = '', text_content = '', is_deleted = 0, update_at = datetime('now') WHERE url = $1 RETURNING id, title, body, created_at, url",
+                "UPDATE articles SET title = '', body = '', text_content = '', is_deleted = 0, updated_at = datetime('now') WHERE url = $1 RETURNING id, title, body, created_at, url",
             )
             .bind(&url)
             .fetch_one(pool)
@@ -266,7 +266,7 @@ pub async fn delete_article(id: i32, db_instances: State<'_, DbInstances>) -> Re
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            let result = query("UPDATE articles SET is_deleted = 1, update_at = datetime('now')  WHERE id = ? and is_deleted = 0")
+            let result = query("UPDATE articles SET is_deleted = 1, updated_at = datetime('now')  WHERE id = ? and is_deleted = 0")
                 .bind(id)
                 .execute(pool)
                 .await

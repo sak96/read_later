@@ -1,7 +1,7 @@
--- add update_at column
+-- add updated_at column
 ALTER TABLE articles
-ADD COLUMN update_at TEXT NOT NULL DEFAULT (datetime('now'));
+ADD COLUMN updated_at TEXT NOT NULL DEFAULT (datetime('now'));
 
--- add update_at column
+-- add is_deleted column
 ALTER TABLE articles
 ADD COLUMN is_deleted INTEGER DEFAULT 0;
