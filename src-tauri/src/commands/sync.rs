@@ -1,7 +1,7 @@
 use crate::commands::settings::{get_setting, set_setting};
 use crate::models::{ArticleSync, DB_URL};
 use blake3;
-use chrono::{DateTime, Utc};
+use chrono::{NaiveDateTime, Utc};
 use reqwest_dav::types::list_cmd::{ListEntity, ListFile};
 use reqwest_dav::types::{Auth, Depth};
 use reqwest_dav::{Client, ClientBuilder};
@@ -40,9 +40,8 @@ fn setup_webdav_client(
 }
 
 fn iso_to_timestamp(iso_str: &str) -> i64 {
-    iso_str
-        .parse::<DateTime<Utc>>()
-        .map(|dt| dt.timestamp())
+    NaiveDateTime::parse_from_str(iso_str, "%Y-%m-%d %H:%M:%S")
+        .map(|naive| naive.and_utc().timestamp())
         .unwrap_or(0)
 }
 
