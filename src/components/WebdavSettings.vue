@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getSetting, setSetting } from '../composables/useSettings'
 import { RectangleEllipsis, Server, User, KeyRound, FolderRoot, X, Check, CloudSync, Pencil } from 'lucide-vue-next'
 import {
@@ -11,6 +12,8 @@ import {
   LAST_SYNCED_AT,
   WEBDAV_AUTH_TYPE,
 } from '../constants'
+
+const router = useRouter()
 
 const webdavEnabled = ref(false)
 
@@ -27,6 +30,10 @@ const showWebdavDialog = ref(false)
 async function onWebdavToggle() {
   webdavEnabled.value = !webdavEnabled.value
   await setSetting(WEBDAV_ENABLED, String(webdavEnabled.value))
+}
+
+function goSync() {
+  router.push({ name: 'splash' })
 }
 
 function openWebdavDialog() {
@@ -88,6 +95,16 @@ onMounted(async () => {
               @click="openWebdavDialog"
             >
               <Pencil />
+            </button>
+          </td>
+          <td>
+            <button
+              type="button"
+              :disabled="!webdavEnabled"
+              class="outline"
+              @click="goSync"
+            >
+              <CloudSync />
             </button>
           </td>
         </tr>
