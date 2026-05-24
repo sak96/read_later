@@ -51,6 +51,10 @@ async fn get_remote_entities(
     sync_path: &str,
     last_synced_at: i64,
 ) -> Result<Vec<ListFile>, String> {
+    if client.list(sync_path, Depth::Number(0)).await.is_err() {
+        client.mkcol(sync_path).await.map_err(|e| e.to_string())?;
+    }
+
     let entities = client
         .list(sync_path, Depth::Number(1))
         .await
