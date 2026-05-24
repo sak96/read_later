@@ -87,6 +87,8 @@ onMounted(async () => {
               @change="onWebdavToggle"
             >
           </td>
+        </tr>
+        <tr>
           <td>
             <button
               type="button"
