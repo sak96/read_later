@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getSetting, setSetting } from '../composables/useSettings'
-import { RectangleEllipsis, Server, User, KeyRound, FolderRoot, X, Check, CloudSync, Pencil } from 'lucide-vue-next'
+import { BadgeAlert, RectangleEllipsis, Server, User, KeyRound, FolderRoot, X, Check, CloudSync, Pencil } from 'lucide-vue-next'
 import {
   WEBDAV_ENABLED,
   WEBDAV_URL,
@@ -112,6 +112,7 @@ onMounted(async () => {
         </tr>
         <tr>
           <td colspan="2">
+            <BadgeAlert />
             <small data-i18n="webdav_sync_instruction" />
           </td>
         </tr>
