@@ -110,6 +110,11 @@ onMounted(async () => {
             </button>
           </td>
         </tr>
+        <tr>
+          <td colspan="2">
+            <small data-i18n="webdav_sync_instruction" />
+          </td>
+        </tr>
       </tbody>
     </table>
   </fieldset>
