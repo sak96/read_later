@@ -220,7 +220,7 @@ pub async fn add_article(
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
             let article = query_as::<_, Article>(
-                "INSERT INTO articles (title, body, url, update_at) VALUES ('', '', $1, datetime('now'))
+                "INSERT INTO articles (title, body, url, updated_at) VALUES ('', '', $1, datetime('now'))
                  ON CONFLICT(url) DO UPDATE SET is_deleted = 0, updated_at = datetime('now')
                  RETURNING id, title, body, created_at, url",
             )
