@@ -219,19 +219,10 @@ pub async fn add_article(
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            // TODO: handle update only if required
-            if let Ok(existing) = query_as::<_, Article>(
-                "UPDATE articles SET title = '', body = '', text_content = '', is_deleted = 0, updated_at = datetime('now') WHERE url = $1 RETURNING id, title, body, created_at, url",
-            )
-            .bind(&url)
-            .fetch_one(pool)
-            .await
-            {
-                return Ok(existing);
-            }
-
             let article = query_as::<_, Article>(
-                "INSERT INTO articles (title, body, url) VALUES ('', '', $1) RETURNING id, title, body, created_at, url",
+                "INSERT INTO articles (title, body, url) VALUES ('', '', $1) 
+                 ON CONFLICT(url) DO UPDATE SET is_deleted = 0, updated_at = datetime('now')
+                 RETURNING id, title, body, created_at, url",
             )
             .bind(url)
             .fetch_one(pool)

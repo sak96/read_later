@@ -94,5 +94,13 @@ pub fn get_migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/2026-05-23-000000_add_article_sync.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 5,
+            description: "add_unique_constraint_to_articles",
+            sql: include_str!(
+                "../migrations/2026-05-24-144135_add_unique_constraint_to_articles.sql"
+            ),
+            kind: MigrationKind::Up,
+        },
     ]
 }

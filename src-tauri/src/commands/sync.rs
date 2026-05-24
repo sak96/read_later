@@ -149,7 +149,8 @@ async fn reconcile_and_process(
                     .map_err(|e| e.to_string())?;
             }
             (None, Some(remote)) => {
-                sqlx::query("INSERT INTO articles (url, created_at, updated_at, is_deleted, title, body) VALUES (?, ?, ?, ?, '', '')")
+                sqlx::query("INSERT INTO articles (url, created_at, updated_at, is_deleted, title, body) VALUES (?, ?, ?, ?, '', '') 
+                             ON CONFLICT(url) DO UPDATE SET created_at = excluded.created_at, updated_at = excluded.updated_at, is_deleted = excluded.is_deleted")
                     .bind(&remote.url)
                     .bind(&remote.created_at)
                     .bind(&remote.updated_at)
