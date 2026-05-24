@@ -64,7 +64,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cargo install tauri-cli@2.9.5
+          cargo install tauri-cli@${{ steps.build_tool_versions.outputs.tauricli }}
           npm ci
 
       - name: Set up JDK
