@@ -88,7 +88,7 @@ async function goNext() {
         </div>
         <div>
           <SpeechSettingIcon />
-          <small data-i18n="tutorial_speech_settings" />
+          <small data-i18n="tutorial_reader_settings" />
         </div>
       </template>
       <footer>
