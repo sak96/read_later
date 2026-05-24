@@ -115,6 +115,7 @@ onMounted(async () => {
     <article>
       <header>
         <button
+          type="button"
           aria-label="Close"
           rel="prev"
           @click="closeWebdavDialog"
@@ -182,12 +183,16 @@ onMounted(async () => {
       </fieldset>
       <footer>
         <button
+          type="button"
           class="secondary"
           @click="closeWebdavDialog"
         >
           <X />
         </button>
-        <button @click="submitWebdavSettings">
+        <button
+          type="button"
+          @click="submitWebdavSettings"
+        >
           <Check />
         </button>
       </footer>
