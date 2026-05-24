@@ -205,7 +205,7 @@ pub async fn sync_articles<R: Runtime>(
     let tauri_plugin_sql::DbPool::Sqlite(pool) = instances.get(DB_URL).ok_or("db not loaded")?;
 
     let new_synced_at = Utc::now().timestamp();
-    let last_synced_at = get_setting("LAST_SYNCED_AT".to_string(), db_instances.clone())
+    let last_synced_at = get_setting("lastSyncedAt".to_string(), db_instances.clone())
         .await
         .unwrap_or_else(|_| "0".to_string())
         .parse::<i64>()
@@ -225,7 +225,7 @@ pub async fn sync_articles<R: Runtime>(
     .await?;
 
     set_setting(
-        "LAST_SYNCED_AT".to_string(),
+        "lastSyncedAt".to_string(),
         new_synced_at.to_string(),
         db_instances.clone(),
     )
