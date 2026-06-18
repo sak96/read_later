@@ -83,6 +83,10 @@ fn is_code_tag(name: &str) -> bool {
     matches!(name, "pre" | "code")
 }
 
+fn has_element_children(node: &NodeRef) -> bool {
+    node.children().any(|c| c.as_element().is_some())
+}
+
 fn flatten_block(node: &NodeRef, pos: &mut usize) -> Vec<ContentItem> {
     let mut items = Vec::new();
 
@@ -90,7 +94,10 @@ fn flatten_block(node: &NodeRef, pos: &mut usize) -> Vec<ContentItem> {
         if let Some(element) = child.as_element() {
             let tag_name = element.name.local.as_ref();
 
-            if is_skip_tag(tag_name) || is_code_tag(tag_name) {
+            if is_skip_tag(tag_name) {
+                continue;
+            }
+            if is_code_tag(tag_name) && has_element_children(&child) {
                 continue;
             }
 
@@ -387,7 +394,7 @@ fn process_node(node: &NodeRef, current_id: &RefCell<u32>) {
             return;
         }
 
-        if is_code_tag(tag_name) {
+        if is_code_tag(tag_name) && has_element_children(node) {
             process_code_element(node, current_id);
             return;
         }
@@ -413,7 +420,7 @@ fn process_block_element(node: &NodeRef, current_id: &RefCell<u32>) {
     for child in &children {
         if let Some(element) = child.as_element() {
             let tag_name = element.name.local.as_ref();
-            if is_code_tag(tag_name) {
+            if is_code_tag(tag_name) && has_element_children(child) {
                 process_code_element(child, current_id);
             } else if is_block_element(tag_name) {
                 process_node(child, current_id);
@@ -424,7 +431,7 @@ fn process_block_element(node: &NodeRef, current_id: &RefCell<u32>) {
     let has_block_or_code_children = children.iter().any(|child| {
         if let Some(element) = child.as_element() {
             let tag_name = element.name.local.as_ref();
-            is_block_element(tag_name) || is_code_tag(tag_name)
+            is_block_element(tag_name) || (is_code_tag(tag_name) && has_element_children(child))
         } else {
             false
         }
@@ -434,7 +441,9 @@ fn process_block_element(node: &NodeRef, current_id: &RefCell<u32>) {
         for child in &children {
             if let Some(element) = child.as_element() {
                 let tag_name = element.name.local.as_ref();
-                if !is_block_element(tag_name) && !is_code_tag(tag_name) {
+                if !is_block_element(tag_name)
+                    && !(is_code_tag(tag_name) && has_element_children(child))
+                {
                     process_node(child, current_id);
                 }
             }
@@ -497,16 +506,15 @@ fn process_block_element(node: &NodeRef, current_id: &RefCell<u32>) {
 
 fn process_code_element(node: &NodeRef, current_id: &RefCell<u32>) {
     if let Some(element) = node.as_element() {
-        let tag_name = element.name.local.as_ref();
         let text_content = node.text_contents();
         let has_newlines = text_content.contains('\n');
 
-        if has_newlines {
-            {
-                let mut attrs = element.attributes.borrow_mut();
-                attrs.insert("class", "tts_code_block".to_string());
-            }
+        {
+            let mut attrs = element.attributes.borrow_mut();
+            attrs.insert("class", "tts_code_block".to_string());
+        }
 
+        if has_newlines {
             let units = split_code_block(&text_content);
 
             if units.len() > 1 {
@@ -536,9 +544,15 @@ fn process_code_element(node: &NodeRef, current_id: &RefCell<u32>) {
                     node.append(span);
                 }
             }
-        } else if tag_name == "code" || tag_name == "pre" {
+        } else {
+            let id_val = {
+                let mut id = current_id.borrow_mut();
+                let val = *id;
+                *id += 1;
+                val
+            };
             let mut attrs = element.attributes.borrow_mut();
-            attrs.insert("class", "tts_code_block".to_string());
+            attrs.insert("class", format!("tts_code_block tts_para_{}", id_val));
         }
     }
 }
@@ -883,12 +897,12 @@ mod tests {
     }
 
     #[test]
-    fn test_code_block_inline_no_split() {
+    fn test_code_inline_no_element_children_flattened() {
         let input = "<p>Here is code: <code>let x = 1;</code></p>";
         let output = process_html_test(input);
         assert!(
-            has_class(&output, "tts_code_block"),
-            "should have tts_code_block: {}",
+            !has_class(&output, "tts_code_block"),
+            "should NOT have tts_code_block for inline code without element children: {}",
             output
         );
         assert!(
@@ -1056,12 +1070,17 @@ mod tests {
     }
 
     #[test]
-    fn test_code_block_split_at_semicolons() {
+    fn test_code_block_no_newlines_no_element_children() {
         let input = "<pre><code>let a = 1; let b = 2; let c = 3;</code></pre>";
         let output = process_html_test(input);
         assert!(
             has_class(&output, "tts_code_block"),
             "should have tts_code_block: {}",
+            output
+        );
+        assert!(
+            has_class(&output, "tts_para_0"),
+            "pre should get tts_para_0: {}",
             output
         );
     }
