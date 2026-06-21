@@ -446,6 +446,57 @@ fn process_block_element(node: &NodeRef, current_id: &RefCell<u32>) {
                 {
                     process_node(child, current_id);
                 }
+            } else if let Some(text) = child.as_text() {
+                let text_content = text.borrow().clone();
+                if !text_content.trim().is_empty() {
+                    let sentences = segment_sentences(&text_content, MAX_LENGTH);
+
+                    if sentences.len() <= 1 {
+                        let id_val = {
+                            let mut id = current_id.borrow_mut();
+                            let val = *id;
+                            *id += 1;
+                            val
+                        };
+                        let span = NodeRef::new_element(
+                            QualName::new(None, ns!(html), local_name!("span")),
+                            vec![(
+                                ExpandedName::new(ns!(), "class"),
+                                Attribute {
+                                    prefix: None,
+                                    value: format!("tts_para_{}", id_val),
+                                },
+                            )],
+                        );
+                        span.append(NodeRef::new_text(text_content));
+                        child.insert_before(span);
+                        child.detach();
+                    } else {
+                        let text_chars: Vec<char> = text_content.chars().collect();
+                        for (start, end) in sentences {
+                            let sentence_text: String = text_chars[start..end].iter().collect();
+                            let id_val = {
+                                let mut id = current_id.borrow_mut();
+                                let val = *id;
+                                *id += 1;
+                                val
+                            };
+                            let span = NodeRef::new_element(
+                                QualName::new(None, ns!(html), local_name!("span")),
+                                vec![(
+                                    ExpandedName::new(ns!(), "class"),
+                                    Attribute {
+                                        prefix: None,
+                                        value: format!("tts_para_{}", id_val),
+                                    },
+                                )],
+                            );
+                            span.append(NodeRef::new_text(sentence_text));
+                            child.insert_before(span);
+                        }
+                        child.detach();
+                    }
+                }
             }
         }
         return;
@@ -1272,6 +1323,74 @@ mod tests {
         assert!(
             !has_class(&output, "tts_anchor"),
             "fragment-only should not have tts_anchor: {}",
+            output
+        );
+    }
+
+    #[test]
+    fn test_bare_text_mixed_with_block_children() {
+        let input = "<div>First sentence. Second sentence.<p>Block paragraph.</p></div>";
+        let output = process_html_test(input);
+        assert!(
+            output.contains("First sentence."),
+            "should contain bare text first sentence: {}",
+            output
+        );
+        assert!(
+            output.contains("Second sentence."),
+            "should contain bare text second sentence: {}",
+            output
+        );
+        assert!(
+            output.contains("Block paragraph."),
+            "should contain block paragraph: {}",
+            output
+        );
+    }
+
+    #[test]
+    fn test_bare_text_before_blocks() {
+        let input = "<div>Loose text.<h1>Title.</h1><p>Paragraph.</p></div>";
+        let output = process_html_test(input);
+        assert!(
+            output.contains("Loose text."),
+            "should contain loose text before blocks: {}",
+            output
+        );
+        assert!(
+            output.contains("Title."),
+            "should contain title: {}",
+            output
+        );
+        assert!(
+            output.contains("Paragraph."),
+            "should contain paragraph: {}",
+            output
+        );
+    }
+
+    #[test]
+    fn test_single_bare_sentence_gets_tts_para() {
+        let input = "<div>First sentence here. Second sentence here.<p>Block paragraph.</p></div>";
+        let output = process_html_test(input);
+        assert!(
+            has_class(&output, "tts_para_0"),
+            "first bare sentence should get tts_para_0: {}",
+            output
+        );
+        assert!(
+            has_class(&output, "tts_para_1"),
+            "second bare sentence should get tts_para_1: {}",
+            output
+        );
+        assert!(
+            output.contains("First sentence here."),
+            "should contain first bare sentence: {}",
+            output
+        );
+        assert!(
+            output.contains("Second sentence here."),
+            "should contain second bare sentence: {}",
             output
         );
     }
