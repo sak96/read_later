@@ -417,16 +417,6 @@ fn process_node(node: &NodeRef, current_id: &RefCell<u32>) {
 
 fn process_block_element(node: &NodeRef, current_id: &RefCell<u32>) {
     let children: Vec<NodeRef> = node.children().collect();
-    for child in &children {
-        if let Some(element) = child.as_element() {
-            let tag_name = element.name.local.as_ref();
-            if is_code_tag(tag_name) && has_element_children(child) {
-                process_code_element(child, current_id);
-            } else if is_block_element(tag_name) {
-                process_node(child, current_id);
-            }
-        }
-    }
 
     let has_block_or_code_children = children.iter().any(|child| {
         if let Some(element) = child.as_element() {
@@ -441,9 +431,9 @@ fn process_block_element(node: &NodeRef, current_id: &RefCell<u32>) {
         for child in &children {
             if let Some(element) = child.as_element() {
                 let tag_name = element.name.local.as_ref();
-                if !is_block_element(tag_name)
-                    && !(is_code_tag(tag_name) && has_element_children(child))
-                {
+                if is_code_tag(tag_name) && has_element_children(child) {
+                    process_code_element(child, current_id);
+                } else {
                     process_node(child, current_id);
                 }
             } else if let Some(text) = child.as_text() {
@@ -507,9 +497,6 @@ fn process_block_element(node: &NodeRef, current_id: &RefCell<u32>) {
     let flat_text = build_flat_string(&items);
 
     if flat_text.trim().is_empty() {
-        if let Some(element) = node.as_element() {
-            tag_element(element, current_id);
-        }
         return;
     }
 
@@ -1035,12 +1022,7 @@ mod tests {
     fn test_empty_paragraph() {
         let input = "<p></p>";
         let output = process_html_test(input);
-        assert!(
-            output.contains("<p"),
-            "should preserve empty paragraph: {}",
-            output
-        );
-        assert_eq!(output, "<div> <p class=\"tts_para_0\"></p> </div>");
+        assert_eq!(output, "<div> <p></p> </div>");
     }
 
     #[test]
@@ -1069,7 +1051,10 @@ mod tests {
             "should resolve img src: {}",
             output
         );
-        assert_eq!(output, "<div> <p class=\"tts_para_0\"><img src=\"https://example.com/image.png\" alt=\"test\"></p> </div>");
+        assert_eq!(
+            output,
+            "<div> <p><img src=\"https://example.com/image.png\" alt=\"test\"></p> </div>"
+        );
     }
 
     #[test]
@@ -1258,12 +1243,7 @@ mod tests {
     fn test_whitespace_only_paragraph() {
         let input = "<p>   </p>";
         let output = process_html_test(input);
-        assert!(
-            has_class(&output, "tts_para_0"),
-            "should have tts_para_0: {}",
-            output
-        );
-        assert_eq!(output, "<div> <p class=\"tts_para_0\">   </p> </div>");
+        assert_eq!(output, "<div> <p>   </p> </div>");
     }
 
     #[test]
@@ -1386,7 +1366,7 @@ mod tests {
             "should contain block paragraph: {}",
             output
         );
-        assert_eq!(output, "<div> <div><span class=\"tts_para_1\">First sentence.</span><span class=\"tts_para_2\"> Second sentence.</span><p class=\"tts_para_0\">Block paragraph.</p></div> </div>");
+        assert_eq!(output, "<div> <div><span class=\"tts_para_0\">First sentence.</span><span class=\"tts_para_1\"> Second sentence.</span><p class=\"tts_para_2\">Block paragraph.</p></div> </div>");
     }
 
     #[test]
@@ -1408,23 +1388,13 @@ mod tests {
             "should contain paragraph: {}",
             output
         );
-        assert_eq!(output, "<div> <div><span class=\"tts_para_2\">Loose text.</span><h1 class=\"tts_para_0\">Title.</h1><p class=\"tts_para_1\">Paragraph.</p></div> </div>");
+        assert_eq!(output, "<div> <div><span class=\"tts_para_0\">Loose text.</span><h1 class=\"tts_para_1\">Title.</h1><p class=\"tts_para_2\">Paragraph.</p></div> </div>");
     }
 
     #[test]
     fn test_single_bare_sentence_gets_tts_para() {
         let input = "<div>First sentence here. Second sentence here.<p>Block paragraph.</p></div>";
         let output = process_html_test(input);
-        assert!(
-            has_class(&output, "tts_para_0"),
-            "first bare sentence should get tts_para_0: {}",
-            output
-        );
-        assert!(
-            has_class(&output, "tts_para_1"),
-            "second bare sentence should get tts_para_1: {}",
-            output
-        );
         assert!(
             output.contains("First sentence here."),
             "should contain first bare sentence: {}",
@@ -1435,6 +1405,6 @@ mod tests {
             "should contain second bare sentence: {}",
             output
         );
-        assert_eq!(output, "<div> <div><span class=\"tts_para_1\">First sentence here.</span><span class=\"tts_para_2\"> Second sentence here.</span><p class=\"tts_para_0\">Block paragraph.</p></div> </div>");
+        assert_eq!(output, "<div> <div><span class=\"tts_para_0\">First sentence here.</span><span class=\"tts_para_1\"> Second sentence here.</span><p class=\"tts_para_2\">Block paragraph.</p></div> </div>");
     }
 }
