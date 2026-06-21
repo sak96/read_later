@@ -834,6 +834,7 @@ mod tests {
             "should contain second sentence: {}",
             output
         );
+        assert_eq!(output, "<div> <p><span class=\"tts_para_0\">Call me Ishmael.</span><span class=\"tts_para_1\"> Some years ago I thought I would sail.</span></p> </div>");
     }
 
     #[test]
@@ -855,6 +856,7 @@ mod tests {
             "should preserve em element: {}",
             output
         );
+        assert_eq!(output, "<div> <p><span class=\"tts_para_0\">This is a sentence with <em>emphasis.</em></span><span class=\"tts_para_1\"><em> And it continues</em> into the next sentence!</span></p> </div>");
     }
 
     #[test]
@@ -877,6 +879,7 @@ mod tests {
             "should preserve strong element: {}",
             output
         );
+        assert_eq!(output, "<div> <p><span class=\"tts_para_0\">First sentence <strong>with bold.</strong></span><span class=\"tts_para_1\"><strong> Second sentence</strong> without bold.</span></p> </div>");
     }
 
     #[test]
@@ -903,6 +906,7 @@ mod tests {
             "should have second sentence: {}",
             output
         );
+        assert_eq!(output, "<div> <p><span class=\"tts_para_0\">Dr. Smith went to the U.S.A. and met Mr. Jones.</span><span class=\"tts_para_1\"> Then he left.</span></p> </div>");
     }
 
     #[test]
@@ -924,6 +928,7 @@ mod tests {
             "should contain second sentence: {}",
             output
         );
+        assert_eq!(output, "<div> <p class=\"tts_para_0\">Visible text.</p><p class=\"tts_para_1\">More visible.</p> </div>");
     }
 
     #[test]
@@ -945,6 +950,7 @@ mod tests {
             "should have tts_para_1: {}",
             output
         );
+        assert_eq!(output, "<div> <pre class=\"tts_code_block\"><span class=\"tts_para_0\">function hello() {</span><span class=\"tts_para_1\">console.log(\"world\");</span><span class=\"tts_para_2\">return true;</span><span class=\"tts_para_3\">}</span></pre> </div>");
     }
 
     #[test]
@@ -960,6 +966,10 @@ mod tests {
             output.contains("let x = 1;"),
             "should preserve code content: {}",
             output
+        );
+        assert_eq!(
+            output,
+            "<div> <p class=\"tts_para_0\">Here is code: <code>let x = 1;</code></p> </div>"
         );
     }
 
@@ -982,6 +992,7 @@ mod tests {
             "should have tts_para_2: {}",
             output
         );
+        assert_eq!(output, "<div> <p><span class=\"tts_para_0\">First clause;</span><span class=\"tts_para_1\"> second clause;</span><span class=\"tts_para_2\"> third clause.</span></p> </div>");
     }
 
     #[test]
@@ -998,6 +1009,7 @@ mod tests {
             "should contain the text: {}",
             output
         );
+        assert_eq!(output, "<div> <div class=\"tts_para_0\">Just some text without any punctuation marks</div> </div>");
     }
 
     #[test]
@@ -1015,6 +1027,8 @@ mod tests {
             "should have tts_para_1: {}",
             output
         );
+        let expected = "<div> <p><span class=\"tts_para_0\">word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word</span><span class=\"tts_para_1\">word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word </span></p> </div>";
+        assert_eq!(output, expected);
     }
 
     #[test]
@@ -1026,6 +1040,7 @@ mod tests {
             "should preserve empty paragraph: {}",
             output
         );
+        assert_eq!(output, "<div> <p class=\"tts_para_0\"></p> </div>");
     }
 
     #[test]
@@ -1042,6 +1057,7 @@ mod tests {
             "should have tts_anchor class: {}",
             output
         );
+        assert_eq!(output, "<div> <p class=\"tts_para_0\">Visit <a href=\"https://example.com/about\" class=\"tts_anchor\">our page</a>.</p> </div>");
     }
 
     #[test]
@@ -1053,6 +1069,7 @@ mod tests {
             "should resolve img src: {}",
             output
         );
+        assert_eq!(output, "<div> <p class=\"tts_para_0\"><img src=\"https://example.com/image.png\" alt=\"test\"></p> </div>");
     }
 
     #[test]
@@ -1069,6 +1086,7 @@ mod tests {
             "should have tts_para_1: {}",
             output
         );
+        assert_eq!(output, "<div> <blockquote><span class=\"tts_para_0\">First quote.</span><span class=\"tts_para_1\"> Second quote.</span></blockquote> </div>");
     }
 
     #[test]
@@ -1080,6 +1098,7 @@ mod tests {
             "should have tts_para classes: {}",
             output
         );
+        assert_eq!(output, "<div> <ul><li><span class=\"tts_para_0\">First item.</span><span class=\"tts_para_1\"> Second sentence.</span></li><li class=\"tts_para_2\">Another item.</li></ul> </div>");
     }
 
     #[test]
@@ -1096,6 +1115,7 @@ mod tests {
             "should have tts_para_1: {}",
             output
         );
+        assert_eq!(output, "<div> <h1><span class=\"tts_para_0\">Title here.</span><span class=\"tts_para_1\"> Subtitle here.</span></h1> </div>");
     }
 
     #[test]
@@ -1118,6 +1138,7 @@ mod tests {
             "should preserve strong: {}",
             output
         );
+        assert_eq!(output, "<div> <p><span class=\"tts_para_0\">Text <em>with <strong>bold.</strong></em></span><span class=\"tts_para_1\"><em><strong> More</strong> text</em> here.</span></p> </div>");
     }
 
     #[test]
@@ -1134,6 +1155,7 @@ mod tests {
             "pre should get tts_para_0: {}",
             output
         );
+        assert_eq!(output, "<div> <pre class=\"tts_code_block tts_para_0\"><code>let a = 1; let b = 2; let c = 3;</code></pre> </div>");
     }
 
     #[test]
@@ -1150,6 +1172,7 @@ mod tests {
             "should have tts_para_0: {}",
             output
         );
+        assert_eq!(output, "<div> <pre class=\"tts_code_block\"><span class=\"tts_para_0\">if (true) {</span><span class=\"tts_para_1\">doSomething();</span><span class=\"tts_para_2\">}</span></pre> </div>");
     }
 
     #[test]
@@ -1161,6 +1184,7 @@ mod tests {
             "should have tts_code_block: {}",
             output
         );
+        assert_eq!(output, "<div> <pre class=\"tts_code_block\"><span class=\"tts_para_0\">let x = 1;</span><span class=\"tts_para_1\">// this is a comment</span><span class=\"tts_para_2\">let y = 2;</span></pre> </div>");
     }
 
     #[test]
@@ -1188,6 +1212,7 @@ mod tests {
             "should contain another paragraph: {}",
             output
         );
+        assert_eq!(output, "<div> <h1 class=\"tts_para_0\">Title.</h1><p><span class=\"tts_para_1\">First paragraph.</span><span class=\"tts_para_2\"> Second sentence.</span></p><p class=\"tts_para_3\">Another paragraph.</p> </div>");
     }
 
     #[test]
@@ -1209,6 +1234,7 @@ mod tests {
             "should have tts_para_2: {}",
             output
         );
+        assert_eq!(output, "<div> <p><span class=\"tts_para_0\">Hello world!</span><span class=\"tts_para_1\"> How are you?</span><span class=\"tts_para_2\"> I am fine.</span></p> </div>");
     }
 
     #[test]
@@ -1225,6 +1251,7 @@ mod tests {
             "should have tts_para_1: {}",
             output
         );
+        assert_eq!(output, "<div> <p><span class=\"tts_para_0\">What is this?</span><span class=\"tts_para_1\"> It is a test.</span></p> </div>");
     }
 
     #[test]
@@ -1236,6 +1263,7 @@ mod tests {
             "should have tts_para_0: {}",
             output
         );
+        assert_eq!(output, "<div> <p class=\"tts_para_0\">   </p> </div>");
     }
 
     #[test]
@@ -1252,6 +1280,7 @@ mod tests {
             "should contain paragraph two: {}",
             output
         );
+        assert_eq!(output, "<div> <div><p class=\"tts_para_0\">Paragraph one.</p><p class=\"tts_para_1\">Paragraph two.</p></div> </div>");
     }
 
     #[test]
@@ -1263,6 +1292,7 @@ mod tests {
             "should have tts_para_0: {}",
             output
         );
+        assert_eq!(output, "<div> <p class=\"tts_para_0\">This is a long sentence, and it continues here, and ends here.</p> </div>");
     }
 
     #[test]
@@ -1279,6 +1309,10 @@ mod tests {
             "should contain text: {}",
             output
         );
+        assert_eq!(
+            output,
+            "<div> <div class=\"tts_para_0\">Some text without punctuation</div> </div>"
+        );
     }
 
     #[test]
@@ -1292,6 +1326,7 @@ mod tests {
         );
         assert!(output.contains("<h1"), "should preserve h1: {}", output);
         assert!(output.contains("<p"), "should preserve p: {}", output);
+        assert_eq!(output, "<div> <article><h1 class=\"tts_para_0\">Title.</h1><p class=\"tts_para_1\">Content here.</p></article> </div>");
     }
 
     #[test]
@@ -1309,6 +1344,7 @@ mod tests {
             output
         );
         assert!(output.contains("<a"), "should preserve anchor: {}", output);
+        assert_eq!(output, "<div> <p><span class=\"tts_para_0\">Click <a href=\"https://example.com/page\" class=\"tts_anchor\">here</a> for more info.</span><span class=\"tts_para_1\"> Thanks.</span></p> </div>");
     }
 
     #[test]
@@ -1324,6 +1360,10 @@ mod tests {
             !has_class(&output, "tts_anchor"),
             "fragment-only should not have tts_anchor: {}",
             output
+        );
+        assert_eq!(
+            output,
+            "<div> <p class=\"tts_para_0\"><a href=\"#section1\">Go to section</a></p> </div>"
         );
     }
 
@@ -1346,6 +1386,7 @@ mod tests {
             "should contain block paragraph: {}",
             output
         );
+        assert_eq!(output, "<div> <div><span class=\"tts_para_1\">First sentence.</span><span class=\"tts_para_2\"> Second sentence.</span><p class=\"tts_para_0\">Block paragraph.</p></div> </div>");
     }
 
     #[test]
@@ -1367,6 +1408,7 @@ mod tests {
             "should contain paragraph: {}",
             output
         );
+        assert_eq!(output, "<div> <div><span class=\"tts_para_2\">Loose text.</span><h1 class=\"tts_para_0\">Title.</h1><p class=\"tts_para_1\">Paragraph.</p></div> </div>");
     }
 
     #[test]
@@ -1393,5 +1435,6 @@ mod tests {
             "should contain second bare sentence: {}",
             output
         );
+        assert_eq!(output, "<div> <div><span class=\"tts_para_1\">First sentence here.</span><span class=\"tts_para_2\"> Second sentence here.</span><p class=\"tts_para_0\">Block paragraph.</p></div> </div>");
     }
 }
