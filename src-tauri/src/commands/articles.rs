@@ -170,6 +170,7 @@ pub async fn get_article(
 
                 let options = readabilityrs::ReadabilityOptions::builder()
                     .remove_title_from_content(true)
+                    .clean_whitespace(false)
                     .debug(true)
                     .build();
                 // Readability is not send.
