@@ -4152,11 +4152,10 @@ checksum = "20675572f6f24e9e76ef639bc5552774ed45f1c30e2951e1e99c59888861c539"
 [[package]]
 name = "readabilityrs"
 version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d90c6e1dad698d9f3c80a8d91bc0efc8c2397cb5ca4bbffb9c0fb88a9a66e6b8"
+source = "git+https://github.com/sak96/readabilityrs?rev=b8aba6480ff7c4dc20c0f18c0da3beb71a02ca0d#b8aba6480ff7c4dc20c0f18c0da3beb71a02ca0d"
 dependencies = [
  "bitflags 2.11.0",
- "kuchikikiki",
+ "ego-tree",
  "once_cell",
  "regex",
  "scraper",

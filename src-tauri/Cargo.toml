@@ -13,7 +13,7 @@ chrono = { version = "0.4", features = ["serde"] }
 blake3 = "1.5.0"
 serde_json = "1"
 serde = { version = "1", features = ["derive"] }
-readabilityrs = "0.1.3"
+readabilityrs = { git = "https://github.com/sak96/readabilityrs", rev = "b8aba6480ff7c4dc20c0f18c0da3beb71a02ca0d" }
 tauri-plugin-opener = "2.0.0"
 tauri-plugin-clipboard-manager = "2.2.3"
 tauri-plugin-dialog = "^2.4.2"
