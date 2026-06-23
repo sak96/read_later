@@ -258,7 +258,7 @@ pub async fn delete_article(id: i32, db_instances: State<'_, DbInstances>) -> Re
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            let result = query("UPDATE articles SET is_deleted = 1, updated_at = datetime('now')  WHERE id = ? and is_deleted = 0")
+            let result = query("UPDATE articles SET is_deleted = 1, title = '', updated_at = datetime('now')  WHERE id = ? and is_deleted = 0")
                 .bind(id)
                 .execute(pool)
                 .await
