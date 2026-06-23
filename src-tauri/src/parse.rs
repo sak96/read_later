@@ -597,14 +597,24 @@ fn process_code_element(node: &NodeRef, current_id: &RefCell<u32>) {
 
 fn split_code_block(text: &str) -> Vec<String> {
     let mut units = Vec::new();
+    let lines: Vec<&str> = text.lines().collect();
+    let line_count = lines.len();
 
-    for line in text.lines() {
-        let trimmed = line.to_string();
-        if trimmed.trim().is_empty() {
+    for (i, line) in lines.iter().enumerate() {
+        if line.is_empty() {
+            if i < line_count - 1 {
+                units.push("\n".to_string());
+            }
             continue;
         }
 
-        let line_units = split_at_code_boundaries(&trimmed);
+        let line_units = split_at_code_boundaries(line);
+        let mut line_units = line_units;
+        if i < line_count - 1 {
+            if let Some(last) = line_units.last_mut() {
+                last.push('\n');
+            }
+        }
         units.extend(line_units);
     }
 
@@ -624,18 +634,16 @@ fn split_at_code_boundaries(line: &str) -> Vec<String> {
 
         match ch {
             ';' | '{' | '}' => {
-                let trimmed = current.trim().to_string();
-                if !trimmed.is_empty() {
-                    units.push(trimmed);
+                if !current.is_empty() {
+                    units.push(current.clone());
                 }
                 current.clear();
             }
             '/' if i + 1 < len && chars[i + 1] == '/' => {
                 let rest: String = chars[i..].iter().collect();
                 current.push_str(&rest[1..]);
-                let trimmed = current.trim().to_string();
-                if !trimmed.is_empty() {
-                    units.push(trimmed);
+                if !current.is_empty() {
+                    units.push(current.clone());
                 }
                 current.clear();
                 break;
@@ -653,9 +661,8 @@ fn split_at_code_boundaries(line: &str) -> Vec<String> {
                     }
                     i += 1;
                 }
-                let trimmed = current.trim().to_string();
-                if !trimmed.is_empty() {
-                    units.push(trimmed);
+                if !current.is_empty() {
+                    units.push(current.clone());
                 }
                 current.clear();
                 continue;
@@ -666,9 +673,8 @@ fn split_at_code_boundaries(line: &str) -> Vec<String> {
         i += 1;
     }
 
-    let trimmed = current.trim().to_string();
-    if !trimmed.is_empty() {
-        units.push(trimmed);
+    if !current.is_empty() {
+        units.push(current);
     }
 
     units
@@ -784,6 +790,8 @@ pub fn build_snippet(body: &str, query: Option<&str>) -> Snippet {
 
 #[cfg(test)]
 mod tests {
+    // All process_html tests should have assert_eq! on the final output
+    // so the expected HTML is clearly visible for review.
     use super::*;
 
     fn process_html_test(frag: &str) -> String {
@@ -937,7 +945,7 @@ mod tests {
             "should have tts_para_1: {}",
             output
         );
-        assert_eq!(output, "<div> <pre class=\"tts_code_block\"><span class=\"tts_para_0\">function hello() {</span><span class=\"tts_para_1\">console.log(\"world\");</span><span class=\"tts_para_2\">return true;</span><span class=\"tts_para_3\">}</span></pre> </div>");
+        assert_eq!(output, "<div> <pre class=\"tts_code_block\"><span class=\"tts_para_0\">function hello() {\n</span><span class=\"tts_para_1\">  console.log(\"world\");\n</span><span class=\"tts_para_2\">  return true;\n</span><span class=\"tts_para_3\">}</span></pre> </div>");
     }
 
     #[test]
@@ -1157,7 +1165,7 @@ mod tests {
             "should have tts_para_0: {}",
             output
         );
-        assert_eq!(output, "<div> <pre class=\"tts_code_block\"><span class=\"tts_para_0\">if (true) {</span><span class=\"tts_para_1\">doSomething();</span><span class=\"tts_para_2\">}</span></pre> </div>");
+        assert_eq!(output, "<div> <pre class=\"tts_code_block\"><span class=\"tts_para_0\">if (true) {\n</span><span class=\"tts_para_1\">  doSomething();\n</span><span class=\"tts_para_2\">}</span></pre> </div>");
     }
 
     #[test]
@@ -1169,7 +1177,7 @@ mod tests {
             "should have tts_code_block: {}",
             output
         );
-        assert_eq!(output, "<div> <pre class=\"tts_code_block\"><span class=\"tts_para_0\">let x = 1;</span><span class=\"tts_para_1\">// this is a comment</span><span class=\"tts_para_2\">let y = 2;</span></pre> </div>");
+        assert_eq!(output, "<div> <pre class=\"tts_code_block\"><span class=\"tts_para_0\">let x = 1;</span><span class=\"tts_para_1\"> // this is a comment\n</span><span class=\"tts_para_2\">let y = 2;</span></pre> </div>");
     }
 
     #[test]
@@ -1406,5 +1414,27 @@ mod tests {
             output
         );
         assert_eq!(output, "<div> <div><span class=\"tts_para_0\">First sentence here.</span><span class=\"tts_para_1\"> Second sentence here.</span><p class=\"tts_para_2\">Block paragraph.</p></div> </div>");
+    }
+
+    #[test]
+    fn test_code_block_preserves_tabs_and_empty_lines() {
+        let input = "<pre><code>fn main() {\n\tlet x = 1;\n\n\tlet y = 2;\n}</code></pre>";
+        let output = process_html_test(input);
+        assert!(
+            has_class(&output, "tts_code_block"),
+            "should have tts_code_block: {}",
+            output
+        );
+        assert!(
+            output.contains("\tlet x = 1;"),
+            "should preserve tab indentation: {}",
+            output
+        );
+        assert!(
+            output.contains("\tlet y = 2;"),
+            "should preserve tab on second let: {}",
+            output
+        );
+        assert_eq!(output, "<div> <pre class=\"tts_code_block\"><span class=\"tts_para_0\">fn main() {\n</span><span class=\"tts_para_1\">\tlet x = 1;\n</span><span class=\"tts_para_2\">\n</span><span class=\"tts_para_3\">\tlet y = 2;\n</span><span class=\"tts_para_4\">}</span></pre> </div>");
     }
 }
