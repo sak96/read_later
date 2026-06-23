@@ -1,6 +1,6 @@
 # Privacy Policy for Read Later App
 
-**Last Updated:** December 7, 2025
+**Last Updated:** June 23, 2026
 
 ## 1. Introduction
 
@@ -26,6 +26,8 @@ We are committed to protecting your privacy and ensuring you understand our priv
 
 All data related to your use of the App (such as articles you save, reading lists, or preferences) is stored **locally on your device only**. We do not access, transmit, or store this data on our servers. You have full control over this data and can delete it at any time by clearing the App's data or uninstalling the App.
 
+If you choose to enable WebDAV sync, your data will be transmitted to and stored on your chosen WebDAV server. This transmission is entirely between your device and your server—we do not act as an intermediary.
+
 ## 3. Third-Party Websites and Services
 
 ### 3.1 External Content
@@ -36,7 +38,23 @@ The App provides functionality to fetch data from external websites. When you ac
 - **Third-party websites have their own privacy policies** that govern how they handle your information
 - You are directly interacting with those third-party services, not with us
 
-### 3.2 Your Responsibility
+### 3.2 WebDAV Sync
+
+The App provides optional WebDAV synchronization functionality that allows you to sync your data (articles, reading lists, preferences) with a WebDAV server of your choice.
+
+- **Your data, your server:** You choose which WebDAV server to connect to. The App does not operate or control any WebDAV server.
+- **Data transmission:** When you enable WebDAV sync, your locally stored data is transmitted directly from your device to your chosen WebDAV server. We do not intercept, access, or store any of this data.
+- **Credentials stored locally:** Your WebDAV server URL, username, and password are stored locally on your device for authentication purposes. These credentials are never transmitted to our servers.
+- **Third-party servers:** WebDAV servers are operated by third parties (including potentially self-hosted solutions). The privacy practices of these servers are governed by their respective providers.
+- **No liability:** We are not responsible for the security, privacy, or data handling practices of your chosen WebDAV server or its provider.
+
+We strongly encourage you to:
+
+- Use trusted and secure WebDAV servers
+- Ensure your WebDAV server uses HTTPS encryption
+- Review the privacy and security practices of your WebDAV provider
+
+### 3.3 Your Responsibility
 
 We strongly encourage you to:
 
@@ -83,6 +101,8 @@ We will not use this information for marketing, advertising, or any other purpos
 Given that we collect minimal data directly, our security practices focus on:
 
 - **Local data protection:** We recommend that your Android device is protected with a strong lock screen password or biometric authentication
+- **WebDAV credentials:** If you use WebDAV sync, your server URL, username, and password are stored locally on your device. These credentials are never transmitted to our servers or any third party.
+- **Sync transmission security:** Data transmitted via WebDAV is sent directly from your device to your chosen server. We recommend using servers that support HTTPS encryption to protect data in transit.
 - **Transmission security:** Any data you voluntarily share with us (bug reports, feature requests) is handled with appropriate care
 - **No data breaches from us:** Since we don't store user data on our servers, there is no centralized database to compromise
 
