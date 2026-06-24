@@ -590,7 +590,7 @@ fn process_code_element(node: &NodeRef, current_id: &RefCell<u32>) {
                 val
             };
             let mut attrs = element.attributes.borrow_mut();
-            attrs.insert("class", format!("tts_code_block tts_para_{}", id_val));
+            attrs.insert("class", format!("tts_para_{} tts_code_block", id_val));
         }
     }
 }
@@ -1148,7 +1148,7 @@ mod tests {
             "pre should get tts_para_0: {}",
             output
         );
-        assert_eq!(output, "<div> <pre class=\"tts_code_block tts_para_0\"><code>let a = 1; let b = 2; let c = 3;</code></pre> </div>");
+        assert_eq!(output, "<div> <pre class=\"tts_para_0 tts_code_block\"><code>let a = 1; let b = 2; let c = 3;</code></pre> </div>");
     }
 
     #[test]
