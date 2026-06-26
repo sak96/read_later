@@ -134,7 +134,11 @@ pub async fn get_article(
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
             let mut article = query_as::<_, Article>(
-                "SELECT id, title, body, url FROM articles WHERE is_deleted == 0 and id = ?",
+                r#"
+                SELECT id, title, body, url
+                FROM articles
+                WHERE is_deleted == 0 AND id = ?
+                "#,
             )
             .bind(id)
             .fetch_one(pool)
@@ -191,7 +195,12 @@ pub async fn get_article(
 
                 // could be update
                 article = query_as::<_, Article>(
-                    "UPDATE articles SET title = $2, body = $3, url = $4, text_content = $5 where id = $1 RETURNING id, title, body, created_at, url",
+                    r#"
+                    UPDATE articles
+                    SET title = $2, body = $3, url = $4, text_content = $5
+                    WHERE id = $1
+                    RETURNING id, title, body, created_at, url
+                    "#,
                 )
                 .bind(article.id)
                 .bind(title)
@@ -221,9 +230,14 @@ pub async fn add_article(
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
             let article = query_as::<_, Article>(
-                "INSERT INTO articles (title, body, url, updated_at) VALUES ('', '', $1, datetime('now'))
-                 ON CONFLICT(url) DO UPDATE SET is_deleted = 0, updated_at = datetime('now')
-                 RETURNING id, title, body, created_at, url",
+                r#"
+                INSERT INTO articles (title, body, url, updated_at)
+                VALUES ('', '', $1, datetime('now'))
+                ON CONFLICT(url) DO UPDATE SET
+                    is_deleted = 0,
+                    updated_at = datetime('now')
+                RETURNING id, title, body, created_at, url
+                "#,
             )
             .bind(url)
             .fetch_one(pool)
@@ -258,7 +272,11 @@ pub async fn refresh_article(id: i32, db_instances: State<'_, DbInstances>) -> R
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            query("UPDATE articles SET title = '', body = '', text_content = '', updated_at = datetime('now') WHERE id = ?")
+            query(r#"
+                UPDATE articles
+                SET title = '', body = '', text_content = '', updated_at = datetime('now')
+                WHERE id = ?
+            "#)
                 .bind(id)
                 .execute(pool)
                 .await
@@ -274,7 +292,11 @@ pub async fn delete_article(id: i32, db_instances: State<'_, DbInstances>) -> Re
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            let result = query("UPDATE articles SET is_deleted = 1, title = '', body = '', text_content = '', updated_at = datetime('now') WHERE id = ? and is_deleted = 0")
+            let result = query(r#"
+                UPDATE articles
+                SET is_deleted = 1, title = '', body = '', text_content = '', updated_at = datetime('now')
+                WHERE id = ? AND is_deleted = 0
+            "#)
                 .bind(id)
                 .execute(pool)
                 .await
