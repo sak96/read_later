@@ -181,6 +181,13 @@ pub async fn sync_articles<R: Runtime>(
         .unwrap_or("false".to_string())
         == "true";
     if !webdav_enabled {
+        let instances = db_instances.0.read().await;
+        let tauri_plugin_sql::DbPool::Sqlite(pool) =
+            instances.get(DB_URL).ok_or("db not loaded")?;
+        sqlx::query("DELETE FROM articles WHERE is_deleted = 1")
+            .execute(pool)
+            .await
+            .map_err(|e| e.to_string())?;
         return Ok(());
     }
 
@@ -230,6 +237,12 @@ pub async fn sync_articles<R: Runtime>(
         db_instances.clone(),
     )
     .await?;
+
+    sqlx::query("DELETE FROM articles WHERE is_deleted = 1 AND datetime(updated_at) < datetime(?, 'unixepoch')")
+        .bind(last_synced_at)
+        .execute(pool)
+        .await
+        .map_err(|e| e.to_string())?;
 
     Ok(())
 }
