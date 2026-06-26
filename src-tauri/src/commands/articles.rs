@@ -253,6 +253,22 @@ pub async fn get_article_count(db_instances: State<'_, DbInstances>) -> Result<i
 }
 
 #[tauri::command]
+pub async fn refresh_article(id: i32, db_instances: State<'_, DbInstances>) -> Result<(), String> {
+    let instances = db_instances.0.read().await;
+    let db = instances.get(DB_URL).ok_or("db not loaded")?;
+    match db {
+        tauri_plugin_sql::DbPool::Sqlite(pool) => {
+            query("UPDATE articles SET title = '', body = '', text_content = '', updated_at = datetime('now') WHERE id = ?")
+                .bind(id)
+                .execute(pool)
+                .await
+                .map_err(|e| e.to_string())?;
+            Ok(())
+        }
+    }
+}
+
+#[tauri::command]
 pub async fn delete_article(id: i32, db_instances: State<'_, DbInstances>) -> Result<u64, String> {
     let instances = db_instances.0.read().await;
     let db = instances.get(DB_URL).ok_or("db not loaded")?;

@@ -12,6 +12,10 @@ const props = defineProps<{
   article: Article
 }>()
 
+const emit = defineEmits<{
+  refreshed: []
+}>()
+
 const router = useRouter()
 const divRef = ref<HTMLElement | null>(null)
 const externalUrl = ref<string | null>(null)
@@ -76,6 +80,7 @@ onMounted(() => {
       :article-id="article.id"
       :article-url="article.url"
       @deleted="router.replace({ name: 'home' })"
+      @refreshed="emit('refreshed')"
     />
   </div>
 </template>

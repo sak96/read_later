@@ -93,5 +93,6 @@ function getProgressInfo(progress: FetchProgress | null): { icon: LucideIcon, ti
   <ReadViewer
     v-else-if="mode.type === 'returned'"
     :article="mode.article"
+    @refreshed="loadArticle"
   />
 </template>

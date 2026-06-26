@@ -13,7 +13,7 @@ import { onAction } from '../composables/useMediaSession'
 import { platform } from '@tauri-apps/plugin-os'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import ConfirmModal from './ConfirmModal.vue'
-import { BookHeadphones, Pause, Globe, Trash2 } from 'lucide-vue-next'
+import { BookHeadphones, Pause, Globe, Trash2, RefreshCw } from 'lucide-vue-next'
 import Fab from '../layouts/Fab.vue'
 import HomeButton from './HomeButton.vue'
 import TutorialSpeakBar from './TutorialSpeakBar.vue'
@@ -30,6 +30,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   deleted: []
+  refreshed: []
 }>()
 
 const foldBar = ref(true)
@@ -142,6 +143,11 @@ function openSettings() {
 async function deleteArticle() {
   await invokeNoParseLogError('delete_article', { id: props.articleId! })
   emit('deleted')
+}
+
+async function refreshArticle() {
+  await invokeParseLogError('refresh_article', { id: props.articleId })
+  emit('refreshed')
 }
 
 function toggleDeleteModal() {
@@ -300,6 +306,12 @@ onUnmounted(async () => {
           @click="openUrl(articleUrl)"
         >
           <Globe />
+        </button>
+        <button
+          v-if="articleId"
+          @click="refreshArticle"
+        >
+          <RefreshCw />
         </button>
         <button
           v-if="articleId"
