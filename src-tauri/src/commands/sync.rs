@@ -132,7 +132,7 @@ async fn reconcile_and_process(
                         .await
                         .map_err(|e| e.to_string())?;
                 } else if remote_ts > local_ts {
-                    sqlx::query("UPDATE articles SET updated_at = ?, is_deleted = ? WHERE url = ?")
+                    sqlx::query("UPDATE articles SET updated_at = $1, is_deleted = $2, title = CASE WHEN $2 = 1 THEN '' ELSE title END, body = CASE WHEN $2 = 1 THEN '' ELSE body END, text_content = CASE WHEN $2 = 1 THEN '' ELSE text_content END WHERE url = $3")
                         .bind(&remote.updated_at)
                         .bind(remote.is_deleted)
                         .bind(&remote.url)
@@ -149,8 +149,8 @@ async fn reconcile_and_process(
                     .map_err(|e| e.to_string())?;
             }
             (None, Some(remote)) => {
-                sqlx::query("INSERT INTO articles (url, created_at, updated_at, is_deleted, title, body) VALUES (?, ?, ?, ?, '', '') 
-                             ON CONFLICT(url) DO UPDATE SET created_at = excluded.created_at, updated_at = excluded.updated_at, is_deleted = excluded.is_deleted")
+                sqlx::query("INSERT INTO articles (url, created_at, updated_at, is_deleted, title, body, text_content) VALUES ($1, $2, $3, $4, '', '', '') 
+                             ON CONFLICT(url) DO UPDATE SET created_at = excluded.created_at, updated_at = excluded.updated_at, is_deleted = excluded.is_deleted, title = CASE WHEN excluded.is_deleted = 1 THEN '' ELSE title END, body = CASE WHEN excluded.is_deleted = 1 THEN '' ELSE body END, text_content = CASE WHEN excluded.is_deleted = 1 THEN '' ELSE text_content END")
                     .bind(&remote.url)
                     .bind(&remote.created_at)
                     .bind(&remote.updated_at)
