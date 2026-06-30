@@ -41,15 +41,19 @@ watch(scale, async (val) => {
 
 <template>
   <label data-i18n="font_scale" />
-  <div>
-    <b>{{ scale.toFixed(1) }}x</b>
-    <input
-      v-model.number="scale"
-      type="range"
-      min="0.5"
-      max="2"
-      step="0.5"
-    >
-    <div />
+  <div
+    style="text-align-last: center;"
+    group="role"
+  >
+    <label style="display: flex; gap: 1em; padding-left: 1em; padding-right: 1em; min-height: 2.5em; justify-content: space-evenly;">
+      <b>{{ scale.toFixed(1) }}x</b>
+      <input
+        v-model.number="scale"
+        type="range"
+        min="0.5"
+        max="2"
+        step="0.5"
+      >
+    </label>
   </div>
 </template>
