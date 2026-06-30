@@ -8,15 +8,10 @@ Read it later app done using Tauri. Mainly for android.
 
 [<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroidButtonGreyBorder_nofont.png" height="80px">](https://apt.izzysoft.de/packages/io.github.sak.read.it.later)
 
-<!--
 [<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="80px">](https://play.google.com/store/apps/details?id=io.github.sak.read.it.later)
--->
 
 [<img src="https://img.shields.io/badge/Get%20it%20on-GH-black?logo=github" style="height:80px;" height="80px">](https://github.com/sak96/read_later/releases/latest)
 
-[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="80px">](https://play.google.com/store/apps/details?id=io.github.sak.read.it.later)
-
-Join testing group for play store: read-later-test-case@googlegroups.com
 
 ## Setup
 
