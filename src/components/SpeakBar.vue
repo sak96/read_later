@@ -130,10 +130,9 @@ async function loadModeClass(newMode: ViewMode) {
   }
 }
 
-async function handleRateUpdate(newRate: number) {
-  await invokeNoParseLogError('change_rate', { rate: newRate })
-  rate.value = newRate
-}
+watch(rate, async (val) => {
+  await invokeNoParseLogError('change_rate', { rate: val })
+})
 
 function openSettings() {
   foldBar.value = true
@@ -293,10 +292,7 @@ onUnmounted(async () => {
         <span data-i18n="speech_settings" />
       </header>
       <template v-if="ttsEnabled">
-        <SpeakRate
-          :model-value="rate"
-          @update:model-value="handleRateUpdate"
-        />
+        <SpeakRate v-model="rate" />
         <LanguageSelect />
       </template>
       <FontScale :target="divRef" />
