@@ -37,6 +37,20 @@ body:
     validations:
       required: false
 
+  - type: checkboxes
+    id: experimental_fetcher
+    attributes:
+      label: Experimental Fetcher
+      description: |
+        Try the Experimental Fetcher before submitting this issue (useful for websites that need JS):
+        1. Open Settings.
+        2. Scroll to Speech Settings.
+        3. Toggle Experimental Fetcher to On.
+        4. Re-add the article.
+      options:
+        - label: I have tried the Experimental Fetcher
+          required: true
+
   - type: textarea
     id: repro_steps
     attributes:
