@@ -731,12 +731,40 @@ pub fn build_snippet(body: &str, query: Option<&str>) -> Snippet {
             let body_lower = body.to_lowercase();
             let q_lower = q.to_lowercase();
 
-            if let Some(pos) = body_lower.find(&q_lower) {
+            if let Some(byte_pos) = body_lower.find(&q_lower) {
+                let char_pos = body_lower[..byte_pos].chars().count();
                 let snippet: String = body
                     .chars()
-                    .skip(pos.saturating_sub(HALF_SNIPPET_LENGTH))
+                    .skip(char_pos.saturating_sub(HALF_SNIPPET_LENGTH))
                     .take(SNIPPET_LENGTH)
                     .collect();
+
+                let snippet_lower = snippet.to_lowercase();
+                if let Some(byte_match_pos) = snippet_lower.find(&q_lower) {
+                    let char_match_pos = snippet_lower[..byte_match_pos].chars().count();
+                    let query_char_len = q_lower.chars().count();
+
+                    let prefix: String = snippet.chars().take(char_match_pos).collect();
+                    let match_text: String = snippet
+                        .chars()
+                        .skip(char_match_pos)
+                        .take(query_char_len)
+                        .collect();
+                    let suffix: String = snippet
+                        .chars()
+                        .skip(char_match_pos + query_char_len)
+                        .collect();
+
+                    return Snippet {
+                        prefix,
+                        match_text: Some(match_text),
+                        suffix: if suffix.is_empty() {
+                            None
+                        } else {
+                            Some(suffix)
+                        },
+                    };
+                }
 
                 return Snippet {
                     prefix: snippet,
