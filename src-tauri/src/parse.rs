@@ -6,6 +6,9 @@ use std::cell::RefCell;
 
 // HTML TTS Processing Rules:
 //
+// Input is always wrapped in a block-level container by process_html,
+// so inline-only fragments at the top level do not occur.
+//
 // 1. All visible text must have a `tts_para` class for TTS segmentation.
 // 2. No two `tts_para` spans may overlap — each unit of text belongs to
 //    exactly one `tts_para_N`.
@@ -13,6 +16,8 @@ use std::cell::RefCell;
 //    elements (<strong>, <em>, etc.) get `tts_para_N` added as a class
 //    for single-sentence content; multi-sentence content keeps the
 //    inline wrapper and inserts `<span class="tts_para_N">` children.
+//    For code/pre elements, each line (delimited by newline) is one
+//    tts_para unit; semicolons and braces also split code lines.
 // 4. Class ordering: `tts_para_N` is always prepended as the first class.
 //    Other classes (`tts_code_block`, `tts_anchor`) are appended after.
 
