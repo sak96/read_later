@@ -411,6 +411,15 @@ fn tag_element(element: &ElementData, current_id: &RefCell<u32>) {
     }
 }
 
+fn make_tts_para_span(text: String, current_id: &RefCell<u32>) -> NodeRef {
+    let span = NodeRef::new_element(QualName::new(None, ns!(html), local_name!("span")), vec![]);
+    span.append(NodeRef::new_text(text));
+    if let Some(element) = span.as_element() {
+        tag_element(element, current_id);
+    }
+    span
+}
+
 fn process_node(node: &NodeRef, current_id: &RefCell<u32>) {
     if let Some(element) = node.as_element() {
         let tag_name = element.name.local.as_ref();
@@ -465,29 +474,15 @@ fn process_element_tts(node: &NodeRef, current_id: &RefCell<u32>) {
 
     for (start, end) in sentences {
         let clipped = clip_items(&items, start, end);
-        let id_val = {
-            let mut id = current_id.borrow_mut();
-            let val = *id;
-            *id += 1;
-            val
-        };
-
-        let span = NodeRef::new_element(
-            QualName::new(None, ns!(html), local_name!("span")),
-            vec![(
-                ExpandedName::new(ns!(), "class"),
-                Attribute {
-                    prefix: None,
-                    value: format!("tts_para_{}", id_val),
-                },
-            )],
-        );
-
+        let span =
+            NodeRef::new_element(QualName::new(None, ns!(html), local_name!("span")), vec![]);
+        if let Some(element) = span.as_element() {
+            tag_element(element, current_id);
+        }
         let child_nodes = build_dom_from_items(&clipped);
         for child in child_nodes {
             span.append(child);
         }
-
         node.append(span);
     }
 }
@@ -521,46 +516,14 @@ fn process_block_element(node: &NodeRef, current_id: &RefCell<u32>) {
                     let sentences = segment_sentences(&text_content, MAX_LENGTH);
 
                     if sentences.len() <= 1 {
-                        let id_val = {
-                            let mut id = current_id.borrow_mut();
-                            let val = *id;
-                            *id += 1;
-                            val
-                        };
-                        let span = NodeRef::new_element(
-                            QualName::new(None, ns!(html), local_name!("span")),
-                            vec![(
-                                ExpandedName::new(ns!(), "class"),
-                                Attribute {
-                                    prefix: None,
-                                    value: format!("tts_para_{}", id_val),
-                                },
-                            )],
-                        );
-                        span.append(NodeRef::new_text(text_content));
+                        let span = make_tts_para_span(text_content, current_id);
                         child.insert_before(span);
                         child.detach();
                     } else {
                         let text_chars: Vec<char> = text_content.chars().collect();
                         for (start, end) in sentences {
                             let sentence_text: String = text_chars[start..end].iter().collect();
-                            let id_val = {
-                                let mut id = current_id.borrow_mut();
-                                let val = *id;
-                                *id += 1;
-                                val
-                            };
-                            let span = NodeRef::new_element(
-                                QualName::new(None, ns!(html), local_name!("span")),
-                                vec![(
-                                    ExpandedName::new(ns!(), "class"),
-                                    Attribute {
-                                        prefix: None,
-                                        value: format!("tts_para_{}", id_val),
-                                    },
-                                )],
-                            );
-                            span.append(NodeRef::new_text(sentence_text));
+                            let span = make_tts_para_span(sentence_text, current_id);
                             child.insert_before(span);
                         }
                         child.detach();
@@ -590,24 +553,7 @@ fn process_code_element(node: &NodeRef, current_id: &RefCell<u32>) {
                 }
 
                 for unit in units {
-                    let id_val = {
-                        let mut id = current_id.borrow_mut();
-                        let val = *id;
-                        *id += 1;
-                        val
-                    };
-
-                    let span = NodeRef::new_element(
-                        QualName::new(None, ns!(html), local_name!("span")),
-                        vec![(
-                            ExpandedName::new(ns!(), "class"),
-                            Attribute {
-                                prefix: None,
-                                value: format!("tts_para_{}", id_val),
-                            },
-                        )],
-                    );
-                    span.append(NodeRef::new_text(unit));
+                    let span = make_tts_para_span(unit, current_id);
                     node.append(span);
                 }
                 return;
