@@ -13,6 +13,8 @@ use std::cell::RefCell;
 //    elements (<strong>, <em>, etc.) get `tts_para_N` added as a class
 //    for single-sentence content; multi-sentence content keeps the
 //    inline wrapper and inserts `<span class="tts_para_N">` children.
+// 4. Class ordering: `tts_para_N` is always prepended as the first class.
+//    Other classes (`tts_code_block`, `tts_anchor`) are appended after.
 
 use crate::models::Snippet;
 
@@ -382,6 +384,16 @@ fn build_dom_from_items(items: &[ContentItem]) -> Vec<NodeRef> {
     nodes
 }
 
+fn append_class(element: &ElementData, class: &str) {
+    let mut attrs = element.attributes.borrow_mut();
+    if let Some(existing) = attrs.get_mut("class") {
+        existing.push(' ');
+        existing.push_str(class);
+    } else {
+        attrs.insert("class", class.to_string());
+    }
+}
+
 fn tag_element(element: &ElementData, current_id: &RefCell<u32>) {
     let id_val = {
         let mut id = current_id.borrow_mut();
@@ -389,10 +401,14 @@ fn tag_element(element: &ElementData, current_id: &RefCell<u32>) {
         *id += 1;
         val
     };
-    element
-        .attributes
-        .borrow_mut()
-        .insert("class", format!("tts_para_{}", id_val));
+    let class = format!("tts_para_{}", id_val);
+    let mut attrs = element.attributes.borrow_mut();
+    if let Some(existing) = attrs.get_mut("class") {
+        let old = existing.clone();
+        *existing = format!("{} {}", class, old);
+    } else {
+        attrs.insert("class", class);
+    }
 }
 
 fn process_node(node: &NodeRef, current_id: &RefCell<u32>) {
@@ -563,10 +579,7 @@ fn process_code_element(node: &NodeRef, current_id: &RefCell<u32>) {
         let text_content = node.text_contents();
         let has_newlines = text_content.contains('\n');
 
-        {
-            let mut attrs = element.attributes.borrow_mut();
-            attrs.insert("class", "tts_code_block".to_string());
-        }
+        append_class(element, "tts_code_block");
 
         if has_newlines {
             let units = split_code_block(&text_content);
