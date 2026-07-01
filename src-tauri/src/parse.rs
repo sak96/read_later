@@ -4,6 +4,16 @@ use kuchikikiki::traits::*;
 use kuchikikiki::{parse_fragment, Attribute, ElementData, ExpandedName, NodeRef};
 use std::cell::RefCell;
 
+// HTML TTS Processing Rules:
+//
+// 1. All visible text must have a `tts_para` class for TTS segmentation.
+// 2. No two `tts_para` spans may overlap — each unit of text belongs to
+//    exactly one `tts_para_N`.
+// 3. HTML structure is retained: block elements keep their tags, inline
+//    elements (<strong>, <em>, etc.) get `tts_para_N` added as a class
+//    for single-sentence content; multi-sentence content keeps the
+//    inline wrapper and inserts `<span class="tts_para_N">` children.
+
 use crate::models::Snippet;
 
 fn make_qual_name(tag: &str) -> QualName {
@@ -415,6 +425,57 @@ fn process_node(node: &NodeRef, current_id: &RefCell<u32>) {
     }
 }
 
+fn process_element_tts(node: &NodeRef, current_id: &RefCell<u32>) {
+    let mut pos = 0;
+    let items = flatten_block(node, &mut pos);
+    let flat_text = build_flat_string(&items);
+
+    if flat_text.trim().is_empty() {
+        return;
+    }
+
+    let sentences = segment_sentences(&flat_text, MAX_LENGTH);
+
+    if sentences.len() <= 1 {
+        if let Some(element) = node.as_element() {
+            tag_element(element, current_id);
+        }
+        return;
+    }
+
+    for child in node.children() {
+        child.detach();
+    }
+
+    for (start, end) in sentences {
+        let clipped = clip_items(&items, start, end);
+        let id_val = {
+            let mut id = current_id.borrow_mut();
+            let val = *id;
+            *id += 1;
+            val
+        };
+
+        let span = NodeRef::new_element(
+            QualName::new(None, ns!(html), local_name!("span")),
+            vec![(
+                ExpandedName::new(ns!(), "class"),
+                Attribute {
+                    prefix: None,
+                    value: format!("tts_para_{}", id_val),
+                },
+            )],
+        );
+
+        let child_nodes = build_dom_from_items(&clipped);
+        for child in child_nodes {
+            span.append(child);
+        }
+
+        node.append(span);
+    }
+}
+
 fn process_block_element(node: &NodeRef, current_id: &RefCell<u32>) {
     let children: Vec<NodeRef> = node.children().collect();
 
@@ -433,8 +494,10 @@ fn process_block_element(node: &NodeRef, current_id: &RefCell<u32>) {
                 let tag_name = element.name.local.as_ref();
                 if is_code_tag(tag_name) && has_element_children(child) {
                     process_code_element(child, current_id);
-                } else {
+                } else if is_block_element(tag_name) {
                     process_node(child, current_id);
+                } else {
+                    process_element_tts(&child, current_id);
                 }
             } else if let Some(text) = child.as_text() {
                 let text_content = text.borrow().clone();
@@ -492,54 +555,7 @@ fn process_block_element(node: &NodeRef, current_id: &RefCell<u32>) {
         return;
     }
 
-    let mut pos = 0;
-    let items = flatten_block(node, &mut pos);
-    let flat_text = build_flat_string(&items);
-
-    if flat_text.trim().is_empty() {
-        return;
-    }
-
-    let sentences = segment_sentences(&flat_text, MAX_LENGTH);
-
-    if sentences.len() <= 1 {
-        if let Some(element) = node.as_element() {
-            tag_element(element, current_id);
-        }
-        return;
-    }
-
-    for child in node.children() {
-        child.detach();
-    }
-
-    for (start, end) in sentences {
-        let clipped = clip_items(&items, start, end);
-        let id_val = {
-            let mut id = current_id.borrow_mut();
-            let val = *id;
-            *id += 1;
-            val
-        };
-
-        let span = NodeRef::new_element(
-            QualName::new(None, ns!(html), local_name!("span")),
-            vec![(
-                ExpandedName::new(ns!(), "class"),
-                Attribute {
-                    prefix: None,
-                    value: format!("tts_para_{}", id_val),
-                },
-            )],
-        );
-
-        let child_nodes = build_dom_from_items(&clipped);
-        for child in child_nodes {
-            span.append(child);
-        }
-
-        node.append(span);
-    }
+    process_element_tts(node, current_id);
 }
 
 fn process_code_element(node: &NodeRef, current_id: &RefCell<u32>) {
@@ -1436,5 +1452,19 @@ mod tests {
             output
         );
         assert_eq!(output, "<div> <pre class=\"tts_code_block\"><span class=\"tts_para_0\">fn main() {\n</span><span class=\"tts_para_1\">\tlet x = 1;\n</span><span class=\"tts_para_2\">\n</span><span class=\"tts_para_3\">\tlet y = 2;\n</span><span class=\"tts_para_4\">}</span></pre> </div>");
+    }
+
+    #[test]
+    fn test_li_with_inline_and_block_children() {
+        let input = "<li><strong>Bold text.</strong><ul><li>Nested.</li></ul></li>";
+        let output = process_html_test(input);
+        assert_eq!(output, "<div> <li><strong class=\"tts_para_0\">Bold text.</strong><ul><li class=\"tts_para_1\">Nested.</li></ul></li> </div>");
+    }
+
+    #[test]
+    fn test_li_with_multisentence_inline_and_block_children() {
+        let input = "<li><strong>First sentence. Second.</strong><ul><li>Nested.</li></ul></li>";
+        let output = process_html_test(input);
+        assert_eq!(output, "<div> <li><strong><span class=\"tts_para_0\">First sentence.</span><span class=\"tts_para_1\"> Second.</span></strong><ul><li class=\"tts_para_2\">Nested.</li></ul></li> </div>");
     }
 }
