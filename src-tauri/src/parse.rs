@@ -597,17 +597,11 @@ fn process_code_element(node: &NodeRef, current_id: &RefCell<u32>) {
                     span.append(NodeRef::new_text(unit));
                     node.append(span);
                 }
+                return;
             }
-        } else {
-            let id_val = {
-                let mut id = current_id.borrow_mut();
-                let val = *id;
-                *id += 1;
-                val
-            };
-            let mut attrs = element.attributes.borrow_mut();
-            attrs.insert("class", format!("tts_para_{} tts_code_block", id_val));
         }
+
+        tag_element(element, current_id);
     }
 }
 
@@ -1466,5 +1460,32 @@ mod tests {
         let input = "<li><strong>First sentence. Second.</strong><ul><li>Nested.</li></ul></li>";
         let output = process_html_test(input);
         assert_eq!(output, "<div> <li><strong><span class=\"tts_para_0\">First sentence.</span><span class=\"tts_para_1\"> Second.</span></strong><ul><li class=\"tts_para_2\">Nested.</li></ul></li> </div>");
+    }
+
+    #[test]
+    fn test_pre_with_language_class() {
+        let input = "<pre class=\"language-scala\" tabindex=\"0\"><code class=\"language-scala\">object Logger\n</code></pre>";
+        let output = process_html_test(input);
+        assert!(
+            output.contains("tts_para_"),
+            "should have tts_para: {}",
+            output
+        );
+        assert!(
+            output.contains("tts_code_block"),
+            "should have tts_code_block: {}",
+            output
+        );
+        assert!(
+            output.contains("language-scala"),
+            "should preserve language-scala class: {}",
+            output
+        );
+        assert!(
+            output.contains("tabindex"),
+            "should preserve tabindex: {}",
+            output
+        );
+        assert_eq!(output, "<div> <pre class=\"tts_para_0 language-scala tts_code_block\" tabindex=\"0\"><code class=\"language-scala\">object Logger\n</code></pre> </div>");
     }
 }
