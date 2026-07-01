@@ -1,7 +1,7 @@
 use html5ever::QualName;
 use html5ever::{local_name, ns};
 use kuchikikiki::traits::*;
-use kuchikikiki::{parse_fragment, Attribute, ElementData, ExpandedName, NodeRef};
+use kuchikikiki::{parse_fragment, Attribute, Attributes, ElementData, ExpandedName, NodeRef};
 use std::cell::RefCell;
 
 // HTML TTS Processing Rules:
@@ -389,8 +389,7 @@ fn build_dom_from_items(items: &[ContentItem]) -> Vec<NodeRef> {
     nodes
 }
 
-fn append_class(element: &ElementData, class: &str) {
-    let mut attrs = element.attributes.borrow_mut();
+fn append_class(attrs: &mut Attributes, class: &str) {
     if let Some(existing) = attrs.get_mut("class") {
         existing.push(' ');
         existing.push_str(class);
@@ -547,7 +546,7 @@ fn process_code_element(node: &NodeRef, current_id: &RefCell<u32>) {
         let text_content = node.text_contents();
         let has_newlines = text_content.contains('\n');
 
-        append_class(element, "tts_code_block");
+        append_class(&mut element.attributes.borrow_mut(), "tts_code_block");
 
         if has_newlines {
             let units = split_code_block(&text_content);
@@ -582,8 +581,7 @@ fn split_code_block(text: &str) -> Vec<String> {
             continue;
         }
 
-        let line_units = split_at_code_boundaries(line);
-        let mut line_units = line_units;
+        let mut line_units = split_at_code_boundaries(line);
         if i < line_count - 1 {
             if let Some(last) = line_units.last_mut() {
                 last.push('\n');
@@ -672,19 +670,13 @@ fn process_node_url(node: &NodeRef, url: &str) {
             if let Ok(absolute_url) = base_url.join(&original_href) {
                 let mut url_without_fragment = absolute_url.clone();
                 url_without_fragment.set_fragment(None);
-                let is_fragement_only =
+                let is_fragment_only =
                     url_without_fragment == base_url && absolute_url.fragment().is_some();
-                if is_fragement_only {
+                if is_fragment_only {
                     *href = format!("#{}", absolute_url.fragment().unwrap());
                 } else {
                     *href = absolute_url.to_string();
-                    if let Some(class) = element.get_mut("class") {
-                        if !class.contains("tts_anchor") {
-                            class.push_str(" tts_anchor");
-                        }
-                    } else {
-                        element.insert("class", "tts_anchor".to_string());
-                    }
+                    append_class(&mut *element, "tts_anchor");
                 }
             }
         }
