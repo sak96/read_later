@@ -83,7 +83,12 @@ fn is_block_element(name: &str) -> bool {
             | "pre"
             | "section"
             | "table"
+            | "tbody"
+            | "td"
             | "tfoot"
+            | "th"
+            | "thead"
+            | "tr"
             | "ul"
             | "video"
     )
@@ -1471,5 +1476,19 @@ mod tests {
             output
         );
         assert_eq!(output, "<div> <pre class=\"tts_para_0 language-scala tts_code_block\" tabindex=\"0\"><code class=\"language-scala\">object Logger\n</code></pre> </div>");
+    }
+
+    #[test]
+    fn test_table_gets_tts_para() {
+        let input = "<table><thead><tr><th>Feature</th><th>session</th></tr></thead><tbody><tr><td>Works</td><td>works</td></tr></tbody></table>";
+        let output = process_html_test(input);
+        assert_eq!(output, "<div> <table><thead><tr><th class=\"tts_para_0\">Feature</th><th class=\"tts_para_1\">session</th></tr></thead><tbody><tr><td class=\"tts_para_2\">Works</td><td class=\"tts_para_3\">works</td></tr></tbody></table> </div>");
+    }
+
+    #[test]
+    fn test_table_multi_sentence_cell() {
+        let input = "<table><tr><td>First sentence. Second sentence.</td></tr></table>";
+        let output = process_html_test(input);
+        assert_eq!(output, "<div> <table><tbody><tr><td><span class=\"tts_para_0\">First sentence.</span><span class=\"tts_para_1\"> Second sentence.</span></td></tr></tbody></table> </div>");
     }
 }
