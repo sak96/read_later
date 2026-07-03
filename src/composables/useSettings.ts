@@ -7,3 +7,7 @@ export async function getSetting(name: string): Promise<string | null> {
 export async function setSetting(name: string, value: string): Promise<void> {
   await invokeNoParseLogError('set_setting', { name, value })
 }
+
+export async function deleteSetting(name: string): Promise<void> {
+  await invokeNoParseLogError('delete_setting', { name })
+}

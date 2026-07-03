@@ -50,3 +50,22 @@ pub async fn set_setting(
         }
     }
 }
+
+#[tauri::command]
+pub async fn delete_setting(
+    name: String,
+    db_instances: State<'_, DbInstances>,
+) -> Result<(), String> {
+    let instances = db_instances.0.read().await;
+    let db = instances.get(DB_URL).ok_or("db not loaded")?;
+    match db {
+        tauri_plugin_sql::DbPool::Sqlite(pool) => {
+            query("DELETE FROM settings WHERE name = ?")
+                .bind(name)
+                .execute(pool)
+                .await
+                .map(|_| ())
+                .map_err(|e| e.to_string())
+        }
+    }
+}

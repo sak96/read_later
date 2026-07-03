@@ -38,6 +38,7 @@ pub fn run() {
             crate::commands::refresh_article,
             crate::commands::get_setting,
             crate::commands::set_setting,
+            crate::commands::delete_setting,
             crate::commands::pick_import_file,
             crate::commands::pick_export_file,
             crate::commands::init_reading,
