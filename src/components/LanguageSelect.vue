@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { getVoices, Voice } from 'tauri-plugin-tts-api'
 import { invokeNoParseLogError } from '../composables/useTauri'
-import { getSetting, setSetting } from '../composables/useSettings'
+import { getSetting, setSetting, deleteSetting } from '../composables/useSettings'
 
 const SETTING_KEY = 'voice_id'
 
@@ -18,6 +18,9 @@ async function loadVoices() {
       if (idx !== -1) {
         selectedIndex.value = idx
         await invokeNoParseLogError('set_voice_id', { voiceId: saved })
+      } else {
+        await invokeNoParseLogError('set_voice_id', { voiceId: null })
+        await deleteSetting(SETTING_KEY)
       }
     }
   }
@@ -35,6 +38,8 @@ async function onLanguageChange(event: Event) {
   await invokeNoParseLogError('set_voice_id', { voiceId: id })
   if (id) {
     await setSetting(SETTING_KEY, id)
+  } else {
+    await deleteSetting(SETTING_KEY)
   }
 }
 
@@ -54,7 +59,6 @@ onMounted(async () => {
       >
         <option
           value=""
-          disabled
         >
           &#127760;
         </option>
