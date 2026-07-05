@@ -2,6 +2,6 @@ rustup 1.28.2
 rust 1.91.1
 jdk 21.0.8
 sdk 36
-ndk 27.3.13750724
+ndk 28.0.13004108
 node 24.14.1
 tauricli 2.11.0
