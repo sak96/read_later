@@ -58,7 +58,7 @@ cargo tauri android build  --split-per-abi
 |![share](fastlane/metadata/android/en-US/images/phoneScreenshots/1_share.png)|![home](fastlane/metadata/android/en-US/images/phoneScreenshots/2_home.png)|
 |---|---|
 |![tts](fastlane/metadata/android/en-US/images/phoneScreenshots/3_tts.png)|![settings](fastlane/metadata/android/en-US/images/phoneScreenshots/4_settings.png)|
-|![light](fastlane/metadata/android/en-US/images/phoneScreenshots/5_light.png)|![dark](fastlane/metadata/android/en-US/images/phoneScreenshots/6_dark.png)|
+|![dark](fastlane/metadata/android/en-US/images/phoneScreenshots/5_dark.png)|![dark](fastlane/metadata/android/en-US/images/phoneScreenshots/6_light.png)|
 
 ## License
 
