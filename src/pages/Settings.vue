@@ -86,7 +86,7 @@ onMounted(async () => {
             <button
               v-for="themeOption in themes"
               :key="themeOption.value"
-              :class="themeContext?.mode === themeOption.value ? 'primary' : 'outline'"
+              :class="themeContext?.mode?.value === themeOption.value ? 'primary' : 'outline'"
               @click="onThemeChange(themeOption.value)"
             >
               <component :is="themeOption.icon" />
