@@ -42,13 +42,29 @@ body:
     attributes:
       label: Experimental Fetcher
       description: |
-        Try the Experimental Fetcher before submitting this issue (useful for websites that need JS):
+        The Experimental Fetcher helps bypass JavaScript-heavy websites that may fail to load.
+        Please try it before submitting this issue:
         1. Open Settings.
         2. Scroll to Speech Settings.
         3. Toggle Experimental Fetcher to On.
         4. Re-add the article.
       options:
         - label: I have tried the Experimental Fetcher
+          required: true
+
+  - type: checkboxes
+    id: reload_icon_check
+    attributes:
+      label: Article Reload Check
+      description: |
+        Sometimes articles fail to load on the first attempt. The reload icon in the reader settings
+        retries the fetch, which often resolves transient loading issues. Please verify it works
+        with the Experimental Fetcher enabled:
+        1. Open the article in the reader.
+        2. Tap the reload icon in the reader settings.
+        3. Confirm the article content refreshed correctly.
+      options:
+        - label: The article reloaded properly when using the reload icon (Experimental Fetcher enabled)
           required: true
 
   - type: textarea
