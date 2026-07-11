@@ -12,7 +12,6 @@ Read it later app done using Tauri. Mainly for android.
 
 [<img src="https://img.shields.io/badge/Get%20it%20on-GH-black?logo=github" style="height:80px;" height="80px">](https://github.com/sak96/read_later/releases/latest)
 
-
 ## Setup
 
 ```bash
@@ -60,10 +59,6 @@ cargo tauri android build  --split-per-abi
 |---|---|
 |![tts](fastlane/metadata/android/en-US/images/phoneScreenshots/3_tts.png)|![settings](fastlane/metadata/android/en-US/images/phoneScreenshots/4_settings.png)|
 |![light](fastlane/metadata/android/en-US/images/phoneScreenshots/5_light.png)|![dark](fastlane/metadata/android/en-US/images/phoneScreenshots/6_dark.png)|
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/chart?repos=sak96/read_later&type=date&legend=top-left)](https://www.star-history.com/?repos=sak96%2Fread_later&type=date&legend=top-left)
 
 ## License
 
