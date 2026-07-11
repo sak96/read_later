@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, inject } from 'vue'
+import { ref, onMounted, inject, type Ref } from 'vue'
 import { getSetting, setSetting } from '../composables/useSettings'
 import { getVersion } from '@tauri-apps/api/app'
 import { openUrl } from '@tauri-apps/plugin-opener'
@@ -18,7 +18,7 @@ import { MonitorCog, Sun, Moon, CodeXml, Bug, Palette, Speech, Archive, Info } f
 
 type Theme = 'light' | 'dark' | 'system'
 
-const themeContext = inject<{ mode: Theme, setMode: (mode: Theme) => void }>('theme')
+const themeContext = inject<{ mode: Ref<Theme>, setMode: (mode: Theme) => void }>('theme')
 
 const appVersion = ref('N/A')
 const ttsEnabled = ref(true)
