@@ -1,24 +1,14 @@
 use crate::models::*;
 use crate::parse::{build_snippet, process_html};
+use super::experimental_fetcher::{ExperimentalFetcher, HtmlFetcher};
 use readabilityrs::Readability;
 use sqlx::{query, query_as};
 use std::sync::mpsc;
-use tauri::{AppHandle, Listener, Manager, Runtime};
 use tauri::{State, ipc::Channel};
 use tauri_plugin_http::reqwest;
 use tauri_plugin_sql::DbInstances;
 
 const CHROME_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36";
-use std::{
-    sync::{
-        Arc,
-        atomic::{AtomicBool, Ordering},
-    },
-    thread,
-    time::Duration,
-};
-
-const HTML_FETCHER: &str = "html-fetcher";
 
 pub struct ArticleFetchLockPermit<'a> {
     tx: &'a mpsc::SyncSender<()>,
@@ -53,136 +43,6 @@ impl ArticleFetchLock {
         drop(guard);
         Ok(ArticleFetchLockPermit { tx: &self.tx })
     }
-}
-
-pub fn fetch_rendered_html<R: Runtime>(app: &AppHandle<R>, url: &str) -> Result<String, String> {
-    let (tx, rx) = mpsc::channel::<String>();
-
-    let running = Arc::new(AtomicBool::new(true));
-    let running_clone = running.clone();
-
-    let webview = app
-        .get_webview_window("main")
-        .ok_or("Failed to get main webview")?;
-
-    // Remember where the user was before opening external page.
-    let previous_url = webview
-        .url()
-        .map(|u| u.to_string())
-        .unwrap_or_else(|_| "http://localhost/home".to_string());
-
-    let listener_id = app.listen(HTML_FETCHER, move |event| {
-        let payload_str = event.payload().to_string();
-        let parsed: Result<String, _> = serde_json::from_str(&payload_str);
-
-        match parsed {
-            Ok(json) => {
-                let _ = tx.send(json.to_string());
-            }
-            Err(err) => {
-                eprintln!("Failed to parse event payload: {err}");
-            }
-        }
-        running_clone.store(false, Ordering::Relaxed);
-    });
-
-    let webview = app
-        .get_webview_window("main")
-        .ok_or("Failed to get main webview")?;
-
-    // Navigate to the requested page.
-    webview
-        .eval(format!(r#"window.location.href = "{}";"#, url))
-        .map_err(|e| e.to_string())?;
-
-    // Keep attempting to inject the toolbar while capture mode is active.
-    let injector_webview = webview.clone();
-    let injector_running = running.clone();
-
-    thread::spawn(move || {
-        while injector_running.load(Ordering::Relaxed) {
-            let _ = injector_webview.eval(
-                r##"
-                const bar = document.createElement("div");
-                bar.id = "__tauri_capture_toolbar";
-
-                Object.assign(bar.style, {
-                    position: "fixed",
-                    right: "20px",
-                    bottom: "20px",
-                    zIndex: "2147483647",
-                    display: "flex",
-                    flexDirection: "column",
-                });
-
-                const buttonStyle = {
-                    margin: "0",
-                    backgroundColor: "#0172ad",
-                    color: "#eff1f4",
-                    minWidth: "1.5em",
-                    minHeight: "1.5em",
-                    fontSize: "1.5em",
-                    padding: "0.75rem 1.25rem",
-                    border: "1px solid transparent",
-                    borderRadius: "0.5rem",
-                    cursor: "pointer",
-                    fontWeight: "600",
-                    textAlign: "center",
-                    transition: "background-color .2s, border-color .2s, color .2s"
-                };
-
-
-                // OK button
-                const ok = document.createElement("button");
-                ok.textContent = "✓";
-                ok.className = "contrast";
-                Object.assign(ok.style, buttonStyle);
-
-                ok.onclick = () => {
-                    window.__TAURI__.event.emit(
-                        "html-fetcher",
-                        document.documentElement ? document.documentElement.outerHTML : ""
-                    );
-                };
-
-                // Cancel button
-                const cancel = document.createElement("button");
-                cancel.textContent = "×";
-                cancel.className = "secondary";
-                Object.assign(cancel.style, buttonStyle);
-
-                cancel.onclick = () => {
-                    window.__TAURI__.event.emit("html-fetcher", "");
-                };
-
-                bar.appendChild(ok);
-                bar.appendChild(cancel);
-
-                if (document.body) {
-                    document.body.appendChild(bar);
-                }
-                "##,
-            );
-
-            thread::sleep(Duration::from_millis(500));
-        }
-    });
-
-    // Wait until the user presses OK.
-    let html = rx.recv().map_err(|e| e.to_string())?;
-
-    running.store(false, Ordering::Relaxed);
-
-    app.unlisten(listener_id);
-    // Return to previous page.
-    let restore_js = format!(
-        r#"window.location.href = "{}";"#,
-        previous_url.replace('"', "\\\"")
-    );
-
-    let _ = webview.eval(&restore_js);
-
-    Ok(html)
 }
 
 #[tauri::command]
@@ -275,6 +135,8 @@ pub async fn get_article(
                         .send(FetchProgress::Downloading(article.url.to_string()))
                         .map_err(|e| e.to_string())?;
 
+                    let mut _exp_fetcher = None;
+
                     let html = match sqlx::query_as::<_, (String,)>(
                         "SELECT value FROM settings WHERE name = 'iframe_fetcher'",
                     )
@@ -283,7 +145,12 @@ pub async fn get_article(
                     .ok()
                     .map(|r| r.0)
                     {
-                        Some(v) if v == "true" => fetch_rendered_html(&app, &article.url)?,
+                        Some(v) if v == "true" => {
+                            let mut fetcher = ExperimentalFetcher::new(&app, &article.url)?;
+                            let result = fetcher.fetch()?;
+                            _exp_fetcher = Some(fetcher);
+                            result
+                        }
                         _ => {
                             let client = reqwest::Client::new();
                             client
