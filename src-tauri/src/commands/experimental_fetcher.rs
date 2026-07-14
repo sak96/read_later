@@ -290,9 +290,8 @@ impl<R: Runtime> Drop for ExperimentalFetcher<R> {
     fn drop(&mut self) {
         if let Some(initial) = self.initial_history_length {
             let _ = self.webview.eval(format!(
-                "window.history.go(-(window.history.length - {})); setTimeout(() => window.location.reload(), {})",
+                "window.history.go(-(window.history.length - {}));",
                 initial,
-                INJECTOR_INTERVAL.as_millis()
             ));
         }
     }
