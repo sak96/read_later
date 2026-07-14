@@ -109,6 +109,30 @@ fn has_element_children(node: &NodeRef) -> bool {
     node.children().any(|c| c.as_element().is_some())
 }
 
+fn is_leaf_block_element(name: &str) -> bool {
+    matches!(name, "td" | "th" | "dd" | "dt")
+}
+
+fn is_single_path_to_text(item: &ContentItem) -> bool {
+    match item {
+        ContentItem::Text { .. } => false,
+        ContentItem::Element { children, .. } => {
+            children.len() == 1 && matches!(&children[0], ContentItem::Text { .. })
+        }
+    }
+}
+
+fn tag_innermost_text_element(node: &NodeRef, current_id: &RefCell<u32>) {
+    if let Some(element) = node.as_element() {
+        let has_elem_children = node.children().any(|c| c.as_element().is_some());
+        if !has_elem_children {
+            tag_element(element, current_id);
+        } else if let Some(first_elem) = node.children().find(|c| c.as_element().is_some()) {
+            tag_innermost_text_element(&first_elem, current_id);
+        }
+    }
+}
+
 fn flatten_block(node: &NodeRef, pos: &mut usize) -> Vec<ContentItem> {
     let mut items = Vec::new();
 
@@ -123,7 +147,7 @@ fn flatten_block(node: &NodeRef, pos: &mut usize) -> Vec<ContentItem> {
                 continue;
             }
 
-            if is_block_element(tag_name) {
+            if is_leaf_block_element(tag_name) {
                 continue;
             }
 
@@ -443,15 +467,7 @@ fn process_node(node: &NodeRef, current_id: &RefCell<u32>) {
             return;
         }
 
-        if is_block_element(tag_name) {
-            process_block_element(node, current_id);
-            return;
-        }
-
-        let children: Vec<NodeRef> = node.children().collect();
-        for child in children {
-            process_node(&child, current_id);
-        }
+        process_element_tts(node, current_id);
     } else if node.as_document().is_some() {
         for child in node.children() {
             process_node(&child, current_id);
@@ -460,6 +476,50 @@ fn process_node(node: &NodeRef, current_id: &RefCell<u32>) {
 }
 
 fn process_element_tts(node: &NodeRef, current_id: &RefCell<u32>) {
+    if let Some(element) = node.as_element() {
+        let tag_name = element.name.local.as_ref();
+        if is_code_tag(tag_name) {
+            append_class(&mut element.attributes.borrow_mut(), "tts_code_block");
+        }
+    }
+
+    let children: Vec<NodeRef> = node.children().collect();
+    let has_block_or_code_children = children.iter().any(|child| {
+        if let Some(element) = child.as_element() {
+            let tag_name = element.name.local.as_ref();
+            is_block_element(tag_name) || (is_code_tag(tag_name) && has_element_children(child))
+        } else {
+            false
+        }
+    });
+
+    if has_block_or_code_children {
+        for child in &children {
+            if child.as_element().is_some() {
+                process_node(child, current_id);
+            } else if let Some(text) = child.as_text() {
+                let text_content = text.borrow().clone();
+                if !text_content.trim().is_empty() {
+                    let sentences = segment_sentences(&text_content, MAX_LENGTH);
+                    if sentences.len() <= 1 {
+                        let span = make_tts_para_span(text_content, current_id);
+                        child.insert_before(span);
+                        child.detach();
+                    } else {
+                        let text_chars: Vec<char> = text_content.chars().collect();
+                        for (start, end) in sentences {
+                            let sentence_text: String = text_chars[start..end].iter().collect();
+                            let span = make_tts_para_span(sentence_text, current_id);
+                            child.insert_before(span);
+                        }
+                        child.detach();
+                    }
+                }
+            }
+        }
+        return;
+    }
+
     let mut pos = 0;
     let items = flatten_block(node, &mut pos);
     let flat_text = build_flat_string(&items);
@@ -483,6 +543,18 @@ fn process_element_tts(node: &NodeRef, current_id: &RefCell<u32>) {
 
     for (start, end) in sentences {
         let clipped = clip_items(&items, start, end);
+
+        if clipped.len() == 1 && is_single_path_to_text(&clipped[0]) {
+            if let ContentItem::Element { .. } = &clipped[0] {
+                let nodes = build_dom_from_items(&clipped);
+                if let Some(elem) = nodes.first() {
+                    tag_innermost_text_element(elem, current_id);
+                    node.append(elem.clone());
+                    continue;
+                }
+            }
+        }
+
         let span =
             NodeRef::new_element(QualName::new(None, ns!(html), local_name!("span")), vec![]);
         if let Some(element) = span.as_element() {
@@ -494,56 +566,6 @@ fn process_element_tts(node: &NodeRef, current_id: &RefCell<u32>) {
         }
         node.append(span);
     }
-}
-
-fn process_block_element(node: &NodeRef, current_id: &RefCell<u32>) {
-    let children: Vec<NodeRef> = node.children().collect();
-
-    let has_block_or_code_children = children.iter().any(|child| {
-        if let Some(element) = child.as_element() {
-            let tag_name = element.name.local.as_ref();
-            is_block_element(tag_name) || (is_code_tag(tag_name) && has_element_children(child))
-        } else {
-            false
-        }
-    });
-
-    if has_block_or_code_children {
-        for child in &children {
-            if let Some(element) = child.as_element() {
-                let tag_name = element.name.local.as_ref();
-                if is_code_tag(tag_name) && has_element_children(child) {
-                    process_code_element(child, current_id);
-                } else if is_block_element(tag_name) {
-                    process_node(child, current_id);
-                } else {
-                    process_element_tts(&child, current_id);
-                }
-            } else if let Some(text) = child.as_text() {
-                let text_content = text.borrow().clone();
-                if !text_content.trim().is_empty() {
-                    let sentences = segment_sentences(&text_content, MAX_LENGTH);
-
-                    if sentences.len() <= 1 {
-                        let span = make_tts_para_span(text_content, current_id);
-                        child.insert_before(span);
-                        child.detach();
-                    } else {
-                        let text_chars: Vec<char> = text_content.chars().collect();
-                        for (start, end) in sentences {
-                            let sentence_text: String = text_chars[start..end].iter().collect();
-                            let span = make_tts_para_span(sentence_text, current_id);
-                            child.insert_before(span);
-                        }
-                        child.detach();
-                    }
-                }
-            }
-        }
-        return;
-    }
-
-    process_element_tts(node, current_id);
 }
 
 fn process_code_element(node: &NodeRef, current_id: &RefCell<u32>) {
@@ -1490,5 +1512,31 @@ mod tests {
         let input = "<table><tr><td>First sentence. Second sentence.</td></tr></table>";
         let output = process_html_test(input);
         assert_eq!(output, "<div> <table><tbody><tr><td><span class=\"tts_para_0\">First sentence.</span><span class=\"tts_para_1\"> Second sentence.</span></td></tr></tbody></table> </div>");
+    }
+
+    #[test]
+    fn test_nonstandard_wrapper_with_block_child() {
+        let input = "<topcomment><article><p>First paragraph. </p><p>Second paragraph.</p></article></topcomment>";
+        let output = process_html_test(input);
+        assert!(
+            output.contains("First paragraph."),
+            "should contain first paragraph: {}",
+            output
+        );
+        assert!(
+            output.contains("Second paragraph."),
+            "should contain second paragraph: {}",
+            output
+        );
+        assert!(
+            has_class(&output, "tts_para_0"),
+            "should have tts_para_0: {}",
+            output
+        );
+        assert!(
+            has_class(&output, "tts_para_1"),
+            "should have tts_para_1: {}",
+            output
+        );
     }
 }
