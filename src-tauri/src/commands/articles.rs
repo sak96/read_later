@@ -3,47 +3,11 @@ use crate::models::*;
 use crate::parse::{build_snippet, process_html};
 use readabilityrs::Readability;
 use sqlx::{query, query_as};
-use std::sync::mpsc;
 use tauri::{State, ipc::Channel};
 use tauri_plugin_http::reqwest;
 use tauri_plugin_sql::DbInstances;
 
 const CHROME_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36";
-
-pub struct ArticleFetchLockPermit<'a> {
-    tx: &'a mpsc::SyncSender<()>,
-}
-
-impl Drop for ArticleFetchLockPermit<'_> {
-    fn drop(&mut self) {
-        let _ = self.tx.send(());
-    }
-}
-
-pub struct ArticleFetchLock {
-    rx: std::sync::Mutex<mpsc::Receiver<()>>,
-    tx: mpsc::SyncSender<()>,
-}
-
-impl Default for ArticleFetchLock {
-    fn default() -> Self {
-        let (tx, rx) = mpsc::sync_channel(1);
-        tx.send(()).unwrap();
-        Self {
-            rx: std::sync::Mutex::new(rx),
-            tx,
-        }
-    }
-}
-
-impl ArticleFetchLock {
-    pub fn lock(&self) -> Result<ArticleFetchLockPermit<'_>, String> {
-        let guard = self.rx.lock().map_err(|_| "lock poisoned".to_string())?;
-        guard.recv().map_err(|e| e.to_string())?;
-        drop(guard);
-        Ok(ArticleFetchLockPermit { tx: &self.tx })
-    }
-}
 
 #[tauri::command]
 pub async fn get_articles(
@@ -142,7 +106,6 @@ async fn fetch_parse_update_article(
 pub async fn get_article(
     id: i32,
     db_instances: State<'_, DbInstances>,
-    article_fetch_lock: State<'_, ArticleFetchLock>,
     on_progress: Channel<FetchProgress>,
     app: tauri::AppHandle,
 ) -> Result<Article, String> {
@@ -150,7 +113,6 @@ pub async fn get_article(
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            let _guard = article_fetch_lock.lock().map_err(|e| e.to_string())?;
             let mut article = query_as::<_, Article>(
                 r#"
                 SELECT id, title, body, url
@@ -171,37 +133,29 @@ pub async fn get_article(
                 .ok()
                 .map(|r| r.0)
                 {
-                    Some(v) if v == "true" => {
-                        Some(ExperimentalFetcher::new(&app, &article.url)?)
-                    }
+                    Some(v) if v == "true" => Some(ExperimentalFetcher::new(&app, &article.url)?),
                     _ => None,
                 };
 
-                article = match fetch_parse_update_article(
-                    &article.url,
-                    exp_fetcher,
-                    &on_progress,
-                )
-                .await
+                article = match fetch_parse_update_article(&article.url, exp_fetcher, &on_progress)
+                    .await
                 {
-                    Ok((title, body, text_content)) => {
-                        query_as::<_, Article>(
-                            r#"
+                    Ok((title, body, text_content)) => query_as::<_, Article>(
+                        r#"
                                 UPDATE articles
                                 SET title = $2, body = $3, url = $4, text_content = $5
                                 WHERE id = $1
                                 RETURNING id, title, body, created_at, url
                             "#,
-                        )
-                        .bind(article.id)
-                        .bind(title)
-                        .bind(body)
-                        .bind(&article.url)
-                        .bind(text_content)
-                        .fetch_one(pool)
-                        .await
-                        .map_err(|e| e.to_string())?
-                    }
+                    )
+                    .bind(article.id)
+                    .bind(title)
+                    .bind(body)
+                    .bind(&article.url)
+                    .bind(text_content)
+                    .fetch_one(pool)
+                    .await
+                    .map_err(|e| e.to_string())?,
                     Err(e) => {
                         let _ = query(
                             "UPDATE articles SET is_deleted = 1, title = '', body = '', text_content = '' WHERE id = ?",
