@@ -21,9 +21,8 @@
 
 use serde::Deserialize;
 use std::sync::{
-    Arc,
     atomic::{AtomicBool, Ordering},
-    mpsc,
+    mpsc, Arc,
 };
 use std::thread;
 use std::time::Duration;
@@ -38,6 +37,8 @@ const HISTORY_LEN_TIMEOUT: Duration = Duration::from_secs(5);
 #[derive(Deserialize)]
 struct HtmlFetcherResponse {
     url: String,
+    origin: String,
+    path: String,
     html: Option<String>,
 }
 
@@ -49,6 +50,8 @@ pub struct ExperimentalFetcher<R: Runtime> {
     app: AppHandle<R>,
     webview: WebviewWindow<R>,
     url: String,
+    self_origin: String,
+    self_path: String,
     initial_history_length: u32,
 }
 
@@ -76,14 +79,21 @@ impl<R: Runtime> ExperimentalFetcher<R> {
             .map_err(|_| "Failed to get current window history".to_string())?;
         app.unlisten(hist_listener);
 
+        let escaped_url = serde_json::to_string(url).map_err(|e| e.to_string())?;
         webview
-            .eval(format!(r#"window.location.href = "{}";"#, url))
+            .eval(format!("window.location.href = {escaped_url};"))
             .map_err(|e| e.to_string())?;
+
+        let parsed = url::Url::parse(url).map_err(|e| format!("Invalid URL: {e}"))?;
+        let self_origin = parsed.origin().ascii_serialization();
+        let self_path = parsed.path().to_string();
 
         Ok(Self {
             app: app.clone(),
             webview,
             url: url.to_string(),
+            self_origin,
+            self_path,
             initial_history_length,
         })
     }
@@ -161,6 +171,8 @@ impl<R: Runtime> HtmlFetcher for ExperimentalFetcher<R> {
                                 "html-fetcher",
                                 {
                                     url: window.location.href,
+                                    origin: window.location.origin,
+                                    path: window.location.pathname,
                                     html: document.documentElement ? document.documentElement.outerHTML : null
                                 }
                             );
@@ -175,6 +187,8 @@ impl<R: Runtime> HtmlFetcher for ExperimentalFetcher<R> {
                         cancel.onclick = () => {
                             window.__TAURI__.event.emit("html-fetcher", {
                                 url: window.location.href,
+                                origin: window.location.origin,
+                                path: window.location.pathname,
                                 html: null
                             });
                         };
@@ -193,20 +207,24 @@ impl<R: Runtime> HtmlFetcher for ExperimentalFetcher<R> {
         });
 
         let response = rx.recv().map_err(|e| e.to_string())?;
-        running.store(false, Ordering::Relaxed);
         let _ = injector_handle.join();
         self.app.unlisten(listener_id);
-        thread::sleep(INJECTOR_INTERVAL * 2);
         let _ = self
             .webview
             .eval(r#"document.getElementById("__tauri_capture_toolbar")?.remove();"#);
         match response.html {
             None => Err("Cancelled by user".into()),
             Some(html) if html.is_empty() => Err("Page returned empty content".into()),
-            Some(_html) if response.url != self.url => Err(format!(
-                "Page navigated from {} to {} during fetch",
-                self.url, response.url
-            )),
+            Some(_html)
+                if response.origin != self.self_origin
+                    || response.path.trim_end_matches('/')
+                        != self.self_path.trim_end_matches('/') =>
+            {
+                Err(format!(
+                    "Page navigated from {} to {} during fetch",
+                    self.url, response.url
+                ))
+            }
             Some(html) => Ok(html),
         }
     }
