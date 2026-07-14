@@ -20,6 +20,41 @@ use std::{
 
 const HTML_FETCHER: &str = "html-fetcher";
 
+pub struct ArticleFetchLockPermit<'a> {
+    tx: &'a mpsc::SyncSender<()>,
+}
+
+impl Drop for ArticleFetchLockPermit<'_> {
+    fn drop(&mut self) {
+        let _ = self.tx.send(());
+    }
+}
+
+pub struct ArticleFetchLock {
+    rx: std::sync::Mutex<mpsc::Receiver<()>>,
+    tx: mpsc::SyncSender<()>,
+}
+
+impl Default for ArticleFetchLock {
+    fn default() -> Self {
+        let (tx, rx) = mpsc::sync_channel(1);
+        tx.send(()).unwrap();
+        Self {
+            rx: std::sync::Mutex::new(rx),
+            tx,
+        }
+    }
+}
+
+impl ArticleFetchLock {
+    pub fn lock(&self) -> Result<ArticleFetchLockPermit<'_>, String> {
+        let guard = self.rx.lock().map_err(|_| "lock poisoned".to_string())?;
+        guard.recv().map_err(|e| e.to_string())?;
+        drop(guard);
+        Ok(ArticleFetchLockPermit { tx: &self.tx })
+    }
+}
+
 pub fn fetch_rendered_html<R: Runtime>(app: &AppHandle<R>, url: &str) -> Result<String, String> {
     let (tx, rx) = mpsc::channel::<String>();
 
@@ -201,6 +236,7 @@ pub async fn get_articles(
 pub async fn get_article(
     id: i32,
     db_instances: State<'_, DbInstances>,
+    article_fetch_lock: State<'_, ArticleFetchLock>,
     on_progress: Channel<FetchProgress>,
     app: tauri::AppHandle,
 ) -> Result<Article, String> {
@@ -220,71 +256,85 @@ pub async fn get_article(
             .await
             .map_err(|e| e.to_string())?;
             if article.title.is_empty() {
-                on_progress
-                    .send(FetchProgress::Downloading(article.url.to_string()))
-                    .map_err(|e| e.to_string())?;
+                let _guard = article_fetch_lock.lock().map_err(|e| e.to_string())?;
 
-                let html = match sqlx::query_as::<_, (String,)>(
-                    "SELECT value FROM settings WHERE name = 'iframe_fetcher'",
-                )
-                .fetch_one(pool)
-                .await
-                .ok()
-                .map(|r| r.0)
-                {
-                    Some(v) if v == "true" => fetch_rendered_html(&app, &article.url)?,
-                    _ => {
-                        let client = reqwest::Client::new();
-                        client
-                            .get(&article.url)
-                            .header(reqwest::header::USER_AGENT, CHROME_USER_AGENT)
-                            .send()
-                            .await
-                            .map_err(|e| e.to_string())?
-                            .text()
-                            .await
-                            .map_err(|e| e.to_string())?
-                    }
-                };
-
-                let options = readabilityrs::ReadabilityOptions::builder()
-                    .remove_title_from_content(true)
-                    .clean_whitespace(false)
-                    .debug(true)
-                    .build();
-                // Readability is not send.
-                let article_data = {
-                    Readability::new(&html, Some(&article.url), Some(options))
-                        .map_err(|e| format!("Failed to parse: {:?}", e))?
-                        .parse()
-                        .ok_or("Failed to extract article")?
-                };
-
-                let title = match article_data.title {
-                    Some(v) if v.is_empty() => "Untitled".into(),
-                    None => "Untitled".into(),
-                    Some(v) => v,
-                };
-                let body = article_data.content.unwrap_or_default();
-                let text_content = article_data.text_content.unwrap_or_default();
-
-                // could be update
                 article = query_as::<_, Article>(
                     r#"
-                    UPDATE articles
-                    SET title = $2, body = $3, url = $4, text_content = $5
-                    WHERE id = $1
-                    RETURNING id, title, body, created_at, url
+                    SELECT id, title, body, url
+                    FROM articles
+                    WHERE is_deleted == 0 AND id = ?
                     "#,
                 )
-                .bind(article.id)
-                .bind(title)
-                .bind(body)
-                .bind(&article.url)
-                .bind(text_content)
+                .bind(id)
                 .fetch_one(pool)
                 .await
                 .map_err(|e| e.to_string())?;
+
+                if article.title.is_empty() {
+                    on_progress
+                        .send(FetchProgress::Downloading(article.url.to_string()))
+                        .map_err(|e| e.to_string())?;
+
+                    let html = match sqlx::query_as::<_, (String,)>(
+                        "SELECT value FROM settings WHERE name = 'iframe_fetcher'",
+                    )
+                    .fetch_one(pool)
+                    .await
+                    .ok()
+                    .map(|r| r.0)
+                    {
+                        Some(v) if v == "true" => fetch_rendered_html(&app, &article.url)?,
+                        _ => {
+                            let client = reqwest::Client::new();
+                            client
+                                .get(&article.url)
+                                .header(reqwest::header::USER_AGENT, CHROME_USER_AGENT)
+                                .send()
+                                .await
+                                .map_err(|e| e.to_string())?
+                                .text()
+                                .await
+                                .map_err(|e| e.to_string())?
+                        }
+                    };
+
+                    let options = readabilityrs::ReadabilityOptions::builder()
+                        .remove_title_from_content(true)
+                        .clean_whitespace(false)
+                        .debug(true)
+                        .build();
+                    let article_data = {
+                        Readability::new(&html, Some(&article.url), Some(options))
+                            .map_err(|e| format!("Failed to parse: {:?}", e))?
+                            .parse()
+                            .ok_or("Failed to extract article")?
+                    };
+
+                    let title = match article_data.title {
+                        Some(v) if v.is_empty() => "Untitled".into(),
+                        None => "Untitled".into(),
+                        Some(v) => v,
+                    };
+                    let body = article_data.content.unwrap_or_default();
+                    let text_content = article_data.text_content.unwrap_or_default();
+
+                    article = query_as::<_, Article>(
+                        r#"
+                        UPDATE articles
+                        SET title = $2, body = $3, url = $4, text_content = $5
+                        WHERE id = $1
+                        RETURNING id, title, body, created_at, url
+                        "#,
+                    )
+                    .bind(article.id)
+                    .bind(title)
+                    .bind(body)
+                    .bind(&article.url)
+                    .bind(text_content)
+                    .fetch_one(pool)
+                    .await
+                    .map_err(|e| e.to_string())?;
+                }
             }
             on_progress
                 .send(FetchProgress::Parsing(article.title.to_string()))

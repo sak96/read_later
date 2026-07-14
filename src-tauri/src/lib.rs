@@ -28,6 +28,7 @@ pub fn run() {
     }
     builder
         .manage(commands::speakbar::SpeakBarState::default())
+        .manage(commands::ArticleFetchLock::default())
         .setup(|_app| Ok(()))
         .invoke_handler(tauri::generate_handler![
             crate::commands::get_articles,
