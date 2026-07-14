@@ -9,16 +9,35 @@ use tauri_plugin_http::reqwest;
 use tauri_plugin_sql::DbInstances;
 
 const CHROME_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36";
+use std::{
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+    thread,
+    time::Duration,
+};
+
 const HTML_FETCHER: &str = "html-fetcher";
 
 pub fn fetch_rendered_html<R: Runtime>(app: &AppHandle<R>, url: &str) -> Result<String, String> {
     let (tx, rx) = mpsc::channel::<String>();
 
-    let app_handle = app.clone();
+    let running = Arc::new(AtomicBool::new(true));
+    let running_clone = running.clone();
 
-    let listener_id = app.listen(HTML_FETCHER, move |event: tauri::Event| {
+    let webview = app
+        .get_webview_window("main")
+        .ok_or("Failed to get main webview")?;
+
+    // Remember where the user was before opening external page.
+    let previous_url = webview
+        .url()
+        .map(|u| u.to_string())
+        .unwrap_or_else(|_| "http://localhost/home".to_string());
+
+    let listener_id = app.listen(HTML_FETCHER, move |event| {
         let payload_str = event.payload().to_string();
-
         let parsed: Result<String, _> = serde_json::from_str(&payload_str);
 
         match parsed {
@@ -29,50 +48,106 @@ pub fn fetch_rendered_html<R: Runtime>(app: &AppHandle<R>, url: &str) -> Result<
                 eprintln!("Failed to parse event payload: {err}");
             }
         }
+        running_clone.store(false, Ordering::Relaxed);
     });
 
     let webview = app
         .get_webview_window("main")
         .ok_or("Failed to get main webview")?;
 
-    let navigate_js = format!(r#"window.location.href = "{}";"#, url);
-    webview.eval(&navigate_js).map_err(|e| e.to_string())?;
+    // Navigate to the requested page.
+    webview
+        .eval(format!(r#"window.location.href = "{}";"#, url))
+        .map_err(|e| e.to_string())?;
 
-    let webview_clone = webview.clone();
-    std::thread::spawn(move || {
-        let mut attempts = 0;
-        loop {
-            std::thread::sleep(std::time::Duration::from_millis(300));
-            attempts += 1;
+    // Keep attempting to inject the toolbar while capture mode is active.
+    let injector_webview = webview.clone();
+    let injector_running = running.clone();
 
-            let eval_result = webview_clone.eval(
-                r#"
-                (document.readyState === "complete" || document.readyState === "interactive")
-            "#,
+    thread::spawn(move || {
+        while injector_running.load(Ordering::Relaxed) {
+            let _ = injector_webview.eval(
+                r##"
+                const bar = document.createElement("div");
+                bar.id = "__tauri_capture_toolbar";
+
+                Object.assign(bar.style, {
+                    position: "fixed",
+                    right: "20px",
+                    bottom: "20px",
+                    zIndex: "2147483647",
+                    display: "flex",
+                    flexDirection: "column",
+                });
+
+                const buttonStyle = {
+                    margin: "0",
+                    backgroundColor: "#0172ad",
+                    color: "#eff1f4",
+                    minWidth: "1.5em",
+                    minHeight: "1.5em",
+                    fontSize: "1.5em",
+                    padding: "0.75rem 1.25rem",
+                    border: "1px solid transparent",
+                    borderRadius: "0.5rem",
+                    cursor: "pointer",
+                    fontWeight: "600",
+                    textAlign: "center",
+                    transition: "background-color .2s, border-color .2s, color .2s"
+                };
+
+
+                // OK button
+                const ok = document.createElement("button");
+                ok.textContent = "✓";
+                ok.className = "contrast";
+                Object.assign(ok.style, buttonStyle);
+
+                ok.onclick = () => {
+                    window.__TAURI__.event.emit(
+                        "html-fetcher",
+                        document.documentElement ? document.documentElement.outerHTML : ""
+                    );
+                };
+
+                // Cancel button
+                const cancel = document.createElement("button");
+                cancel.textContent = "×";
+                cancel.className = "secondary";
+                Object.assign(cancel.style, buttonStyle);
+
+                cancel.onclick = () => {
+                    window.__TAURI__.event.emit("html-fetcher", "");
+                };
+
+                bar.appendChild(ok);
+                bar.appendChild(cancel);
+
+                if (document.body) {
+                    document.body.appendChild(bar);
+                }
+                "##,
             );
-            if eval_result.is_ok() && attempts > 5 {
-                std::thread::sleep(std::time::Duration::from_millis(500));
-                let js = format!(
-                    r#"
-                    window.__TAURI__.event.emit("{}", document.documentElement ? document.documentElement.outerHTML : "");
-                    "#,
-                    HTML_FETCHER
-                );
-                let _ = webview_clone.eval(&js);
-                break;
-            }
-            if attempts > 100 {
-                break;
-            }
+
+            thread::sleep(Duration::from_millis(500));
         }
     });
 
-    let result = rx.recv().map_err(|e| e.to_string())?;
-    app_handle.unlisten(listener_id);
+    // Wait until the user presses OK.
+    let html = rx.recv().map_err(|e| e.to_string())?;
 
-    webview.eval("history.back()").map_err(|e| e.to_string())?;
+    running.store(false, Ordering::Relaxed);
 
-    Ok(result)
+    app.unlisten(listener_id);
+    // Return to previous page.
+    let restore_js = format!(
+        r#"window.location.href = "{}";"#,
+        previous_url.replace('"', "\\\"")
+    );
+
+    let _ = webview.eval(&restore_js);
+
+    Ok(html)
 }
 
 #[tauri::command]
@@ -272,15 +347,17 @@ pub async fn refresh_article(id: i32, db_instances: State<'_, DbInstances>) -> R
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            query(r#"
+            query(
+                r#"
                 UPDATE articles
                 SET title = '', body = '', text_content = '', updated_at = datetime('now')
                 WHERE id = ?
-            "#)
-                .bind(id)
-                .execute(pool)
-                .await
-                .map_err(|e| e.to_string())?;
+            "#,
+            )
+            .bind(id)
+            .execute(pool)
+            .await
+            .map_err(|e| e.to_string())?;
             Ok(())
         }
     }
