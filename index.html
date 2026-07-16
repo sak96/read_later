@@ -38,10 +38,14 @@
     .reader_view ul > li {
       list-style: inside;
     }
-    code.tts_code_block {
+    .reader_view .tts_code_block {
       width: 100%;
       overflow-x: scroll;
       white-space: pre;
+    }
+    .reader_view .tts_code_block * {
+      overflow-x: visible;
+      max-width: none;
     }
     img {
       max-width: 100%;
