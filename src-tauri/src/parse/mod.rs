@@ -105,6 +105,65 @@ fn is_code_tag(name: &str) -> bool {
     matches!(name, "pre" | "code")
 }
 
+fn is_inline_formatting_tag(name: &str) -> bool {
+    matches!(
+        name,
+        "strong"
+            | "em"
+            | "b"
+            | "i"
+            | "u"
+            | "s"
+            | "del"
+            | "ins"
+            | "sup"
+            | "sub"
+            | "small"
+            | "mark"
+            | "span"
+            | "a"
+            | "abbr"
+            | "cite"
+            | "q"
+            | "kbd"
+            | "var"
+            | "ruby"
+            | "rt"
+            | "rp"
+            | "time"
+            | "data"
+            | "label"
+            | "br"
+            | "wbr"
+    )
+}
+
+fn has_only_inline_children(node: &NodeRef) -> bool {
+    for child in node.children() {
+        if let Some(element) = child.as_element() {
+            let tag_name = element.name.local.as_ref();
+            if !is_inline_formatting_tag(tag_name) {
+                return false;
+            }
+            if !has_only_inline_children(&child) {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+fn is_real_code_block(node: &NodeRef) -> bool {
+    let text_content = node.text_contents();
+    if text_content.contains('\n') {
+        return true;
+    }
+    if has_element_children(node) {
+        return !has_only_inline_children(node);
+    }
+    false
+}
+
 fn has_element_children(node: &NodeRef) -> bool {
     node.children().any(|c| c.as_element().is_some())
 }
@@ -143,7 +202,7 @@ fn flatten_block(node: &NodeRef, pos: &mut usize) -> Vec<ContentItem> {
             if is_skip_tag(tag_name) {
                 continue;
             }
-            if is_code_tag(tag_name) && has_element_children(&child) {
+            if is_code_tag(tag_name) && is_real_code_block(&child) {
                 continue;
             }
 
@@ -462,7 +521,7 @@ fn process_node(node: &NodeRef, current_id: &RefCell<u32>) {
             return;
         }
 
-        if is_code_tag(tag_name) && has_element_children(node) {
+        if is_code_tag(tag_name) && is_real_code_block(node) {
             process_code_element(node, current_id);
             return;
         }
@@ -478,7 +537,7 @@ fn process_node(node: &NodeRef, current_id: &RefCell<u32>) {
 fn process_element_tts(node: &NodeRef, current_id: &RefCell<u32>) {
     if let Some(element) = node.as_element() {
         let tag_name = element.name.local.as_ref();
-        if is_code_tag(tag_name) {
+        if is_code_tag(tag_name) && is_real_code_block(node) {
             append_class(&mut element.attributes.borrow_mut(), "tts_code_block");
         }
     }
@@ -487,7 +546,7 @@ fn process_element_tts(node: &NodeRef, current_id: &RefCell<u32>) {
     let has_block_or_code_children = children.iter().any(|child| {
         if let Some(element) = child.as_element() {
             let tag_name = element.name.local.as_ref();
-            is_block_element(tag_name) || (is_code_tag(tag_name) && has_element_children(child))
+            is_block_element(tag_name) || (is_code_tag(tag_name) && is_real_code_block(child))
         } else {
             false
         }

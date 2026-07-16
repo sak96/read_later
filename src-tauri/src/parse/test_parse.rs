@@ -728,3 +728,123 @@ fn test_nonstandard_wrapper_with_block_child() {
         output
     );
 }
+
+#[test]
+fn test_code_with_strong_inline_is_inline() {
+    let input = "<p>This is an <code><strong>expert</strong></code> archer.</p>";
+    let output = process_html_test(input);
+    assert!(
+        !has_class(&output, "tts_code_block"),
+        "should NOT have tts_code_block: {}",
+        output
+    );
+    assert!(
+        has_class(&output, "tts_para_0"),
+        "should have tts_para_0: {}",
+        output
+    );
+    assert_eq!(output, "<div> <p class=\"tts_para_0\">This is an <code><strong>expert</strong></code> archer.</p> </div>");
+}
+
+#[test]
+fn test_code_with_sup_inline_is_inline() {
+    let input = "<p>Text <code><sup>2</sup></code> more text.</p>";
+    let output = process_html_test(input);
+    assert!(
+        !has_class(&output, "tts_code_block"),
+        "should NOT have tts_code_block: {}",
+        output
+    );
+    assert!(
+        has_class(&output, "tts_para_0"),
+        "should have tts_para_0: {}",
+        output
+    );
+    assert_eq!(
+        output,
+        "<div> <p class=\"tts_para_0\">Text <code><sup>2</sup></code> more text.</p> </div>"
+    );
+}
+
+#[test]
+fn test_code_with_nested_inline_is_inline() {
+    let input = "<p>Text <code><strong><em>expert</em></strong></code> end.</p>";
+    let output = process_html_test(input);
+    assert!(
+        !has_class(&output, "tts_code_block"),
+        "should NOT have tts_code_block: {}",
+        output
+    );
+    assert!(
+        has_class(&output, "tts_para_0"),
+        "should have tts_para_0: {}",
+        output
+    );
+    assert_eq!(output, "<div> <p class=\"tts_para_0\">Text <code><strong><em>expert</em></strong></code> end.</p> </div>");
+}
+
+#[test]
+fn test_code_with_multisentence_inline_formatting() {
+    let input = "<p>First sentence. <code><em>second.</em></code> Third sentence.</p>";
+    let output = process_html_test(input);
+    assert!(
+        !has_class(&output, "tts_code_block"),
+        "should NOT have tts_code_block: {}",
+        output
+    );
+    assert!(
+        has_class(&output, "tts_para_0"),
+        "should have tts_para_0: {}",
+        output
+    );
+    assert!(
+        has_class(&output, "tts_para_1"),
+        "should have tts_para_1: {}",
+        output
+    );
+    assert!(
+        has_class(&output, "tts_para_2"),
+        "should have tts_para_2: {}",
+        output
+    );
+    assert_eq!(output, "<div> <p><span class=\"tts_para_0\">First sentence.</span><span class=\"tts_para_1\"> <code><em>second.</em></code></span><span class=\"tts_para_2\"> Third sentence.</span></p> </div>");
+}
+
+#[test]
+fn test_pre_with_code_child_still_code_block() {
+    let input = "<pre><code><strong>still code</strong></code></pre>";
+    let output = process_html_test(input);
+    assert!(
+        has_class(&output, "tts_code_block"),
+        "should have tts_code_block: {}",
+        output
+    );
+    assert!(
+        has_class(&output, "tts_para_0"),
+        "should have tts_para_0: {}",
+        output
+    );
+    assert_eq!(output, "<div> <pre class=\"tts_para_0 tts_code_block\"><code><strong>still code</strong></code></pre> </div>");
+}
+
+#[test]
+fn test_code_with_newline_and_inline_children_is_code_block() {
+    let input = "<pre><code><strong>line1\nline2</strong></code></pre>";
+    let output = process_html_test(input);
+    assert!(
+        has_class(&output, "tts_code_block"),
+        "should have tts_code_block: {}",
+        output
+    );
+    assert!(
+        has_class(&output, "tts_para_0"),
+        "should have tts_para_0: {}",
+        output
+    );
+    assert!(
+        has_class(&output, "tts_para_1"),
+        "should have tts_para_1: {}",
+        output
+    );
+    assert_eq!(output, "<div> <pre class=\"tts_code_block\"><span class=\"tts_para_0\">line1\n</span><span class=\"tts_para_1\">line2</span></pre> </div>");
+}
