@@ -166,6 +166,7 @@ impl<R: Runtime> ExperimentalFetcher<R> {
                         }};
 
                         (document.documentElement || document.body).appendChild(host);
+                        host.scrollIntoView({{ behavior: "smooth", block: "center" }});
                     }}
                     "##,
                     bottom_inset
