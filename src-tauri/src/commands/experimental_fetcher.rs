@@ -106,44 +106,24 @@ impl<R: Runtime> ExperimentalFetcher<R> {
             thread::sleep(Self::INJECTOR_INTERVAL / 2);
             while injector_running.load(Ordering::Relaxed) {
                 let js = r##"
-                    if (!document.getElementById("__tauri_capture_toolbar")) {
-                        const bar = document.createElement("div");
-                        bar.id = "__tauri_capture_toolbar";
+                    if (!document.getElementById("__tauri_capture_toolbar_host")) {
+                        const host = document.createElement("div");
+                        host.id = "__tauri_capture_toolbar_host";
+                        host.style.cssText = "all:initial !important;position:fixed !important;right:20px !important;bottom:20px !important;z-index:2147483647 !important;";
+                        const shadow = host.attachShadow({ mode: "open" });
+                        shadow.innerHTML = `
+                            <style>
+                                .bar { all:initial !important;display:flex !important;flex-direction:column !important;gap:5px !important;font-family:sans-serif !important; }
+                                .btn { all:initial !important;margin:0 !important;background-color:#0172ad !important;color:#eff1f4 !important;min-width:1.5em !important;min-height:1.5em !important;font-size:1.5em !important;padding:0.75rem 1.25rem !important;border:1px solid transparent !important;border-radius:0.5rem !important;cursor:pointer !important;font-weight:600 !important;text-align:center !important; }
+                            </style>
+                            <div class="bar" id="__tauri_capture_toolbar">
+                                <button class="btn" id="__tauri_cap_ok">\u2713</button>
+                                <button class="btn" id="__tauri_cap_cancel">\u00d7</button>
+                            </div>
+                        `;
 
-                        Object.assign(bar.style, {
-                            position: "fixed",
-                           right: "20px",
-                            bottom: "20px",
-                            zIndex: "2147483647",
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "5px"
-                        });
-
-                        const buttonStyle = {
-                            margin: "0",
-                            backgroundColor: "#0172ad",
-                            color: "#eff1f4",
-                            minWidth: "1.5em",
-                            minHeight: "1.5em",
-                            fontSize: "1.5em",
-                            padding: "0.75rem 1.25rem",
-                            border: "1px solid transparent",
-                            borderRadius: "0.5rem",
-                            cursor: "pointer",
-                            fontWeight: "600",
-                            textAlign: "center",
-                            transition: "background-color .2s, border-color .2s, color .2s"
-                        };
-
-                        // OK button
-                        const ok = document.createElement("button");
-                        ok.textContent = "✓";
-                        ok.className = "contrast";
-                        Object.assign(ok.style, buttonStyle);
-
-                        ok.onclick = () => {
-                            document.getElementById("__tauri_capture_toolbar")?.remove();
+                        shadow.getElementById("__tauri_cap_ok").onclick = () => {
+                            host.remove();
                             window.__TAURI__.event.emit(
                                 "__HTML_CAPTURE_EVENT__",
                                 {
@@ -155,13 +135,8 @@ impl<R: Runtime> ExperimentalFetcher<R> {
                             );
                         };
 
-                        // Cancel button
-                        const cancel = document.createElement("button");
-                        cancel.textContent = "×";
-                        cancel.className = "secondary";
-                        Object.assign(cancel.style, buttonStyle);
-
-                        cancel.onclick = () => {
+                        shadow.getElementById("__tauri_cap_cancel").onclick = () => {
+                            host.remove();
                             window.__TAURI__.event.emit("__HTML_CAPTURE_EVENT__", {
                                 url: window.location.href,
                                 origin: window.location.origin,
@@ -170,12 +145,7 @@ impl<R: Runtime> ExperimentalFetcher<R> {
                             });
                         };
 
-                        bar.appendChild(ok);
-                        bar.appendChild(cancel);
-
-                        if (document.body) {
-                            document.body.appendChild(bar);
-                        }
+                        (document.documentElement || document.body).appendChild(host);
                     }
                     "##;
                 let _ = injector_webview
@@ -189,7 +159,7 @@ impl<R: Runtime> ExperimentalFetcher<R> {
         self.app.unlisten(listener_id);
         let _ = self
             .webview
-            .eval(r#"document.getElementById("__tauri_capture_toolbar")?.remove();"#);
+            .eval(r#"document.getElementById("__tauri_capture_toolbar_host")?.remove();"#);
         match response.html {
             None => Err("Cancelled by user".into()),
             Some(html) if html.is_empty() => Err("Page returned empty content".into()),
