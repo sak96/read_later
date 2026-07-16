@@ -29,14 +29,15 @@
       max-width: 100%;
       overflow-x: auto;
     }
-    .reader_view ol,  .reader_view ul{
-      list-style-position: inside;
+    .reader_view ol,
+    .reader_view ul {
+      list-style-position: outside;
+      padding-left: 1.5em;
     }
-    .reader_view ol > li {
-      max-width: unset;
-    }
-    .reader_view ul > li {
-      list-style: inside;
+    .reader_view li,
+    .reader_view li * {
+      overflow-x: visible;
+      max-width: none;
     }
     .reader_view .tts_code_block {
       width: 100%;
