@@ -26,6 +26,8 @@ use std::thread;
 use std::time::Duration;
 use tauri::webview::WebviewWindow;
 use tauri::{AppHandle, Listener, Manager, Runtime};
+#[cfg(target_os = "android")]
+use tauri_plugin_safe_area_insets_css::SafeAreaInsetsCssExt;
 
 #[derive(Deserialize)]
 struct CaptureResponse {
@@ -61,6 +63,11 @@ impl<R: Runtime> ExperimentalFetcher<R> {
             .get_webview_window("main")
             .ok_or("Failed to get main webview")?;
 
+        #[cfg(target_os = "android")]
+        {
+            app.safe_area_insets_css();
+        }
+
         let parsed = url::Url::parse(url).map_err(|e| format!("Invalid URL: {e}"))?;
         let self_origin = parsed.origin().ascii_serialization();
         let self_path = parsed.path().to_string();
@@ -78,6 +85,18 @@ impl<R: Runtime> ExperimentalFetcher<R> {
     pub fn fetch(&mut self) -> Result<String, String> {
         self.initial_history_length = Some(self.get_history()?);
         self.open_and_wait_for_page()?;
+
+        // Get bottom safe area inset on Android
+        #[cfg(target_os = "android")]
+        let bottom_inset = self
+            .app
+            .safe_area_insets_css()
+            .get_bottom_inset()
+            .map(|r| r.inset)
+            .unwrap_or(0.0);
+
+        #[cfg(not(target_os = "android"))]
+        let bottom_inset = 0.0;
 
         let (tx, rx) = mpsc::channel::<CaptureResponse>();
         let running = Arc::new(AtomicBool::new(false));
@@ -105,16 +124,17 @@ impl<R: Runtime> ExperimentalFetcher<R> {
         let injector_handle = thread::spawn(move || {
             thread::sleep(Self::INJECTOR_INTERVAL / 2);
             while injector_running.load(Ordering::Relaxed) {
-                let js = r##"
-                    if (!document.getElementById("__tauri_capture_toolbar_host")) {
+                let js = format!(
+                    r##"
+                    if (!document.getElementById("__tauri_capture_toolbar_host")) {{
                         const host = document.createElement("div");
                         host.id = "__tauri_capture_toolbar_host";
-                        host.style.cssText = "all:initial !important;position:fixed !important;right:20px !important;bottom:20px !important;z-index:2147483647 !important;";
-                        const shadow = host.attachShadow({ mode: "open" });
+                        host.style.cssText = "all:initial !important;position:fixed !important;right:20px !important;bottom:calc(20px + {}px) !important;z-index:2147483647 !important;";
+                        const shadow = host.attachShadow({{ mode: "open" }});
                         shadow.innerHTML = `
                             <style>
-                                .bar { all:initial !important;display:flex !important;flex-direction:column !important;gap:5px !important;font-family:sans-serif !important; }
-                                .btn { all:initial !important;margin:0 !important;background-color:#0172ad !important;color:#eff1f4 !important;min-width:1.5em !important;min-height:1.5em !important;font-size:1.5em !important;padding:0.75rem 1.25rem !important;border:1px solid transparent !important;border-radius:0.5rem !important;cursor:pointer !important;font-weight:600 !important;text-align:center !important; }
+                                .bar {{ all:initial !important;display:flex !important;flex-direction:column !important;gap:5px !important;font-family:sans-serif !important; }}
+                                .btn {{ all:initial !important;margin:0 !important;background-color:#0172ad !important;color:#eff1f4 !important;min-width:1.5em !important;min-height:1.5em !important;font-size:1.5em !important;padding:0.75rem 1.25rem !important;border:1px solid transparent !important;border-radius:0.5rem !important;cursor:pointer !important;font-weight:600 !important;text-align:center !important; }}
                             </style>
                             <div class="bar" id="__tauri_capture_toolbar">
                                 <button class="btn" id="__tauri_cap_ok">\u2713</button>
@@ -122,32 +142,34 @@ impl<R: Runtime> ExperimentalFetcher<R> {
                             </div>
                         `;
 
-                        shadow.getElementById("__tauri_cap_ok").onclick = () => {
+                        shadow.getElementById("__tauri_cap_ok").onclick = () => {{
                             host.remove();
                             window.__TAURI__.event.emit(
                                 "__HTML_CAPTURE_EVENT__",
-                                {
+                                {{
                                     url: window.location.href,
                                     origin: window.location.origin,
                                     path: window.location.pathname,
                                     html: document.documentElement ? document.documentElement.outerHTML : null
-                                }
+                                }}
                             );
-                        };
+                        }};
 
-                        shadow.getElementById("__tauri_cap_cancel").onclick = () => {
+                        shadow.getElementById("__tauri_cap_cancel").onclick = () => {{
                             host.remove();
-                            window.__TAURI__.event.emit("__HTML_CAPTURE_EVENT__", {
+                            window.__TAURI__.event.emit("__HTML_CAPTURE_EVENT__", {{
                                 url: window.location.href,
                                 origin: window.location.origin,
                                 path: window.location.pathname,
                                 html: null
-                            });
-                        };
+                            }});
+                        }};
 
                         (document.documentElement || document.body).appendChild(host);
-                    }
-                    "##;
+                    }}
+                    "##,
+                    bottom_inset
+                );
                 let _ = injector_webview
                     .eval(&js.replace("__HTML_CAPTURE_EVENT__", Self::HTML_CAPTURE_EVENT));
                 thread::sleep(Self::INJECTOR_INTERVAL);
