@@ -113,7 +113,6 @@ pub async fn get_article(
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            dbg!("data base load");
             let mut article = query_as::<_, Article>(
                 r#"
                 SELECT id, title, body, url
@@ -126,7 +125,6 @@ pub async fn get_article(
             .await
             .map_err(|e| e.to_string())?;
             if article.title.is_empty() {
-                dbg!("article empty");
                 let mut exp_fetcher = None;
 
                 if let Some("true") = sqlx::query_as::<_, (String,)>(
@@ -138,7 +136,6 @@ pub async fn get_article(
                 .map(|r| r.0)
                 .as_deref()
                 {
-                    dbg!("exp fetcher load");
                     exp_fetcher = Some(ExperimentalFetcher::new(&app, &article.url)?);
                 }
 
@@ -166,7 +163,6 @@ pub async fn get_article(
                     .await
                     .map_err(|e| e.to_string()),
                     Err(e) => {
-                        dbg!("failed done");
                         let _ = query(
                             "UPDATE articles SET is_deleted = 1, title = '', body = '', text_content = '' WHERE id = ?",
                         )
@@ -176,9 +172,7 @@ pub async fn get_article(
                         Err(e)
                     }
                 }?;
-                dbg!("update done");
             }
-            dbg!("fetch success");
             on_progress
                 .send(FetchProgress::Parsing(article.title.to_string()))
                 .map_err(|e| e.to_string())?;
