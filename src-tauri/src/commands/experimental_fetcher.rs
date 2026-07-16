@@ -16,9 +16,6 @@
 //! 4. [`Drop`] navigates the webview back to the app by replaying browser history
 //!    (`history.go(-(window.history.length - initial))`). This handles any number
 //!    of intermediate pages the user may have visited (login redirects, etc.).
-//!
-//! An [`ArticleFetchLock`] (channel-based semaphore) in the caller ensures only one
-//! external fetch runs at a time, preventing concurrent navigation of the webview.
 
 use serde::Deserialize;
 use std::sync::{
@@ -30,26 +27,12 @@ use std::time::Duration;
 use tauri::webview::WebviewWindow;
 use tauri::{AppHandle, Listener, Manager, Runtime};
 
-const HTML_FETCHER: &str = "html-fetcher";
-const HISTORY_LEN_EVENT: &str = "__experimental_fetcher_history_len";
-const PAGE_LOADED_EVENT: &str = "__experimental_fetcher_page_loaded";
-const INJECTOR_INTERVAL: Duration = Duration::from_millis(500);
-const HISTORY_LEN_TIMEOUT: Duration = Duration::from_secs(5);
-const PAGE_LOAD_CHECK_INTERVAL: Duration = Duration::from_millis(50);
-const PAGE_LOAD_MIN_ATTEMPTS: u32 = 5;
-const PAGE_LOAD_MAX_ATTEMPTS: u32 = 100;
-const PAGE_LOAD_POST_READY_DELAY: Duration = Duration::from_millis(500);
-
 #[derive(Deserialize)]
-struct HtmlFetcherResponse {
+struct CaptureResponse {
     url: String,
     origin: String,
     path: String,
     html: Option<String>,
-}
-
-pub trait HtmlFetcher {
-    fn fetch(&mut self) -> Result<String, String>;
 }
 
 pub struct ExperimentalFetcher<R: Runtime> {
@@ -62,6 +45,17 @@ pub struct ExperimentalFetcher<R: Runtime> {
 }
 
 impl<R: Runtime> ExperimentalFetcher<R> {
+    const HTML_CAPTURE_EVENT: &str = "__experimental_fetcher_html_capture";
+    const HISTORY_LEN_EVENT: &str = "__experimental_fetcher_history_len";
+    const PAGE_LOADED_EVENT: &str = "__experimental_fetcher_page_loaded";
+    const PAGE_RELOAD_DONE_EVENT: &str = "__experimental_fetcher_reload_done";
+    const INJECTOR_INTERVAL: Duration = Duration::from_millis(500);
+    const HISTORY_LEN_TIMEOUT: Duration = Duration::from_secs(5);
+    const PAGE_LOAD_CHECK_INTERVAL: Duration = Duration::from_millis(50);
+    const PAGE_LOAD_MIN_ATTEMPTS: u32 = 5;
+    const PAGE_LOAD_MAX_ATTEMPTS: u32 = 100;
+    const PAGE_LOAD_POST_READY_DELAY: Duration = Duration::from_millis(500);
+
     pub fn new(app: &AppHandle<R>, url: &str) -> Result<Self, String> {
         let webview = app
             .get_webview_window("main")
@@ -81,91 +75,19 @@ impl<R: Runtime> ExperimentalFetcher<R> {
         })
     }
 
-    fn get_history(&self) -> Result<u32, String> {
-        let (hist_tx, hist_rx) = mpsc::channel::<u32>();
-        let hist_listener = self.app.listen(HISTORY_LEN_EVENT, move |event| {
-            if let Ok(len) = serde_json::from_str::<u32>(event.payload()) {
-                let _ = hist_tx.send(len);
-            }
-        });
-
-        self.webview
-            .eval(format!(
-                "window.__TAURI__.event.emit(\"{HISTORY_LEN_EVENT}\", window.history.length)"
-            ))
-            .map_err(|e| format!("Failed to get current window history: {e}"))?;
-
-        let history_length = hist_rx
-            .recv_timeout(HISTORY_LEN_TIMEOUT)
-            .map_err(|_| "Failed to get current window history".to_string())?;
-        self.app.unlisten(hist_listener);
-
-        Ok(history_length)
-    }
-
-    fn open_and_wait_for_page(&self) -> Result<(), String> {
-        let escaped_url = serde_json::to_string(&self.url).map_err(|e| e.to_string())?;
-        self.webview
-            .eval(format!("window.location.href = {escaped_url};"))
-            .map_err(|e| e.to_string())?;
-
-        let webview_clone = self.webview.clone();
-        let (page_tx, page_rx) = mpsc::channel::<()>();
-        let page_listener = self.app.listen(PAGE_LOADED_EVENT, move |_| {
-            let _ = page_tx.send(());
-        });
-
-        thread::spawn(move || {
-            let mut attempts = 0;
-            loop {
-                thread::sleep(PAGE_LOAD_CHECK_INTERVAL);
-                attempts += 1;
-
-                let eval_result = webview_clone.eval(
-                    r#"
-                    (document.readyState === "complete" || document.readyState === "interactive")
-                "#,
-                );
-                if eval_result.is_ok() && attempts > PAGE_LOAD_MIN_ATTEMPTS {
-                    thread::sleep(PAGE_LOAD_POST_READY_DELAY);
-                    let js = format!(
-                        r#"
-                        window.__TAURI__.event.emit("{}", document.documentElement ? document.documentElement.outerHTML : "");
-                        "#,
-                        PAGE_LOADED_EVENT
-                    );
-                    let _ = webview_clone.eval(&js);
-                    break;
-                }
-                if attempts > PAGE_LOAD_MAX_ATTEMPTS {
-                    break;
-                }
-            }
-        });
-
-        page_rx
-            .recv_timeout(HISTORY_LEN_TIMEOUT * 2)
-            .map_err(|_| "Timed out waiting for page to load".to_string())?;
-        self.app.unlisten(page_listener);
-
-        Ok(())
-    }
-}
-
-impl<R: Runtime> HtmlFetcher for ExperimentalFetcher<R> {
-    fn fetch(&mut self) -> Result<String, String> {
+    pub fn fetch(&mut self) -> Result<String, String> {
         self.initial_history_length = Some(self.get_history()?);
         self.open_and_wait_for_page()?;
 
-        let (tx, rx) = mpsc::channel::<HtmlFetcherResponse>();
+        let (tx, rx) = mpsc::channel::<CaptureResponse>();
         let running = Arc::new(AtomicBool::new(false));
 
         running.store(true, Ordering::Relaxed);
         let running_clone = running.clone();
 
-        let listener_id = self.app.listen(HTML_FETCHER, move |event| {
+        let listener_id = self.app.listen(Self::HTML_CAPTURE_EVENT, move |event| {
             let payload_str = event.payload().to_string();
-            let parsed: Result<HtmlFetcherResponse, _> = serde_json::from_str(&payload_str);
+            let parsed: Result<CaptureResponse, _> = serde_json::from_str(&payload_str);
 
             match parsed {
                 Ok(response) => {
@@ -181,10 +103,9 @@ impl<R: Runtime> HtmlFetcher for ExperimentalFetcher<R> {
         let injector_webview = self.webview.clone();
         let injector_running = running.clone();
         let injector_handle = thread::spawn(move || {
-            thread::sleep(INJECTOR_INTERVAL / 2);
+            thread::sleep(Self::INJECTOR_INTERVAL / 2);
             while injector_running.load(Ordering::Relaxed) {
-                let _ = injector_webview.eval(
-                    r##"
+                let js = r##"
                     if (!document.getElementById("__tauri_capture_toolbar")) {
                         const bar = document.createElement("div");
                         bar.id = "__tauri_capture_toolbar";
@@ -224,7 +145,7 @@ impl<R: Runtime> HtmlFetcher for ExperimentalFetcher<R> {
                         ok.onclick = () => {
                             document.getElementById("__tauri_capture_toolbar")?.remove();
                             window.__TAURI__.event.emit(
-                                "html-fetcher",
+                                "__HTML_CAPTURE_EVENT__",
                                 {
                                     url: window.location.href,
                                     origin: window.location.origin,
@@ -241,7 +162,7 @@ impl<R: Runtime> HtmlFetcher for ExperimentalFetcher<R> {
                         Object.assign(cancel.style, buttonStyle);
 
                         cancel.onclick = () => {
-                            window.__TAURI__.event.emit("html-fetcher", {
+                            window.__TAURI__.event.emit("__HTML_CAPTURE_EVENT__", {
                                 url: window.location.href,
                                 origin: window.location.origin,
                                 path: window.location.pathname,
@@ -256,9 +177,10 @@ impl<R: Runtime> HtmlFetcher for ExperimentalFetcher<R> {
                             document.body.appendChild(bar);
                         }
                     }
-                    "##,
-                );
-                thread::sleep(INJECTOR_INTERVAL);
+                    "##;
+                let _ = injector_webview
+                    .eval(&js.replace("__HTML_CAPTURE_EVENT__", Self::HTML_CAPTURE_EVENT));
+                thread::sleep(Self::INJECTOR_INTERVAL);
             }
         });
 
@@ -284,6 +206,80 @@ impl<R: Runtime> HtmlFetcher for ExperimentalFetcher<R> {
             Some(html) => Ok(html),
         }
     }
+
+    fn get_history(&self) -> Result<u32, String> {
+        let (hist_tx, hist_rx) = mpsc::channel::<u32>();
+        let hist_listener = self.app.listen(Self::HISTORY_LEN_EVENT, move |event| {
+            if let Ok(len) = serde_json::from_str::<u32>(event.payload()) {
+                let _ = hist_tx.send(len);
+            }
+        });
+
+        self.webview
+            .eval(format!(
+                "window.__TAURI__.event.emit(\"{}\", window.history.length)",
+                Self::HISTORY_LEN_EVENT
+            ))
+            .map_err(|e| format!("Failed to get current window history: {e}"))?;
+
+        let history_length = hist_rx
+            .recv_timeout(Self::HISTORY_LEN_TIMEOUT)
+            .map_err(|_| "Failed to get current window history".to_string())?;
+        self.app.unlisten(hist_listener);
+
+        Ok(history_length)
+    }
+
+    fn wait_for_page_ready(&self, event_name: &str) -> Result<(), String> {
+        let webview_clone = self.webview.clone();
+        let (tx, rx) = mpsc::channel::<()>();
+        let event = event_name.to_string();
+        let event_clone = event.clone();
+
+        let listener = self.app.listen(event, move |_| {
+            let _ = tx.send(());
+        });
+
+        thread::spawn(move || {
+            let mut attempts = 0u32;
+            loop {
+                thread::sleep(Self::PAGE_LOAD_CHECK_INTERVAL);
+                attempts += 1;
+
+                let eval_result = webview_clone.eval(
+                    r#"(document.readyState === "complete" || document.readyState === "interactive")"#,
+                );
+                if eval_result.is_ok() && attempts > Self::PAGE_LOAD_MIN_ATTEMPTS {
+                    thread::sleep(Self::PAGE_LOAD_POST_READY_DELAY);
+                    Self::emit_event(&webview_clone, &event_clone);
+                    break;
+                }
+                if attempts > Self::PAGE_LOAD_MAX_ATTEMPTS {
+                    Self::emit_event(&webview_clone, &event_clone);
+                    break;
+                }
+            }
+        });
+
+        rx.recv_timeout(Self::HISTORY_LEN_TIMEOUT * 2)
+            .map_err(|_| "Timed out waiting for page to load".to_string())?;
+        self.app.unlisten(listener);
+
+        Ok(())
+    }
+
+    fn open_and_wait_for_page(&self) -> Result<(), String> {
+        let escaped_url = serde_json::to_string(&self.url).map_err(|e| e.to_string())?;
+        self.webview
+            .eval(format!("window.location.href = {escaped_url};"))
+            .map_err(|e| e.to_string())?;
+
+        self.wait_for_page_ready(Self::PAGE_LOADED_EVENT)
+    }
+
+    fn emit_event(webview: &WebviewWindow<impl Runtime>, event_name: &str) {
+        let _ = webview.eval(format!(r#"window.__TAURI__.event.emit("{}");"#, event_name));
+    }
 }
 
 impl<R: Runtime> Drop for ExperimentalFetcher<R> {
@@ -293,6 +289,7 @@ impl<R: Runtime> Drop for ExperimentalFetcher<R> {
                 "window.history.go(-(window.history.length - {}));",
                 initial,
             ));
+            let _ = self.wait_for_page_ready(Self::PAGE_RELOAD_DONE_EVENT);
         }
     }
 }

@@ -1,4 +1,4 @@
-use super::experimental_fetcher::{ExperimentalFetcher, HtmlFetcher};
+use super::experimental_fetcher::ExperimentalFetcher;
 use crate::models::*;
 use crate::parse::{build_snippet, process_html};
 use readabilityrs::Readability;
@@ -58,14 +58,14 @@ pub async fn get_articles(
 
 async fn fetch_parse_update_article(
     article_url: &str,
-    mut exp_fetcher: Option<ExperimentalFetcher<tauri::Wry>>,
+    exp_fetcher: &mut Option<ExperimentalFetcher<tauri::Wry>>,
     on_progress: &Channel<FetchProgress>,
 ) -> Result<(String, String, String), String> {
     on_progress
         .send(FetchProgress::Downloading(article_url.to_string()))
         .map_err(|e| e.to_string())?;
 
-    let html = match &mut exp_fetcher {
+    let html = match &mut (*exp_fetcher) {
         Some(fetcher) => fetcher.fetch()?,
         None => {
             let client = reqwest::Client::new();
@@ -113,6 +113,7 @@ pub async fn get_article(
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
+            dbg!("data base load");
             let mut article = query_as::<_, Article>(
                 r#"
                 SELECT id, title, body, url
@@ -125,20 +126,28 @@ pub async fn get_article(
             .await
             .map_err(|e| e.to_string())?;
             if article.title.is_empty() {
-                let exp_fetcher = match sqlx::query_as::<_, (String,)>(
+                dbg!("article empty");
+                let mut exp_fetcher = None;
+
+                if let Some("true") = sqlx::query_as::<_, (String,)>(
                     "SELECT value FROM settings WHERE name = 'iframe_fetcher'",
                 )
                 .fetch_one(pool)
                 .await
                 .ok()
                 .map(|r| r.0)
+                .as_deref()
                 {
-                    Some(v) if v == "true" => Some(ExperimentalFetcher::new(&app, &article.url)?),
-                    _ => None,
-                };
+                    dbg!("exp fetcher load");
+                    exp_fetcher = Some(ExperimentalFetcher::new(&app, &article.url)?);
+                }
 
-                article = match fetch_parse_update_article(&article.url, exp_fetcher, &on_progress)
-                    .await
+                article = match fetch_parse_update_article(
+                    &article.url,
+                    &mut exp_fetcher,
+                    &on_progress,
+                )
+                .await
                 {
                     Ok((title, body, text_content)) => query_as::<_, Article>(
                         r#"
@@ -155,18 +164,21 @@ pub async fn get_article(
                     .bind(text_content)
                     .fetch_one(pool)
                     .await
-                    .map_err(|e| e.to_string())?,
+                    .map_err(|e| e.to_string()),
                     Err(e) => {
+                        dbg!("failed done");
                         let _ = query(
                             "UPDATE articles SET is_deleted = 1, title = '', body = '', text_content = '' WHERE id = ?",
                         )
                         .bind(id)
                         .execute(pool)
                         .await;
-                        return Err(e);
+                        Err(e)
                     }
-                };
+                }?;
+                dbg!("update done");
             }
+            dbg!("fetch success");
             on_progress
                 .send(FetchProgress::Parsing(article.title.to_string()))
                 .map_err(|e| e.to_string())?;
