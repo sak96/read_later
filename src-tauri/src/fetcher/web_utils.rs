@@ -1,8 +1,9 @@
 use serde::Deserialize;
 use std::marker::PhantomData;
 use std::sync::{
+    Arc,
     atomic::{AtomicBool, Ordering},
-    mpsc, Arc,
+    mpsc,
 };
 use std::thread;
 use std::time::Duration;
@@ -16,16 +17,22 @@ pub(crate) const PAGE_RELOAD_DONE_EVENT: &str = "__experimental_fetcher_reload_d
 
 pub(crate) const HISTORY_LEN_TIMEOUT: Duration = Duration::from_secs(5);
 pub(crate) const PAGE_LOAD_CHECK_INTERVAL: Duration = Duration::from_millis(50);
-pub(crate) const PAGE_LOAD_MIN_ATTEMPTS: u32 = 5;
 pub(crate) const PAGE_LOAD_MAX_ATTEMPTS: u32 = 100;
-pub(crate) const PAGE_LOAD_POST_READY_DELAY: Duration = Duration::from_millis(500);
-pub(crate) const PAGE_LOAD_INITIAL_DELAY: Duration = Duration::from_millis(150);
+pub(crate) const PAGE_LOAD_INITIAL_DELAY: Duration = Duration::from_millis(500);
 
 pub(crate) const TOOLBAR_REMOVE_JS: &str =
     r#"document.getElementById("__tauri_capture_toolbar_host")?.remove();"#;
 
-pub(crate) const PAGE_READY_CHECK_JS: &str =
-    r#"(document.readyState === "complete" || document.readyState === "interactive")"#;
+pub(crate) fn page_ready_check_js(event_name: &str) -> String {
+    format!(
+        r#"(function() {{
+            if (document.readyState === "complete" || document.readyState === "interactive") {{
+                window.__TAURI__.event.emit("{event}");
+            }}
+        }})()"#,
+        event = event_name,
+    )
+}
 
 #[derive(Deserialize)]
 pub(crate) struct CaptureResponse {
@@ -87,37 +94,33 @@ impl<R: Runtime> FetcherBase<R> {
 
     pub fn wait_for_page_ready(&self, event_name: &str) -> Result<(), String> {
         let webview_clone = self.webview.clone();
-        let (tx, rx) = mpsc::channel::<()>();
-        let event = event_name.to_string();
-        let event_clone = event.clone();
+        let page_ready = Arc::new(AtomicBool::new(false));
+        let page_ready_thread = page_ready.clone();
+        let page_ready_main = page_ready.clone();
+        let check_js = page_ready_check_js(event_name);
 
-        let listener = self.app.listen(event, move |_| {
-            let _ = tx.send(());
+        let listener = self.app.listen(event_name.to_string(), move |_| {
+            page_ready_thread.store(true, Ordering::Release);
         });
 
-        thread::spawn(move || {
+        let handle = thread::spawn(move || {
             let mut attempts = 0u32;
             thread::sleep(PAGE_LOAD_INITIAL_DELAY);
-            loop {
+            while !page_ready.load(Ordering::Acquire) {
                 thread::sleep(PAGE_LOAD_CHECK_INTERVAL);
                 attempts += 1;
-
-                let eval_result = webview_clone.eval(PAGE_READY_CHECK_JS);
-                if eval_result.is_ok() && attempts > PAGE_LOAD_MIN_ATTEMPTS {
-                    thread::sleep(PAGE_LOAD_POST_READY_DELAY);
-                    Self::emit_event(&webview_clone, &event_clone);
-                    break;
-                }
+                let _ = webview_clone.eval(&check_js);
                 if attempts > PAGE_LOAD_MAX_ATTEMPTS {
-                    Self::emit_event(&webview_clone, &event_clone);
                     break;
                 }
             }
         });
 
-        rx.recv_timeout(HISTORY_LEN_TIMEOUT * 2)
-            .map_err(|_| "Timed out waiting for page to load".to_string())?;
+        let _ = handle.join();
         self.app.unlisten(listener);
+        if !page_ready_main.load(Ordering::Acquire) {
+            return Err("Timed out waiting for page to load".to_string());
+        }
 
         Ok(())
     }
@@ -196,13 +199,6 @@ impl<R: Runtime> FetcherBase<R> {
             ));
             let _ = self.wait_for_page_ready(PAGE_RELOAD_DONE_EVENT);
         }
-    }
-
-    pub fn emit_event(webview: &WebviewWindow<impl Runtime>, event_name: &str) {
-        let _ = webview.eval(format!(
-            r#"window.__TAURI__.event.emit("{event_name}");"#,
-            event_name = event_name,
-        ));
     }
 }
 

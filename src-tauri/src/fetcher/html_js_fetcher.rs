@@ -1,13 +1,11 @@
-use std::pin::Pin;
 use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use tauri::{AppHandle, Runtime};
 
 use super::Fetcher;
-use super::web_utils::{
-    FetcherBase, FetchGuard, HISTORY_LEN_TIMEOUT,
-};
+use super::web_utils::{FetchGuard, FetcherBase, HISTORY_LEN_TIMEOUT};
 
 const HTML_CAPTURE_JS: &str = r#"
     window.__TAURI__.event.emit('__experimental_fetcher_html_capture', {
