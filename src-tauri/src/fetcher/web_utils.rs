@@ -320,7 +320,7 @@ fn build_toolbar_inject_js(iframe_html: &str, bottom_inset: f64) -> String {
             if (!document.getElementById("__tauri_capture_toolbar_host")) {{
                 const iframe = document.createElement("iframe");
                 iframe.id = "__tauri_capture_toolbar_host";
-                iframe.style.cssText = "position:fixed !important;right:20px !important;bottom: {bottom}px !important;z-index:2147483647 !important;border:none !important;width:60px !important;height:auto !important;pointer-events:auto !important;";
+                iframe.style.cssText = "position:fixed !important;right:20px !important;bottom: {bottom}px !important;z-index:2147483647 !important;border:none !important;width:60px !important;height:auto !important;pointer-events:auto !important;background:transparent !important;";
                 (document.documentElement || document.body).appendChild(iframe);
                 iframe.scrollIntoView({{behavior: "smooth", block: "center"}});
                 iframe.contentDocument.open();
