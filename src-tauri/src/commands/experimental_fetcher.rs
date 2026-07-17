@@ -58,6 +58,66 @@ impl<R: Runtime> ExperimentalFetcher<R> {
     const PAGE_LOAD_MAX_ATTEMPTS: u32 = 100;
     const PAGE_LOAD_POST_READY_DELAY: Duration = Duration::from_millis(500);
 
+    const IFRAME_STYLE: &str = r#"
+        body { margin: 0; padding: 4px; background: transparent; overflow: visible }
+        .bar { display: flex; flex-direction: column; gap: 5px; font-family: sans-serif }
+        .btn {
+            margin: 0; background-color: #0172ad; color: #eff1f4;
+            min-width: 1.5em; min-height: 1.5em; font-size: 1.5em;
+            padding: 0.75rem 1.25rem; border: 1px solid transparent;
+            border-radius: 0.5rem; cursor: pointer; font-weight: 600; text-align: center
+        }
+    "#;
+
+    const IFRAME_BUTTONS_HTML: &str = r#"
+        <div class="bar">
+            <button class="btn" id="__tauri_cap_ok">\u{2713}</button>
+            <button class="btn" id="__tauri_cap_cancel">\u{00d7}</button>
+        </div>
+    "#;
+
+    const TOOLBAR_REMOVE_JS: &str =
+        r#"document.getElementById("__tauri_capture_toolbar_host")?.remove();"#;
+
+    const PAGE_READY_CHECK_JS: &str =
+        r#"(document.readyState === "complete" || document.readyState === "interactive")"#;
+
+    fn build_iframe_html() -> String {
+        let script = format!(
+            r#"
+                document.getElementById('__tauri_cap_ok').onclick = function() {{
+                    window.parent.__TAURI__.event.emit('{capture_event}', {{
+                        url: window.parent.location.href,
+                        origin: window.parent.location.origin,
+                        path: window.parent.location.pathname,
+                        html: window.parent.document.documentElement
+                            ? window.parent.document.documentElement.outerHTML
+                            : null
+                    }});
+                }};
+                document.getElementById('__tauri_cap_cancel').onclick = function() {{
+                    window.parent.__TAURI__.event.emit('{capture_event}', {{
+                        url: window.parent.location.href,
+                        origin: window.parent.location.origin,
+                        path: window.parent.location.pathname,
+                        html: null
+                    }});
+                }};
+            "#,
+            capture_event = Self::HTML_CAPTURE_EVENT,
+        );
+        format!(
+            r#"<!DOCTYPE html><html><head><style>{style}</style></head><body>{buttons}<script>{script}</script></body></html>"#,
+            style = Self::IFRAME_STYLE,
+            buttons = Self::IFRAME_BUTTONS_HTML,
+            script = script,
+        )
+    }
+
+    fn escape_for_js_string(s: &str) -> String {
+        s.replace('\\', "\\\\").replace('"', "\\\"")
+    }
+
     pub fn new(app: &AppHandle<R>, url: &str) -> Result<Self, String> {
         let webview = app
             .get_webview_window("main")
@@ -86,7 +146,6 @@ impl<R: Runtime> ExperimentalFetcher<R> {
         self.initial_history_length = Some(self.get_history()?);
         self.open_and_wait_for_page()?;
 
-        // Get bottom safe area inset on Android
         #[cfg(target_os = "android")]
         let bottom_inset = self
             .app
@@ -124,55 +183,24 @@ impl<R: Runtime> ExperimentalFetcher<R> {
         let injector_handle = thread::spawn(move || {
             thread::sleep(Self::INJECTOR_INTERVAL / 2);
             while injector_running.load(Ordering::Relaxed) {
+                let escaped_html = Self::escape_for_js_string(&Self::build_iframe_html());
                 let js = format!(
-                    r##"
-                    if (!document.getElementById("__tauri_capture_toolbar_host")) {{
-                        const host = document.createElement("div");
-                        host.id = "__tauri_capture_toolbar_host";
-                        host.style.cssText = "all:initial !important;position:fixed !important;right:20px !important;bottom:calc(20px + {}px) !important;z-index:2147483647 !important;";
-                        const shadow = host.attachShadow({{ mode: "open" }});
-                        shadow.innerHTML = `
-                            <style>
-                                .bar {{ all:initial !important;display:flex !important;flex-direction:column !important;gap:5px !important;font-family:sans-serif !important; }}
-                                .btn {{ all:initial !important;margin:0 !important;background-color:#0172ad !important;color:#eff1f4 !important;min-width:1.5em !important;min-height:1.5em !important;font-size:1.5em !important;padding:0.75rem 1.25rem !important;border:1px solid transparent !important;border-radius:0.5rem !important;cursor:pointer !important;font-weight:600 !important;text-align:center !important; }}
-                            </style>
-                            <div class="bar" id="__tauri_capture_toolbar">
-                                <button class="btn" id="__tauri_cap_ok">\u2713</button>
-                                <button class="btn" id="__tauri_cap_cancel">\u00d7</button>
-                            </div>
-                        `;
-
-                        shadow.getElementById("__tauri_cap_ok").onclick = () => {{
-                            host.remove();
-                            window.__TAURI__.event.emit(
-                                "__HTML_CAPTURE_EVENT__",
-                                {{
-                                    url: window.location.href,
-                                    origin: window.location.origin,
-                                    path: window.location.pathname,
-                                    html: document.documentElement ? document.documentElement.outerHTML : null
-                                }}
-                            );
-                        }};
-
-                        shadow.getElementById("__tauri_cap_cancel").onclick = () => {{
-                            host.remove();
-                            window.__TAURI__.event.emit("__HTML_CAPTURE_EVENT__", {{
-                                url: window.location.href,
-                                origin: window.location.origin,
-                                path: window.location.pathname,
-                                html: null
-                            }});
-                        }};
-
-                        (document.documentElement || document.body).appendChild(host);
-                        host.scrollIntoView({{ behavior: "smooth", block: "center" }});
-                    }}
-                    "##,
-                    bottom_inset
+                    r#"
+                        if (!document.getElementById("__tauri_capture_toolbar_host")) {{
+                            const iframe = document.createElement("iframe");
+                            iframe.id = "__tauri_capture_toolbar_host";
+                            iframe.style.cssText = "position:fixed !important;right:20px !important;bottom:calc(20px + {bottom}px) !important;z-index:2147483647 !important;border:none !important;width:60px !important;height:auto !important;pointer-events:auto !important;";
+                            (document.documentElement || document.body).appendChild(iframe);
+                            iframe.scrollIntoView({behavior: "smooth", block: "center"});
+                            iframe.contentDocument.open();
+                            iframe.contentDocument.write("{html}");
+                            iframe.contentDocument.close();
+                        }}
+                    "#,
+                    bottom = bottom_inset,
+                    html = escaped_html,
                 );
-                let _ = injector_webview
-                    .eval(&js.replace("__HTML_CAPTURE_EVENT__", Self::HTML_CAPTURE_EVENT));
+                let _ = injector_webview.eval(&js);
                 thread::sleep(Self::INJECTOR_INTERVAL);
             }
         });
@@ -180,9 +208,8 @@ impl<R: Runtime> ExperimentalFetcher<R> {
         let response = rx.recv().map_err(|e| e.to_string())?;
         let _ = injector_handle.join();
         self.app.unlisten(listener_id);
-        let _ = self
-            .webview
-            .eval(r#"document.getElementById("__tauri_capture_toolbar_host")?.remove();"#);
+        let _ = self.webview.eval(Self::TOOLBAR_REMOVE_JS);
+
         match response.html {
             None => Err("Cancelled by user".into()),
             Some(html) if html.is_empty() => Err("Page returned empty content".into()),
@@ -210,8 +237,8 @@ impl<R: Runtime> ExperimentalFetcher<R> {
 
         self.webview
             .eval(format!(
-                "window.__TAURI__.event.emit(\"{}\", window.history.length)",
-                Self::HISTORY_LEN_EVENT
+                r#"window.__TAURI__.event.emit("{event_name}", window.history.length)"#,
+                event_name = Self::HISTORY_LEN_EVENT,
             ))
             .map_err(|e| format!("Failed to get current window history: {e}"))?;
 
@@ -239,9 +266,7 @@ impl<R: Runtime> ExperimentalFetcher<R> {
                 thread::sleep(Self::PAGE_LOAD_CHECK_INTERVAL);
                 attempts += 1;
 
-                let eval_result = webview_clone.eval(
-                    r#"(document.readyState === "complete" || document.readyState === "interactive")"#,
-                );
+                let eval_result = webview_clone.eval(Self::PAGE_READY_CHECK_JS);
                 if eval_result.is_ok() && attempts > Self::PAGE_LOAD_MIN_ATTEMPTS {
                     thread::sleep(Self::PAGE_LOAD_POST_READY_DELAY);
                     Self::emit_event(&webview_clone, &event_clone);
@@ -264,14 +289,20 @@ impl<R: Runtime> ExperimentalFetcher<R> {
     fn open_and_wait_for_page(&self) -> Result<(), String> {
         let escaped_url = serde_json::to_string(&self.url).map_err(|e| e.to_string())?;
         self.webview
-            .eval(format!("window.location.href = {escaped_url};"))
+            .eval(format!(
+                "window.location.href = {escaped_url};",
+                escaped_url = escaped_url,
+            ))
             .map_err(|e| e.to_string())?;
 
         self.wait_for_page_ready(Self::PAGE_LOADED_EVENT)
     }
 
     fn emit_event(webview: &WebviewWindow<impl Runtime>, event_name: &str) {
-        let _ = webview.eval(format!(r#"window.__TAURI__.event.emit("{}");"#, event_name));
+        let _ = webview.eval(format!(
+            r#"window.__TAURI__.event.emit("{event_name}");"#,
+            event_name = event_name,
+        ));
     }
 }
 
@@ -279,8 +310,8 @@ impl<R: Runtime> Drop for ExperimentalFetcher<R> {
     fn drop(&mut self) {
         if let Some(initial) = self.initial_history_length {
             let _ = self.webview.eval(format!(
-                "window.history.go(-(window.history.length - {}));",
-                initial,
+                "window.history.go(-(window.history.length - {initial}));",
+                initial = initial,
             ));
             let _ = self.wait_for_page_ready(Self::PAGE_RELOAD_DONE_EVENT);
         }
