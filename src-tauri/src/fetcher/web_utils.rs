@@ -122,14 +122,30 @@ impl<R: Runtime> FetcherBase<R> {
         Ok(())
     }
 
-    pub fn open_and_wait_for_page(&self) -> Result<(), String> {
-        let escaped_url = serde_json::to_string(&self.url).map_err(|e| e.to_string())?;
+    pub fn navigate_to_url(&self, url: &str) -> Result<(), String> {
+        let parsed = url::Url::parse(url).map_err(|e| format!("Invalid URL: {e}"))?;
         self.webview
-            .eval(format!(
-                "window.location.href = {escaped_url};",
-                escaped_url = escaped_url,
-            ))
-            .map_err(|e| e.to_string())?;
+            .navigate(parsed.clone())
+            .map_err(|e| format!("Failed to navigate: {e}"))?;
+
+        thread::sleep(PAGE_LOAD_INITIAL_DELAY);
+        let mut attempts = 0u32;
+        loop {
+            thread::sleep(PAGE_LOAD_CHECK_INTERVAL);
+            attempts += 1;
+
+            if let Ok(current) = self.webview.url() {
+                if current.origin() == parsed.origin()
+                    && current.path().trim_end_matches('/') == parsed.path().trim_end_matches('/')
+                {
+                    break;
+                }
+            }
+
+            if attempts > PAGE_LOAD_MAX_ATTEMPTS {
+                return Err("Timed out waiting for navigation URL to match".into());
+            }
+        }
 
         self.wait_for_page_ready(PAGE_LOADED_EVENT)
     }

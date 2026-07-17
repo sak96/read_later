@@ -31,7 +31,7 @@ impl<R: Runtime> HtmlJsFetcher<R> {
 
     fn fetch_inner(&mut self) -> Result<String, String> {
         self.base.initial_history_length = Some(self.base.get_history()?);
-        self.base.open_and_wait_for_page()?;
+        self.base.navigate_to_url(&self.base.url)?;
 
         let running = Arc::new(AtomicBool::new(true));
         let (listener_id, rx) = self.base.listen_for_capture(running);

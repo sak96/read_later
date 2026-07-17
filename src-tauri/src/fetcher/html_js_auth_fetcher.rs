@@ -24,7 +24,7 @@ impl<R: Runtime> HtmlJsAuthFetcher<R> {
 
     fn fetch_inner(&mut self) -> Result<String, String> {
         self.base.initial_history_length = Some(self.base.get_history()?);
-        self.base.open_and_wait_for_page()?;
+        self.base.navigate_to_url(&self.base.url)?;
 
         #[cfg(target_os = "android")]
         let bottom_inset = self
