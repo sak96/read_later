@@ -75,3 +75,4 @@ Distributed under the MIT License. See `LICENSE.md` for more information.
 ## Works well with
 
 - [SherpaTTS](https://f-droid.org/packages/org.woheller69.ttsengine/)
+- [SupertonicTTS](https://f-droid.org/en/packages/com.brahmadeo.supertonic.tts/)
