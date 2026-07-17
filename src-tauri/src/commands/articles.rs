@@ -1,4 +1,4 @@
-use super::fetcher::{Fetcher, FetcherMode};
+use crate::fetcher::{new_fetcher, Fetcher, FetcherMode};
 use crate::models::*;
 use crate::parse::{build_snippet, process_html};
 use readabilityrs::Readability;
@@ -55,7 +55,7 @@ pub async fn get_articles(
 
 async fn fetch_parse_update_article(
     article_url: &str,
-    fetcher: &mut Fetcher<tauri::Wry>,
+    fetcher: &mut dyn Fetcher,
     on_progress: &Channel<FetchProgress>,
 ) -> Result<(String, String, String), String> {
     on_progress
@@ -118,11 +118,11 @@ pub async fn get_article(
                 .and_then(|v| FetcherMode::from_str(&v))
                 .unwrap_or(FetcherMode::Html);
 
-                let mut fetcher = Fetcher::new(&app, &article.url, mode)?;
+                let mut fetcher = new_fetcher(&app, &article.url, mode)?;
 
                 article = match fetch_parse_update_article(
                     &article.url,
-                    &mut fetcher,
+                    &mut *fetcher,
                     &on_progress,
                 )
                 .await

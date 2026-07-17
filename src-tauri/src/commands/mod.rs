@@ -3,7 +3,6 @@ mod articles;
 mod import_export;
 #[cfg(target_os = "android")]
 mod import_export_android;
-mod fetcher;
 mod settings;
 pub mod speakbar;
 pub mod sync;
