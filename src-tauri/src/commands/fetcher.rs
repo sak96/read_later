@@ -1,22 +1,3 @@
-//! Fetches article HTML by navigating the main webview to the external URL.
-//!
-//! Some articles require login, captcha, or JavaScript rendering that a plain HTTP
-//! request cannot handle. This module navigates the app's main webview directly to
-//! the article URL so the user can complete any such process in the live page.
-//!
-//! # Flow
-//!
-//! 1. [`ExperimentalFetcher::new`] stores the target URL without navigating.
-//! 2. [`ExperimentalFetcher::fetch`] captures the current browser history length,
-//!    navigates the webview to the target URL, waits for the page to load, then
-//!    injects a floating toolbar (OK / Cancel) into the external page. The user
-//!    interacts with the page as needed (login, captcha, etc.) and clicks **OK**
-//!    to capture the rendered HTML, or **Cancel** to abort.
-//! 3. After capture, the caller parses and saves the article to the database.
-//! 4. [`Drop`] navigates the webview back to the app by replaying browser history
-//!    (`history.go(-(window.history.length - initial))`). This handles any number
-//!    of intermediate pages the user may have visited (login redirects, etc.).
-
 use serde::Deserialize;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
@@ -26,8 +7,29 @@ use std::thread;
 use std::time::Duration;
 use tauri::webview::WebviewWindow;
 use tauri::{AppHandle, Listener, Manager, Runtime};
+use tauri_plugin_http::reqwest;
 #[cfg(target_os = "android")]
 use tauri_plugin_safe_area_insets_css::SafeAreaInsetsCssExt;
+
+const CHROME_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FetcherMode {
+    Html,
+    HtmlJs,
+    HtmlJsAuth,
+}
+
+impl FetcherMode {
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "html" => Some(Self::Html),
+            "html_js" => Some(Self::HtmlJs),
+            "html_js_auth" => Some(Self::HtmlJsAuth),
+            _ => None,
+        }
+    }
+}
 
 #[derive(Deserialize)]
 struct CaptureResponse {
@@ -37,7 +39,8 @@ struct CaptureResponse {
     html: Option<String>,
 }
 
-pub struct ExperimentalFetcher<R: Runtime> {
+pub struct Fetcher<R: Runtime> {
+    mode: FetcherMode,
     app: AppHandle<R>,
     webview: WebviewWindow<R>,
     url: String,
@@ -46,7 +49,7 @@ pub struct ExperimentalFetcher<R: Runtime> {
     initial_history_length: Option<u32>,
 }
 
-impl<R: Runtime> ExperimentalFetcher<R> {
+impl<R: Runtime> Fetcher<R> {
     const HTML_CAPTURE_EVENT: &str = "__experimental_fetcher_html_capture";
     const HISTORY_LEN_EVENT: &str = "__experimental_fetcher_history_len";
     const PAGE_LOADED_EVENT: &str = "__experimental_fetcher_page_loaded";
@@ -71,8 +74,8 @@ impl<R: Runtime> ExperimentalFetcher<R> {
 
     const IFRAME_BUTTONS_HTML: &str = r#"
         <div class="bar">
-            <button class="btn" id="__tauri_cap_ok">\u{2713}</button>
-            <button class="btn" id="__tauri_cap_cancel">\u{00d7}</button>
+            <button class="btn" id="__tauri_cap_ok">✓</button>
+            <button class="btn" id="__tauri_cap_cancel">×</button>
         </div>
     "#;
 
@@ -81,6 +84,15 @@ impl<R: Runtime> ExperimentalFetcher<R> {
 
     const PAGE_READY_CHECK_JS: &str =
         r#"(document.readyState === "complete" || document.readyState === "interactive")"#;
+
+    const HTML_CAPTURE_JS: &str = r#"
+        window.__TAURI__.event.emit('__experimental_fetcher_html_capture', {
+            url: window.location.href,
+            origin: window.location.origin,
+            path: window.location.pathname,
+            html: document.documentElement.outerHTML
+        });
+    "#;
 
     fn build_iframe_html() -> String {
         let script = format!(
@@ -115,10 +127,13 @@ impl<R: Runtime> ExperimentalFetcher<R> {
     }
 
     fn escape_for_js_string(s: &str) -> String {
-        s.replace('\\', "\\\\").replace('"', "\\\"")
+        s.replace('\\', "\\\\")
+            .replace('"', "\\\"")
+            .replace('\n', "\\n")
+            .replace('\r', "\\r")
     }
 
-    pub fn new(app: &AppHandle<R>, url: &str) -> Result<Self, String> {
+    pub fn new(app: &AppHandle<R>, url: &str, mode: FetcherMode) -> Result<Self, String> {
         let webview = app
             .get_webview_window("main")
             .ok_or("Failed to get main webview")?;
@@ -133,6 +148,7 @@ impl<R: Runtime> ExperimentalFetcher<R> {
         let self_path = parsed.path().to_string();
 
         Ok(Self {
+            mode,
             app: app.clone(),
             webview,
             url: url.to_string(),
@@ -142,7 +158,74 @@ impl<R: Runtime> ExperimentalFetcher<R> {
         })
     }
 
-    pub fn fetch(&mut self) -> Result<String, String> {
+    pub async fn fetch(&mut self) -> Result<String, String> {
+        match self.mode {
+            FetcherMode::Html => self.fetch_html().await,
+            FetcherMode::HtmlJs => self.fetch_html_js(),
+            FetcherMode::HtmlJsAuth => self.fetch_html_js_auth(),
+        }
+    }
+
+    async fn fetch_html(&self) -> Result<String, String> {
+        let client = reqwest::Client::new();
+        client
+            .get(&self.url)
+            .header(reqwest::header::USER_AGENT, CHROME_USER_AGENT)
+            .send()
+            .await
+            .map_err(|e| e.to_string())?
+            .text()
+            .await
+            .map_err(|e| e.to_string())
+    }
+
+    fn fetch_html_js(&mut self) -> Result<String, String> {
+        self.initial_history_length = Some(self.get_history()?);
+        self.open_and_wait_for_page()?;
+
+        let (tx, rx) = mpsc::channel::<CaptureResponse>();
+        let running = Arc::new(AtomicBool::new(true));
+
+        let running_clone = running.clone();
+        let listener_id = self.app.listen(Self::HTML_CAPTURE_EVENT, move |event| {
+            let payload_str = event.payload().to_string();
+            let parsed: Result<CaptureResponse, _> = serde_json::from_str(&payload_str);
+
+            match parsed {
+                Ok(response) => {
+                    let _ = tx.send(response);
+                }
+                Err(err) => {
+                    eprintln!("Failed to parse html-fetcher event: {err}");
+                }
+            }
+            running_clone.store(false, Ordering::Relaxed);
+        });
+
+        let _ = self.webview.eval(Self::HTML_CAPTURE_JS);
+        let response = rx
+            .recv_timeout(Self::HISTORY_LEN_TIMEOUT * 2)
+            .map_err(|_| "Timed out waiting for page capture".to_string())?;
+        self.app.unlisten(listener_id);
+
+        match response.html {
+            None => Err("Cancelled by user".into()),
+            Some(html) if html.is_empty() => Err("Page returned empty content".into()),
+            Some(_html)
+                if response.origin != self.self_origin
+                    || response.path.trim_end_matches('/')
+                        != self.self_path.trim_end_matches('/') =>
+            {
+                Err(format!(
+                    "Page navigated from {} to {} during fetch",
+                    self.url, response.url
+                ))
+            }
+            Some(html) => Ok(html),
+        }
+    }
+
+    fn fetch_html_js_auth(&mut self) -> Result<String, String> {
         self.initial_history_length = Some(self.get_history()?);
         self.open_and_wait_for_page()?;
 
@@ -189,9 +272,9 @@ impl<R: Runtime> ExperimentalFetcher<R> {
                         if (!document.getElementById("__tauri_capture_toolbar_host")) {{
                             const iframe = document.createElement("iframe");
                             iframe.id = "__tauri_capture_toolbar_host";
-                            iframe.style.cssText = "position:fixed !important;right:20px !important;bottom:calc(20px + {bottom}px) !important;z-index:2147483647 !important;border:none !important;width:60px !important;height:auto !important;pointer-events:auto !important;";
+                            iframe.style.cssText = "position:fixed !important;right:20px !important;bottom: {bottom}px !important;z-index:2147483647 !important;border:none !important;width:60px !important;height:auto !important;pointer-events:auto !important;";
                             (document.documentElement || document.body).appendChild(iframe);
-                            iframe.scrollIntoView({behavior: "smooth", block: "center"});
+                            iframe.scrollIntoView({{behavior: "smooth", block: "center"}});
                             iframe.contentDocument.open();
                             iframe.contentDocument.write("{html}");
                             iframe.contentDocument.close();
@@ -306,7 +389,7 @@ impl<R: Runtime> ExperimentalFetcher<R> {
     }
 }
 
-impl<R: Runtime> Drop for ExperimentalFetcher<R> {
+impl<R: Runtime> Drop for Fetcher<R> {
     fn drop(&mut self) {
         if let Some(initial) = self.initial_history_length {
             let _ = self.webview.eval(format!(

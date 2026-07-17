@@ -9,7 +9,7 @@ export const MIN_SEARCH_LENGTH = 3
 // Settings
 export const TUTORIAL_SHOWN = 'tutorial_speak_bar_shown'
 
-export const EXPERIMENTAL_FETCHER = 'iframe_fetcher'
+export const FETCHER_MODE = 'fetcher_mode'
 
 export const TTS_ENABLED = 'tts'
 

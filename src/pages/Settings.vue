@@ -13,7 +13,7 @@ import WebdavSettings from '../components/WebdavSettings.vue'
 import { Fab } from '../layouts'
 import { loadTtsSetting } from '../composables/useTTS'
 import { invokeParseLogError } from '../composables/useTauri'
-import { EXPERIMENTAL_FETCHER, TUTORIAL_SHOWN, TTS_ENABLED, THEME } from '../constants'
+import { FETCHER_MODE, TUTORIAL_SHOWN, TTS_ENABLED, THEME } from '../constants'
 import { MonitorCog, Sun, Moon, CodeXml, Bug, Palette, Speech, Archive, Info } from 'lucide-vue-next'
 
 type Theme = 'light' | 'dark' | 'system'
@@ -23,8 +23,14 @@ const themeContext = inject<{ mode: Ref<Theme>, setMode: (mode: Theme) => void }
 const appVersion = ref('N/A')
 const ttsEnabled = ref(true)
 const tutorialEnabled = ref(true)
-const iframeFetcherEnabled = ref(false)
+const fetcherMode = ref('html')
 const articleCount = ref(0)
+
+const fetcherModes = [
+  { value: 'html', label: 'fetcher_html' },
+  { value: 'html_js', label: 'fetcher_html_js' },
+  { value: 'html_js_auth', label: 'fetcher_html_js_auth' },
+]
 
 const themes = [
   { value: 'light' as Theme, icon: Sun },
@@ -56,10 +62,11 @@ async function onTutorialToggle() {
   await setSetting(TUTORIAL_SHOWN, newState ? 'false' : 'true')
 }
 
-async function onIframeFetcherToggle() {
-  const newState = !!!iframeFetcherEnabled.value
-  iframeFetcherEnabled.value = newState
-  await setSetting(EXPERIMENTAL_FETCHER, newState.toString())
+async function onFetcherModeChange(event: Event) {
+  const target = event.target as HTMLSelectElement
+  const newMode = target.value
+  fetcherMode.value = newMode
+  await setSetting(FETCHER_MODE, newMode)
 }
 
 onMounted(async () => {
@@ -68,8 +75,8 @@ onMounted(async () => {
   ttsEnabled.value = await loadTtsSetting()
   const tutorialSetting = await getSetting(TUTORIAL_SHOWN)
   tutorialEnabled.value = tutorialSetting !== 'true'
-  const iframeFetcherSetting = await getSetting(EXPERIMENTAL_FETCHER)
-  iframeFetcherEnabled.value = iframeFetcherSetting === 'true'
+  const fetcherModeSetting = await getSetting(FETCHER_MODE)
+  fetcherMode.value = fetcherModeSetting || 'html'
 })
 </script>
 
@@ -128,15 +135,20 @@ onMounted(async () => {
                 </td>
               </tr>
               <tr>
-                <th data-i18n="experimental_fetcher" />
+                <th data-i18n="fetcher_mode" />
                 <td>
-                  <input
-                    name="iframeFetcher"
-                    type="checkbox"
-                    role="switch"
-                    :checked="iframeFetcherEnabled"
-                    @change="onIframeFetcherToggle"
+                  <select
+                    style="text-align-last: center;"
+                    @change="onFetcherModeChange"
                   >
+                    <option
+                      v-for="mode in fetcherModes"
+                      :key="mode.value"
+                      :selected="fetcherMode === mode.value"
+                      :value="mode.value"
+                      :data-i18n="mode.label"
+                    />
+                  </select>
                 </td>
               </tr>
             </tbody>

@@ -1,13 +1,10 @@
-use super::experimental_fetcher::ExperimentalFetcher;
+use super::fetcher::{Fetcher, FetcherMode};
 use crate::models::*;
 use crate::parse::{build_snippet, process_html};
 use readabilityrs::Readability;
 use sqlx::{query, query_as};
 use tauri::{State, ipc::Channel};
-use tauri_plugin_http::reqwest;
 use tauri_plugin_sql::DbInstances;
-
-const CHROME_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36";
 
 #[tauri::command]
 pub async fn get_articles(
@@ -58,28 +55,14 @@ pub async fn get_articles(
 
 async fn fetch_parse_update_article(
     article_url: &str,
-    exp_fetcher: &mut Option<ExperimentalFetcher<tauri::Wry>>,
+    fetcher: &mut Fetcher<tauri::Wry>,
     on_progress: &Channel<FetchProgress>,
 ) -> Result<(String, String, String), String> {
     on_progress
         .send(FetchProgress::Downloading(article_url.to_string()))
         .map_err(|e| e.to_string())?;
 
-    let html = match &mut (*exp_fetcher) {
-        Some(fetcher) => fetcher.fetch()?,
-        None => {
-            let client = reqwest::Client::new();
-            client
-                .get(article_url)
-                .header(reqwest::header::USER_AGENT, CHROME_USER_AGENT)
-                .send()
-                .await
-                .map_err(|e| e.to_string())?
-                .text()
-                .await
-                .map_err(|e| e.to_string())?
-        }
-    };
+    let html = fetcher.fetch().await?;
 
     let options = readabilityrs::ReadabilityOptions::builder()
         .remove_title_from_content(true)
@@ -125,23 +108,21 @@ pub async fn get_article(
             .await
             .map_err(|e| e.to_string())?;
             if article.title.is_empty() {
-                let mut exp_fetcher = None;
-
-                if let Some("true") = sqlx::query_as::<_, (String,)>(
-                    "SELECT value FROM settings WHERE name = 'iframe_fetcher'",
+                let mode = sqlx::query_as::<_, (String,)>(
+                    "SELECT value FROM settings WHERE name = 'fetcher_mode'",
                 )
                 .fetch_one(pool)
                 .await
                 .ok()
                 .map(|r| r.0)
-                .as_deref()
-                {
-                    exp_fetcher = Some(ExperimentalFetcher::new(&app, &article.url)?);
-                }
+                .and_then(|v| FetcherMode::from_str(&v))
+                .unwrap_or(FetcherMode::Html);
+
+                let mut fetcher = Fetcher::new(&app, &article.url, mode)?;
 
                 article = match fetch_parse_update_article(
                     &article.url,
-                    &mut exp_fetcher,
+                    &mut fetcher,
                     &on_progress,
                 )
                 .await
