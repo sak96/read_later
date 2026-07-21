@@ -5909,9 +5909,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-tts"
-version = "0.1.9"
+version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be6c11c02ee6a2e72a7f836b81a98060c8079cbbd179f67356616ae066c4f10c"
+checksum = "aa5047350e7796bd63510e52a3be56d3ae4b6e05c81c6ffad885f706cc330e17"
 dependencies = [
  "log",
  "serde",
