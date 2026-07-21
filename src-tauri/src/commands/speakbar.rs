@@ -92,11 +92,7 @@ fn setup_media_action_listener(app: &AppHandle) {
                             .unwrap()
                             .clone();
                         if mode == Mode::View {
-                            *state
-                                .mode
-                                .write()
-                                .map_err(|e| e.to_string())
-                                .unwrap() = Mode::Reader;
+                            *state.mode.write().map_err(|e| e.to_string()).unwrap() = Mode::Reader;
                             let _ = update_media_session(&app).await;
                             let pos = *state
                                 .current_position
@@ -160,11 +156,7 @@ async fn handle_seek(app: &AppHandle, seek_pos: f64) {
 
         match mode {
             Mode::Reader | Mode::Skipto(_) => {
-                *state
-                    .mode
-                    .write()
-                    .map_err(|e| e.to_string())
-                    .unwrap() = Mode::Skipto(target);
+                *state.mode.write().map_err(|e| e.to_string()).unwrap() = Mode::Skipto(target);
                 let _ = update_media_session(app).await;
                 let _ = app.emit(
                     "speakbar:state-changed",
@@ -173,7 +165,7 @@ async fn handle_seek(app: &AppHandle, seek_pos: f64) {
                         mode: Mode::Reader,
                     },
                 );
-                app.tts().stop();
+                let _ = app.tts().stop();
             }
             Mode::View => {
                 *state
@@ -181,11 +173,7 @@ async fn handle_seek(app: &AppHandle, seek_pos: f64) {
                     .write()
                     .map_err(|e| e.to_string())
                     .unwrap() = target;
-                *state
-                    .mode
-                    .write()
-                    .map_err(|e| e.to_string())
-                    .unwrap() = Mode::Reader;
+                *state.mode.write().map_err(|e| e.to_string()).unwrap() = Mode::Reader;
                 let _ = update_media_session(app).await;
                 let _ = app.emit(
                     "speakbar:state-changed",
@@ -211,18 +199,12 @@ pub async fn init_reading(
     *state.paragraphs.write().map_err(|e| e.to_string())? = paragraphs;
     *state.title.write().map_err(|e| e.to_string())? = title;
     *state.rate.write().map_err(|e| e.to_string())? = rate;
-    *state
-        .current_position
-        .write()
-        .map_err(|e| e.to_string())? = 0;
+    *state.current_position.write().map_err(|e| e.to_string())? = 0;
     *state
         .cumulative_durations
         .write()
         .map_err(|e| e.to_string())? = cumulative;
-    *state
-        .total_duration
-        .write()
-        .map_err(|e| e.to_string())? = total;
+    *state.total_duration.write().map_err(|e| e.to_string())? = total;
 
     #[cfg(any(target_os = "android", target_os = "ios"))]
     {
@@ -260,11 +242,7 @@ pub async fn init_reading(
                             .map_err(|e| e.to_string())
                             .unwrap() = next_pos;
                         if reset_mode {
-                            *state
-                                .mode
-                                .write()
-                                .map_err(|e| e.to_string())
-                                .unwrap() = Mode::Reader;
+                            *state.mode.write().map_err(|e| e.to_string()).unwrap() = Mode::Reader;
                         }
 
                         #[cfg(any(target_os = "android", target_os = "ios"))]
@@ -313,11 +291,8 @@ pub async fn init_reading(
                                     .write()
                                     .map_err(|e| e.to_string())
                                     .unwrap() = target;
-                                *state
-                                    .mode
-                                    .write()
-                                    .map_err(|e| e.to_string())
-                                    .unwrap() = Mode::Reader;
+                                *state.mode.write().map_err(|e| e.to_string()).unwrap() =
+                                    Mode::Reader;
                                 #[cfg(any(target_os = "android", target_os = "ios"))]
                                 let _ = update_media_session(&app).await;
                                 let _ = app.emit(
@@ -331,7 +306,7 @@ pub async fn init_reading(
                                 let _ = start_reading(app2, None, state).await;
                             }
                             Mode::Reader => {
-                                let _ = stop_reading(app, state).await;
+                                let _ = stop_reading(app.clone(), state).await;
                             }
                             Mode::View => {}
                         }
@@ -385,21 +360,12 @@ pub async fn start_reading(
     });
 
     if pos >= len {
-        *state
-            .mode
-            .write()
-            .map_err(|e| e.to_string())? = Mode::View;
+        *state.mode.write().map_err(|e| e.to_string())? = Mode::View;
         return stop_reading(app, state).await;
     }
 
-    *state
-        .current_position
-        .write()
-        .map_err(|e| e.to_string())? = pos;
-    *state
-        .mode
-        .write()
-        .map_err(|e| e.to_string())? = Mode::Reader;
+    *state.current_position.write().map_err(|e| e.to_string())? = pos;
+    *state.mode.write().map_err(|e| e.to_string())? = Mode::Reader;
 
     #[cfg(any(target_os = "android", target_os = "ios"))]
     let _ = update_media_session(&app).await;
@@ -430,11 +396,7 @@ async fn read_next_para(app: AppHandle, state: State<'_, SpeakBarState>) -> Resu
         positions[pos].clone()
     };
 
-    let mode = state
-        .mode
-        .read()
-        .map_err(|e| e.to_string())?
-        .clone();
+    let mode = state.mode.read().map_err(|e| e.to_string())?.clone();
     app.emit(
         "speakbar:state-changed",
         StateChanged {
@@ -476,10 +438,7 @@ async fn stop_reading_internal(
     app: &AppHandle,
     state: State<'_, SpeakBarState>,
 ) -> Result<(), String> {
-    *state
-        .mode
-        .write()
-        .map_err(|e| e.to_string())? = Mode::View;
+    *state.mode.write().map_err(|e| e.to_string())? = Mode::View;
 
     #[cfg(any(target_os = "android", target_os = "ios"))]
     let _ = app.media_session().clear();
@@ -499,11 +458,7 @@ async fn stop_reading_internal(
 #[cfg(any(target_os = "android", target_os = "ios"))]
 async fn update_media_session(app: &AppHandle) -> Result<(), String> {
     if let Some(state) = app.try_state::<SpeakBarState>() {
-        let mode = state
-            .mode
-            .read()
-            .map_err(|e| e.to_string())?
-            .clone();
+        let mode = state.mode.read().map_err(|e| e.to_string())?.clone();
         let is_playing = mode != Mode::View;
         let title = state.title.read().map_err(|e| e.to_string())?.clone();
         let title = if title.is_empty() {
@@ -513,10 +468,7 @@ async fn update_media_session(app: &AppHandle) -> Result<(), String> {
         };
         let pos = *state.current_position.read().map_err(|e| e.to_string())?;
         let rate = *state.rate.read().map_err(|e| e.to_string())?;
-        let total = *state
-            .total_duration
-            .read()
-            .map_err(|e| e.to_string())?;
+        let total = *state.total_duration.read().map_err(|e| e.to_string())?;
         let position = {
             let durations = state
                 .cumulative_durations
@@ -569,14 +521,13 @@ pub async fn change_rate(
 
 #[tauri::command]
 pub async fn get_read_state(state: State<'_, SpeakBarState>) -> Result<ReadState, String> {
-    let mode = state
-        .mode
-        .read()
-        .map_err(|e| e.to_string())?
-        .clone();
+    let mode = state.mode.read().map_err(|e| e.to_string())?.clone();
     let position = *state.current_position.read().map_err(|e| e.to_string())?;
 
-    Ok(ReadState { mode: mode.to_frontend(), position })
+    Ok(ReadState {
+        mode: mode.to_frontend(),
+        position,
+    })
 }
 
 #[tauri::command]
@@ -584,10 +535,7 @@ pub async fn set_voice_id(
     voice_id: Option<String>,
     state: State<'_, SpeakBarState>,
 ) -> Result<(), String> {
-    *state
-        .voice_id
-        .write()
-        .map_err(|e| e.to_string())? = voice_id;
+    *state.voice_id.write().map_err(|e| e.to_string())? = voice_id;
     Ok(())
 }
 
@@ -598,30 +546,15 @@ pub async fn cleanup_reading(
 ) -> Result<(), String> {
     let _ = app.tts().stop();
 
-    *state
-        .paragraphs
-        .write()
-        .map_err(|e| e.to_string())? = Vec::new();
-    *state
-        .title
-        .write()
-        .map_err(|e| e.to_string())? = String::new();
-    *state
-        .current_position
-        .write()
-        .map_err(|e| e.to_string())? = 0;
-    *state
-        .mode
-        .write()
-        .map_err(|e| e.to_string())? = Mode::View;
+    *state.paragraphs.write().map_err(|e| e.to_string())? = Vec::new();
+    *state.title.write().map_err(|e| e.to_string())? = String::new();
+    *state.current_position.write().map_err(|e| e.to_string())? = 0;
+    *state.mode.write().map_err(|e| e.to_string())? = Mode::View;
     *state
         .cumulative_durations
         .write()
         .map_err(|e| e.to_string())? = Vec::new();
-    *state
-        .total_duration
-        .write()
-        .map_err(|e| e.to_string())? = 0.0;
+    *state.total_duration.write().map_err(|e| e.to_string())? = 0.0;
 
     #[cfg(any(target_os = "android", target_os = "ios"))]
     let _ = app.media_session().clear();
