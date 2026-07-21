@@ -48,6 +48,8 @@ pub struct SpeakBarState {
     pub voice_id: RwLock<Option<String>>,
     pub is_playing: RwLock<bool>,
     pub tts_listener_ids: RwLock<Vec<u32>>,
+    pub cumulative_durations: RwLock<Vec<f64>>,
+    pub total_duration: RwLock<f64>,
 }
 
 impl Default for SpeakBarState {
@@ -60,8 +62,22 @@ impl Default for SpeakBarState {
             voice_id: RwLock::new(None),
             is_playing: RwLock::new(false),
             tts_listener_ids: RwLock::new(Vec::new()),
+            cumulative_durations: RwLock::new(Vec::new()),
+            total_duration: RwLock::new(0.0),
         }
     }
+}
+
+fn compute_cumulative_durations(paragraphs: &[String]) -> (Vec<f64>, f64) {
+    let mut cumulative = Vec::with_capacity(paragraphs.len());
+    let mut running = 0.0_f64;
+    for text in paragraphs {
+        let word_count = text.split_whitespace().count() as f64;
+        let duration = 4.0 * (word_count / 10.0);
+        running += duration;
+        cumulative.push(running);
+    }
+    (cumulative, running)
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -78,10 +94,19 @@ pub async fn init_reading(
     paragraphs: Vec<String>,
     state: State<'_, SpeakBarState>,
 ) -> Result<(), String> {
+    let (cumulative, total) = compute_cumulative_durations(&paragraphs);
     *state.paragraphs.write().map_err(|e| e.to_string())? = paragraphs;
     *state.title.write().map_err(|e| e.to_string())? = title;
     *state.rate.write().map_err(|e| e.to_string())? = rate;
     *state.current_position.write().map_err(|e| e.to_string())? = 0;
+    *state
+        .cumulative_durations
+        .write()
+        .map_err(|e| e.to_string())? = cumulative;
+    *state.total_duration.write().map_err(|e| e.to_string())? = total;
+
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    let _ = update_media_session(&app).await;
 
     let listener_finish = {
         let app_clone = app.clone();
@@ -100,6 +125,10 @@ pub async fn init_reading(
                             .write()
                             .map_err(|e| e.to_string())
                             .unwrap() = pos + 1;
+
+                        #[cfg(any(target_os = "android", target_os = "ios"))]
+                        let _ = update_media_session(&app).await;
+
                         let app = app.clone();
                         let _ = start_reading(app, None, state).await;
                     }
@@ -288,11 +317,32 @@ async fn update_media_session(app: &AppHandle) -> Result<(), String> {
         } else {
             title
         };
+        let pos = *state.current_position.read().map_err(|e| e.to_string())?;
+        let rate = *state.rate.read().map_err(|e| e.to_string())?;
+        let total = *state.total_duration.read().map_err(|e| e.to_string())?;
+        let position = {
+            let durations = state
+                .cumulative_durations
+                .read()
+                .map_err(|e| e.to_string())?;
+            if pos > 0 && pos <= durations.len() {
+                durations[pos - 1] / rate as f64
+            } else {
+                0.0
+            }
+        };
 
         app.media_session()
             .update_state(MediaState {
                 title: Some(title),
+                duration: Some(total / rate as f64),
+                position: Some(position),
+                playback_speed: Some(rate as f64),
                 is_playing: Some(is_playing),
+                artist: Some("estimated time".into()),
+                can_prev: Some(false),
+                can_next: Some(false),
+                can_seek: Some(false),
                 ..Default::default()
             })
             .map_err(|e| e.to_string())?;
@@ -307,8 +357,16 @@ pub async fn stop_reading(app: AppHandle, state: State<'_, SpeakBarState>) -> Re
 }
 
 #[tauri::command]
-pub async fn change_rate(rate: f32, state: State<'_, SpeakBarState>) -> Result<(), String> {
-    *state.rate.write().map_err(|e| e.to_string())? = rate;
+pub async fn change_rate(
+    rate: f32,
+    #[allow(unused_variables)] app: AppHandle,
+) -> Result<(), String> {
+    if let Some(state) = app.try_state::<SpeakBarState>() {
+        *state.rate.write().map_err(|e| e.to_string())? = rate;
+
+        #[cfg(any(target_os = "android", target_os = "ios"))]
+        let _ = update_media_session(&app).await;
+    }
     Ok(())
 }
 
@@ -343,6 +401,11 @@ pub async fn cleanup_reading(
     *state.title.write().map_err(|e| e.to_string())? = String::new();
     *state.current_position.write().map_err(|e| e.to_string())? = 0;
     *state.is_playing.write().map_err(|e| e.to_string())? = false;
+    *state
+        .cumulative_durations
+        .write()
+        .map_err(|e| e.to_string())? = Vec::new();
+    *state.total_duration.write().map_err(|e| e.to_string())? = 0.0;
 
     #[cfg(any(target_os = "android", target_os = "ios"))]
     let _ = app.media_session().clear();
