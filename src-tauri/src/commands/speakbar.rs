@@ -4,21 +4,7 @@ use tauri::{AppHandle, Emitter, Listener, Manager, State};
 use tauri_plugin_tts::TtsExt;
 
 #[cfg(any(target_os = "android", target_os = "ios"))]
-use tauri_plugin_media_session::{MediaSessionExt, MediaState};
-
-#[derive(Debug, Deserialize, Default, PartialEq)]
-pub enum MediaAction {
-    #[default]
-    Stop,
-    Play,
-    Pause,
-}
-
-#[derive(Debug, Deserialize, Default)]
-pub struct MediaActionEvent {
-    #[serde(default)]
-    pub action: Option<MediaAction>,
-}
+use tauri_plugin_media_session::{MediaAction, MediaSessionExt, MediaState};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum Mode {
@@ -26,11 +12,15 @@ pub enum Mode {
     View,
     #[serde(rename = "reader")]
     Reader,
+    Skipto(usize),
 }
 
 impl Mode {
-    pub fn from_is_playing(is_playing: bool) -> Self {
-        if is_playing { Mode::Reader } else { Mode::View }
+    pub fn to_frontend(&self) -> Mode {
+        match self {
+            Mode::Skipto(_) => Mode::Reader,
+            other => other.clone(),
+        }
     }
 }
 
@@ -46,7 +36,7 @@ pub struct SpeakBarState {
     pub current_position: RwLock<usize>,
     pub rate: RwLock<f32>,
     pub voice_id: RwLock<Option<String>>,
-    pub is_playing: RwLock<bool>,
+    pub mode: RwLock<Mode>,
     pub tts_listener_ids: RwLock<Vec<u32>>,
     pub cumulative_durations: RwLock<Vec<f64>>,
     pub total_duration: RwLock<f64>,
@@ -60,7 +50,7 @@ impl Default for SpeakBarState {
             current_position: RwLock::new(0),
             rate: RwLock::new(1.0),
             voice_id: RwLock::new(None),
-            is_playing: RwLock::new(false),
+            mode: RwLock::new(Mode::View),
             tts_listener_ids: RwLock::new(Vec::new()),
             cumulative_durations: RwLock::new(Vec::new()),
             total_duration: RwLock::new(0.0),
@@ -86,6 +76,129 @@ pub struct ReadState {
     pub position: usize,
 }
 
+#[cfg(any(target_os = "android", target_os = "ios"))]
+fn setup_media_action_listener(app: &AppHandle) {
+    let app_clone = app.clone();
+    app.media_session().on_action(move |event| {
+        let app = app_clone.clone();
+        tauri::async_runtime::spawn(async move {
+            if let Some(state) = app.try_state::<SpeakBarState>() {
+                match event.action {
+                    MediaAction::Play => {
+                        let mode = state
+                            .mode
+                            .read()
+                            .map_err(|e| e.to_string())
+                            .unwrap()
+                            .clone();
+                        if mode == Mode::View {
+                            *state
+                                .mode
+                                .write()
+                                .map_err(|e| e.to_string())
+                                .unwrap() = Mode::Reader;
+                            let _ = update_media_session(&app).await;
+                            let pos = *state
+                                .current_position
+                                .read()
+                                .map_err(|e| e.to_string())
+                                .unwrap();
+                            let _ = app.emit(
+                                "speakbar:state-changed",
+                                StateChanged {
+                                    position: Some(pos),
+                                    mode: Mode::Reader,
+                                },
+                            );
+                        }
+                    }
+                    MediaAction::Pause | MediaAction::Stop => {
+                        let mode = state
+                            .mode
+                            .read()
+                            .map_err(|e| e.to_string())
+                            .unwrap()
+                            .clone();
+                        if mode != Mode::View {
+                            let app2 = app.clone();
+                            let _ = stop_reading(app2, state).await;
+                        }
+                    }
+                    MediaAction::Seek => {
+                        if let Some(seek_pos) = event.seek_position {
+                            handle_seek(&app, seek_pos).await;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        });
+    });
+}
+
+#[cfg(any(target_os = "android", target_os = "ios"))]
+async fn handle_seek(app: &AppHandle, seek_pos: f64) {
+    if let Some(state) = app.try_state::<SpeakBarState>() {
+        let rate = state.rate.read().map(|r| *r).unwrap_or(1.0);
+        let durations = state
+            .cumulative_durations
+            .read()
+            .map(|d| d.clone())
+            .unwrap_or_default();
+
+        let target = durations
+            .iter()
+            .position(|&d| d / rate as f64 >= seek_pos)
+            .unwrap_or(durations.len().saturating_sub(1));
+
+        let mode = state
+            .mode
+            .read()
+            .map_err(|e| e.to_string())
+            .unwrap()
+            .clone();
+
+        match mode {
+            Mode::Reader | Mode::Skipto(_) => {
+                *state
+                    .mode
+                    .write()
+                    .map_err(|e| e.to_string())
+                    .unwrap() = Mode::Skipto(target);
+                let _ = update_media_session(app).await;
+                let _ = app.emit(
+                    "speakbar:state-changed",
+                    StateChanged {
+                        position: Some(target),
+                        mode: Mode::Reader,
+                    },
+                );
+                app.tts().stop();
+            }
+            Mode::View => {
+                *state
+                    .current_position
+                    .write()
+                    .map_err(|e| e.to_string())
+                    .unwrap() = target;
+                *state
+                    .mode
+                    .write()
+                    .map_err(|e| e.to_string())
+                    .unwrap() = Mode::Reader;
+                let _ = update_media_session(app).await;
+                let _ = app.emit(
+                    "speakbar:state-changed",
+                    StateChanged {
+                        position: Some(target),
+                        mode: Mode::Reader,
+                    },
+                );
+            }
+        }
+    }
+}
+
 #[tauri::command]
 pub async fn init_reading(
     app: AppHandle,
@@ -98,15 +211,24 @@ pub async fn init_reading(
     *state.paragraphs.write().map_err(|e| e.to_string())? = paragraphs;
     *state.title.write().map_err(|e| e.to_string())? = title;
     *state.rate.write().map_err(|e| e.to_string())? = rate;
-    *state.current_position.write().map_err(|e| e.to_string())? = 0;
+    *state
+        .current_position
+        .write()
+        .map_err(|e| e.to_string())? = 0;
     *state
         .cumulative_durations
         .write()
         .map_err(|e| e.to_string())? = cumulative;
-    *state.total_duration.write().map_err(|e| e.to_string())? = total;
+    *state
+        .total_duration
+        .write()
+        .map_err(|e| e.to_string())? = total;
 
     #[cfg(any(target_os = "android", target_os = "ios"))]
-    let _ = update_media_session(&app).await;
+    {
+        let _ = update_media_session(&app).await;
+        setup_media_action_listener(&app);
+    }
 
     let listener_finish = {
         let app_clone = app.clone();
@@ -115,16 +237,35 @@ pub async fn init_reading(
                 let app = app_clone.clone();
                 tauri::async_runtime::spawn(async move {
                     if let Some(state) = app.try_state::<SpeakBarState>() {
+                        let current_mode = state
+                            .mode
+                            .read()
+                            .map_err(|e| e.to_string())
+                            .unwrap()
+                            .clone();
                         let pos = *state
                             .current_position
                             .read()
                             .map_err(|e| e.to_string())
                             .unwrap();
+
+                        let (next_pos, reset_mode) = match &current_mode {
+                            Mode::Skipto(target) => (*target, true),
+                            _ => (pos + 1, false),
+                        };
+
                         *state
                             .current_position
                             .write()
                             .map_err(|e| e.to_string())
-                            .unwrap() = pos + 1;
+                            .unwrap() = next_pos;
+                        if reset_mode {
+                            *state
+                                .mode
+                                .write()
+                                .map_err(|e| e.to_string())
+                                .unwrap() = Mode::Reader;
+                        }
 
                         #[cfg(any(target_os = "android", target_os = "ios"))]
                         let _ = update_media_session(&app).await;
@@ -159,8 +300,41 @@ pub async fn init_reading(
                 let app = app_clone.clone();
                 tauri::async_runtime::spawn(async move {
                     if let Some(state) = app.try_state::<SpeakBarState>() {
-                        let app = app.clone();
-                        let _ = stop_reading(app, state).await;
+                        let current_mode = state
+                            .mode
+                            .read()
+                            .map_err(|e| e.to_string())
+                            .unwrap()
+                            .clone();
+                        match current_mode {
+                            Mode::Skipto(target) => {
+                                *state
+                                    .current_position
+                                    .write()
+                                    .map_err(|e| e.to_string())
+                                    .unwrap() = target;
+                                *state
+                                    .mode
+                                    .write()
+                                    .map_err(|e| e.to_string())
+                                    .unwrap() = Mode::Reader;
+                                #[cfg(any(target_os = "android", target_os = "ios"))]
+                                let _ = update_media_session(&app).await;
+                                let _ = app.emit(
+                                    "speakbar:state-changed",
+                                    StateChanged {
+                                        position: Some(target),
+                                        mode: Mode::Reader,
+                                    },
+                                );
+                                let app2 = app.clone();
+                                let _ = start_reading(app2, None, state).await;
+                            }
+                            Mode::Reader => {
+                                let _ = stop_reading(app, state).await;
+                            }
+                            Mode::View => {}
+                        }
                     }
                 });
             }
@@ -211,12 +385,21 @@ pub async fn start_reading(
     });
 
     if pos >= len {
-        *state.is_playing.write().map_err(|e| e.to_string())? = false;
+        *state
+            .mode
+            .write()
+            .map_err(|e| e.to_string())? = Mode::View;
         return stop_reading(app, state).await;
     }
 
-    *state.current_position.write().map_err(|e| e.to_string())? = pos;
-    *state.is_playing.write().map_err(|e| e.to_string())? = true;
+    *state
+        .current_position
+        .write()
+        .map_err(|e| e.to_string())? = pos;
+    *state
+        .mode
+        .write()
+        .map_err(|e| e.to_string())? = Mode::Reader;
 
     #[cfg(any(target_os = "android", target_os = "ios"))]
     let _ = update_media_session(&app).await;
@@ -228,10 +411,10 @@ pub async fn start_reading(
 
 async fn read_next_para(app: AppHandle, state: State<'_, SpeakBarState>) -> Result<(), String> {
     let should_stop = {
-        let is_playing = *state.is_playing.read().map_err(|e| e.to_string())?;
+        let mode = state.mode.read().map_err(|e| e.to_string())?;
         let positions = state.paragraphs.read().map_err(|e| e.to_string())?;
         let pos = *state.current_position.read().map_err(|e| e.to_string())?;
-        is_playing && pos < positions.len()
+        *mode != Mode::View && pos < positions.len()
     };
 
     if !should_stop {
@@ -247,13 +430,16 @@ async fn read_next_para(app: AppHandle, state: State<'_, SpeakBarState>) -> Resu
         positions[pos].clone()
     };
 
-    let is_playing = *state.is_playing.read().map_err(|e| e.to_string())?;
-    let mode = Mode::from_is_playing(is_playing);
+    let mode = state
+        .mode
+        .read()
+        .map_err(|e| e.to_string())?
+        .clone();
     app.emit(
         "speakbar:state-changed",
         StateChanged {
             position: Some(pos),
-            mode,
+            mode: mode.to_frontend(),
         },
     )
     .map_err(|e| e.to_string())?;
@@ -290,7 +476,10 @@ async fn stop_reading_internal(
     app: &AppHandle,
     state: State<'_, SpeakBarState>,
 ) -> Result<(), String> {
-    *state.is_playing.write().map_err(|e| e.to_string())? = false;
+    *state
+        .mode
+        .write()
+        .map_err(|e| e.to_string())? = Mode::View;
 
     #[cfg(any(target_os = "android", target_os = "ios"))]
     let _ = app.media_session().clear();
@@ -310,7 +499,12 @@ async fn stop_reading_internal(
 #[cfg(any(target_os = "android", target_os = "ios"))]
 async fn update_media_session(app: &AppHandle) -> Result<(), String> {
     if let Some(state) = app.try_state::<SpeakBarState>() {
-        let is_playing = *state.is_playing.read().map_err(|e| e.to_string())?;
+        let mode = state
+            .mode
+            .read()
+            .map_err(|e| e.to_string())?
+            .clone();
+        let is_playing = mode != Mode::View;
         let title = state.title.read().map_err(|e| e.to_string())?.clone();
         let title = if title.is_empty() {
             "Untitled".to_string()
@@ -319,7 +513,10 @@ async fn update_media_session(app: &AppHandle) -> Result<(), String> {
         };
         let pos = *state.current_position.read().map_err(|e| e.to_string())?;
         let rate = *state.rate.read().map_err(|e| e.to_string())?;
-        let total = *state.total_duration.read().map_err(|e| e.to_string())?;
+        let total = *state
+            .total_duration
+            .read()
+            .map_err(|e| e.to_string())?;
         let position = {
             let durations = state
                 .cumulative_durations
@@ -342,7 +539,7 @@ async fn update_media_session(app: &AppHandle) -> Result<(), String> {
                 artist: Some("estimated time".into()),
                 can_prev: Some(false),
                 can_next: Some(false),
-                can_seek: Some(false),
+                can_seek: Some(true),
                 ..Default::default()
             })
             .map_err(|e| e.to_string())?;
@@ -372,13 +569,14 @@ pub async fn change_rate(
 
 #[tauri::command]
 pub async fn get_read_state(state: State<'_, SpeakBarState>) -> Result<ReadState, String> {
-    let is_playing = *state.is_playing.read().map_err(|e| e.to_string())?;
+    let mode = state
+        .mode
+        .read()
+        .map_err(|e| e.to_string())?
+        .clone();
     let position = *state.current_position.read().map_err(|e| e.to_string())?;
 
-    Ok(ReadState {
-        mode: Mode::from_is_playing(is_playing),
-        position,
-    })
+    Ok(ReadState { mode: mode.to_frontend(), position })
 }
 
 #[tauri::command]
@@ -386,7 +584,10 @@ pub async fn set_voice_id(
     voice_id: Option<String>,
     state: State<'_, SpeakBarState>,
 ) -> Result<(), String> {
-    *state.voice_id.write().map_err(|e| e.to_string())? = voice_id;
+    *state
+        .voice_id
+        .write()
+        .map_err(|e| e.to_string())? = voice_id;
     Ok(())
 }
 
@@ -397,15 +598,30 @@ pub async fn cleanup_reading(
 ) -> Result<(), String> {
     let _ = app.tts().stop();
 
-    *state.paragraphs.write().map_err(|e| e.to_string())? = Vec::new();
-    *state.title.write().map_err(|e| e.to_string())? = String::new();
-    *state.current_position.write().map_err(|e| e.to_string())? = 0;
-    *state.is_playing.write().map_err(|e| e.to_string())? = false;
+    *state
+        .paragraphs
+        .write()
+        .map_err(|e| e.to_string())? = Vec::new();
+    *state
+        .title
+        .write()
+        .map_err(|e| e.to_string())? = String::new();
+    *state
+        .current_position
+        .write()
+        .map_err(|e| e.to_string())? = 0;
+    *state
+        .mode
+        .write()
+        .map_err(|e| e.to_string())? = Mode::View;
     *state
         .cumulative_durations
         .write()
         .map_err(|e| e.to_string())? = Vec::new();
-    *state.total_duration.write().map_err(|e| e.to_string())? = 0.0;
+    *state
+        .total_duration
+        .write()
+        .map_err(|e| e.to_string())? = 0.0;
 
     #[cfg(any(target_os = "android", target_os = "ios"))]
     let _ = app.media_session().clear();

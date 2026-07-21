@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, watch, inject, onMounted, onUnmounted, nextTick } from 'vue'
-import type { PluginListener } from '@tauri-apps/api/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { invokeNoParseLogError, invokeParseLogError } from '../composables/useTauri'
 import type { AlertContext } from '../types'
@@ -9,7 +8,6 @@ import LanguageSelect from './LanguageSelect.vue'
 import ReaderSettingIcon from './ReaderSettingIcon.vue'
 import ListenResetIcon from './ListenResetIcon.vue'
 import { loadTtsSetting } from '../composables/useTTS'
-import { onAction } from '../composables/useMediaSession'
 import { platform } from '@tauri-apps/plugin-os'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import ConfirmModal from './ConfirmModal.vue'
@@ -43,7 +41,6 @@ const mode = ref<ViewMode>('view')
 const rate = ref(1.0)
 const ttsEnabled = ref(true)
 const stateHandler = ref<UnlistenFn | null>()
-const notificationListener = ref<PluginListener | null>()
 const currentPlatform: string = platform()
 const focusUnlistener = ref<UnlistenFn | null>(null)
 
@@ -66,29 +63,6 @@ function extractParaText(): string[] {
 }
 async function initReading() {
   await invokeNoParseLogError('init_reading', { rate: rate.value, title: props.title || 'Untitled', paragraphs: extractParaText() })
-}
-
-async function loadNotificationHandlers() {
-  try {
-    const unlisten = await onAction((event) => {
-      switch (event.action) {
-        case 'play':
-          mode.value = 'reader'
-          break
-        case 'pause':
-        case 'stop':
-          mode.value = 'view'
-          stop()
-          break
-        default:
-          console.error('Unhandled media session action:', event.action)
-      }
-    })
-    notificationListener.value = unlisten
-  }
-  catch (e) {
-    console.error('Failed to register media session action listener:', e)
-  }
 }
 
 async function loadEventHandlers() {
@@ -227,7 +201,6 @@ onMounted(async () => {
   ttsEnabled.value = await loadTtsSetting()
   await nextTick()
   await initReading()
-  await loadNotificationHandlers()
   await loadEventHandlers()
   props.divRef?.classList.add('view')
   loadCurrentPara(0)
@@ -235,7 +208,6 @@ onMounted(async () => {
 })
 
 onUnmounted(async () => {
-  await notificationListener.value?.unregister()
   stateHandler.value?.()
   await invokeNoParseLogError('cleanup_reading')
 })

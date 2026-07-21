@@ -5811,9 +5811,10 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-media-session"
 version = "0.2.4"
-source = "git+https://github.com/sak96/tauri-plugin-media-session?rev=6132ca7c6875644a1e5da22062a289d056603c5f#6132ca7c6875644a1e5da22062a289d056603c5f"
+source = "git+https://github.com/sak96/tauri-plugin-media-session?rev=78f2539f434a0c17b0be82f054450bf3cc6cb2be#78f2539f434a0c17b0be82f054450bf3cc6cb2be"
 dependencies = [
  "serde",
+ "serde_json",
  "tauri",
  "tauri-plugin",
 ]
