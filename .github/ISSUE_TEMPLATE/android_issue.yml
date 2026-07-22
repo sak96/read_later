@@ -37,34 +37,34 @@ body:
     validations:
       required: false
 
-  - type: checkboxes
-    id: experimental_fetcher
+  - type: dropdown
+    id: fetcher_mode
     attributes:
-      label: Experimental Fetcher
+      label: Fetcher Mode
       description: |
-        The Experimental Fetcher helps bypass JavaScript-heavy websites that may fail to load.
-        Please try it before submitting this issue:
-        1. Open Settings.
-        2. Scroll to Speech Settings.
-        3. Toggle Experimental Fetcher to On.
-        4. Re-add the article.
+        Which fetcher mode were you using when the issue occurred?
+        - **Simple HTML** — Default mode for standard static articles.
+        - **(Beta) Dynamic sites** — Use for JavaScript-heavy sites that fail to load with Simple HTML.
+        - **(Beta) Sites requiring sign in** — Use for articles that require authentication.
       options:
-        - label: I have tried the Experimental Fetcher
-          required: true
+        - Simple HTML (default)
+        - "(Beta) Dynamic sites"
+        - "(Beta) Sites requiring sign in"
+    validations:
+      required: true
 
   - type: checkboxes
     id: reload_icon_check
     attributes:
       label: Article Reload Check
       description: |
-        Sometimes articles fail to load on the first attempt. The reload icon in the reader settings
-        retries the fetch, which often resolves transient loading issues. Please verify it works
-        with the Experimental Fetcher enabled:
+        Sometimes articles fail to load on the first attempt. Please retry with the same fetcher mode
+        you selected above before submitting this issue:
         1. Open the article in the reader.
-        2. Tap the reload icon in the reader settings.
-        3. Confirm the article content refreshed correctly.
+        2. Tap the reload icon in the reader settings, or re-add the article.
+        3. Confirm the article content loaded correctly.
       options:
-        - label: The article reloaded properly when using the reload icon (Experimental Fetcher enabled)
+        - label: I retried with the same fetcher mode and the issue persists
           required: true
 
   - type: textarea
