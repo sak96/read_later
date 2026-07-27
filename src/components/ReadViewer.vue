@@ -33,7 +33,7 @@ function openExternalUrl(url: string) {
 function setLinkCallbacks() {
   if (!divRef.value) return
 
-  const links = divRef.value.querySelectorAll('a')
+  const links = divRef.value.querySelectorAll('a.tts_anchor')
   links.forEach((link) => {
     link.addEventListener('click', (e) => {
       e.preventDefault()
