@@ -1,7 +1,7 @@
 {
   "name": "read-later",
   "private": true,
-  "version": "0.1.80",
+  "version": "0.1.81",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -39,8 +39,8 @@
     "@vue/typescript": "^1.8.20",
     "@vue/typescript-plugin": "^3.2.6",
     "esbuild": "^0.28.1",
-    "eslint": "^9.39.4",
-    "eslint-plugin-vue": "^9.33.0",
+    "eslint": "^10.8.0",
+    "eslint-plugin-vue": "^10.10.0",
     "globals": "^17.4.0",
     "jiti": "^2.6.1",
     "typescript": "^5.9.3",
