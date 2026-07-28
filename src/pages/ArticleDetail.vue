@@ -26,8 +26,8 @@ const onProgress = (progress: FetchProgress | null) => {
 }
 
 async function waitForTauriReady(): Promise<void> {
-  while (!("__TAURI_INTERNALS__" in window)) {
-    await new Promise((resolve) => setTimeout(resolve, 10));
+  while (!('__TAURI_INTERNALS__' in window)) {
+    await new Promise(resolve => setTimeout(resolve, 10))
   }
 }
 
@@ -54,7 +54,7 @@ async function deleteArticle() {
 
 onMounted(async () => {
   mode.value = { type: 'fetching', progress: null }
-  await waitForTauriReady();
+  await waitForTauriReady()
   await loadArticle()
 })
 

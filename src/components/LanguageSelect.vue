@@ -18,7 +18,8 @@ async function loadVoices() {
       if (idx !== -1) {
         selectedIndex.value = idx
         await invokeNoParseLogError('set_voice_id', { voiceId: saved })
-      } else {
+      }
+      else {
         await invokeNoParseLogError('set_voice_id', { voiceId: null })
         await deleteSetting(SETTING_KEY)
       }
@@ -38,7 +39,8 @@ async function onLanguageChange(event: Event) {
   await invokeNoParseLogError('set_voice_id', { voiceId: id })
   if (id) {
     await setSetting(SETTING_KEY, id)
-  } else {
+  }
+  else {
     await deleteSetting(SETTING_KEY)
   }
 }
