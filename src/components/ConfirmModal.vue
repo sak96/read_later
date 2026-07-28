@@ -3,7 +3,7 @@ import type { Component } from 'vue'
 import { X, Check } from 'lucide-vue-next'
 
 defineProps<{
-  icon: Component
+  icon?: Component
   i18nKey: string
   message: string
   show: boolean
@@ -26,12 +26,14 @@ const emit = defineEmits<{
         />
         <component
           :is="icon"
+          v-if="icon"
           size="2em"
           style="margin-right: 1em"
         />
         <span :data-i18n="i18nKey" />
       </header>
       <strong>{{ message }}</strong>
+      <slot />
       <footer>
         <button
           class="secondary"

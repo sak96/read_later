@@ -56,6 +56,11 @@ pub fn run() {
             crate::commands::set_voice_id,
             crate::commands::cleanup_reading,
             crate::commands::sync_articles,
+            crate::commands::get_pronunciation_rules,
+            crate::commands::save_pronunciation_rule,
+            crate::commands::delete_pronunciation_rule,
+            crate::commands::pick_pronunciation_import_file,
+            crate::commands::pick_pronunciation_export_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

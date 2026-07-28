@@ -55,6 +55,12 @@ pub struct Setting {
     pub default_value: String,
 }
 
+#[derive(Serialize, Deserialize, PartialEq, Clone, sqlx::FromRow)]
+pub struct PronunciationRule {
+    pub match_pattern: String,
+    pub replacement: String,
+}
+
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 #[serde(untagged)]
 pub enum IntentEvent {
@@ -100,6 +106,12 @@ pub fn get_migrations() -> Vec<Migration> {
             sql: include_str!(
                 "../migrations/2026-05-24-144135_add_unique_constraint_to_articles.sql"
             ),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 6,
+            description: "add_pronunciation_rules",
+            sql: include_str!("../migrations/2026-07-28-000000_add_pronunciation_rules.sql"),
             kind: MigrationKind::Up,
         },
     ]

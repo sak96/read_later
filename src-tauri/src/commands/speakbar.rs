@@ -78,7 +78,8 @@ pub async fn init_reading(
     paragraphs: Vec<String>,
     state: State<'_, SpeakBarState>,
 ) -> Result<(), String> {
-    *state.paragraphs.write().map_err(|e| e.to_string())? = paragraphs;
+    let processed = super::pronunciation::apply_pronunciation_rules(&app, paragraphs).await?;
+    *state.paragraphs.write().map_err(|e| e.to_string())? = processed;
     *state.title.write().map_err(|e| e.to_string())? = title;
     *state.rate.write().map_err(|e| e.to_string())? = rate;
     *state.current_position.write().map_err(|e| e.to_string())? = 0;

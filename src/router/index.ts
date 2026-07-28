@@ -4,6 +4,7 @@ const Home = () => import('../pages/Home.vue')
 const ArticleDetail = () => import('../pages/ArticleDetail.vue')
 const Settings = () => import('../pages/Settings.vue')
 const AddArticle = () => import('../pages/AddArticle.vue')
+const PronunciationRules = () => import('../pages/PronunciationRules.vue')
 
 const routes = [
   {
@@ -33,6 +34,11 @@ const routes = [
     path: '/add_article/',
     name: 'addArticle',
     component: AddArticle,
+  },
+  {
+    path: '/pronunciation-rules',
+    name: 'pronunciationRules',
+    component: PronunciationRules,
   },
 ]
 

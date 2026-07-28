@@ -106,6 +106,7 @@ dependencies = [
  "html5ever 0.38.0",
  "kuchikikiki",
  "readabilityrs",
+ "regex",
  "reqwest_dav",
  "serde",
  "serde_json",

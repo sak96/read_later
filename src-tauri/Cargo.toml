@@ -23,6 +23,7 @@ tauri-plugin-sql = { version = "2.3.1", features = ["sqlite"] }
 tauri-plugin-tts = "0.1.11"
 tauri-plugin-i18n = "2.0.2"
 sqlx = "0.8.0"
+regex = "1"
 kuchikikiki = "0.9"
 html5ever = "0.38"
 url = "2.5.7"

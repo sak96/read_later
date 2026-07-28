@@ -1,7 +1,4 @@
-use crate::fetcher::{new_fetcher, Fetcher, FetcherMode};
 use crate::models::*;
-use crate::parse::{build_snippet, process_html};
-use readabilityrs::Readability;
 use sqlx::{query, query_as, query_scalar};
 use tauri::{State, ipc::Channel};
 use tauri_plugin_sql::DbInstances;
@@ -52,6 +49,10 @@ pub async fn get_articles(
         }
     }
 }
+
+use crate::fetcher::{new_fetcher, Fetcher, FetcherMode};
+use crate::parse::{build_snippet, process_html};
+use readabilityrs::Readability;
 
 async fn fetch_parse_update_article(
     article_url: &str,
