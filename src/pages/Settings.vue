@@ -6,6 +6,7 @@ import { openUrl } from '@tauri-apps/plugin-opener'
 import HomeButton from '../components/HomeButton.vue'
 import DataTransferButton from '../components/DataTransferButton.vue'
 import SpeakRate from '../components/SpeakRate.vue'
+import FetcherMode from '../components/FetcherMode.vue'
 import LanguageSelect from '../components/LanguageSelect.vue'
 import FontScale from '../components/FontScale.vue'
 import LocaleBar from '../components/LocaleBar.vue'
@@ -13,7 +14,7 @@ import WebdavSettings from '../components/WebdavSettings.vue'
 import { Fab } from '../layouts'
 import { loadTtsSetting } from '../composables/useTTS'
 import { invokeParseLogError } from '../composables/useTauri'
-import { FETCHER_MODE, TUTORIAL_SHOWN, TTS_ENABLED, THEME } from '../constants'
+import { TUTORIAL_SHOWN, TTS_ENABLED, THEME } from '../constants'
 import { MonitorCog, Sun, Moon, CodeXml, Bug, Palette, Speech, Archive, Info } from 'lucide-vue-next'
 
 type Theme = 'light' | 'dark' | 'system'
@@ -23,15 +24,7 @@ const themeContext = inject<{ mode: Ref<Theme>, setMode: (mode: Theme) => void }
 const appVersion = ref('N/A')
 const ttsEnabled = ref(true)
 const tutorialEnabled = ref(true)
-const fetcherMode = ref('html')
 const articleCount = ref(0)
-
-const fetcherModes = [
-  { value: 'html', label: 'fetcher_html' },
-  { value: 'html_js', label: 'fetcher_html_js' },
-  { value: 'html_js_auth', label: 'fetcher_html_js_auth' },
-]
-
 const themes = [
   { value: 'light' as Theme, icon: Sun },
   { value: 'dark' as Theme, icon: Moon },
@@ -62,21 +55,12 @@ async function onTutorialToggle() {
   await setSetting(TUTORIAL_SHOWN, newState ? 'false' : 'true')
 }
 
-async function onFetcherModeChange(event: Event) {
-  const target = event.target as HTMLSelectElement
-  const newMode = target.value
-  fetcherMode.value = newMode
-  await setSetting(FETCHER_MODE, newMode)
-}
-
 onMounted(async () => {
   articleCount.value = await invokeParseLogError<number>('get_article_count') || 0
   appVersion.value = await getVersion()
   ttsEnabled.value = await loadTtsSetting()
   const tutorialSetting = await getSetting(TUTORIAL_SHOWN)
   tutorialEnabled.value = tutorialSetting !== 'true'
-  const fetcherModeSetting = await getSetting(FETCHER_MODE)
-  fetcherMode.value = fetcherModeSetting || 'html'
 })
 </script>
 
@@ -134,25 +118,9 @@ onMounted(async () => {
                   >
                 </td>
               </tr>
-              <tr>
-                <th data-i18n="fetcher_mode" />
-                <td>
-                  <select
-                    style="text-align-last: center;"
-                    @change="onFetcherModeChange"
-                  >
-                    <option
-                      v-for="mode in fetcherModes"
-                      :key="mode.value"
-                      :selected="fetcherMode === mode.value"
-                      :value="mode.value"
-                      :data-i18n="mode.label"
-                    />
-                  </select>
-                </td>
-              </tr>
             </tbody>
           </table>
+          <FetcherMode />
           <SpeakRate
             :model-value="1"
             @update:model-value="() => {}"
