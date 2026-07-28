@@ -120,13 +120,13 @@ onMounted(async () => {
               </tr>
             </tbody>
           </table>
-          <FetcherMode />
           <SpeakRate
             :model-value="1"
             @update:model-value="() => {}"
           />
-          <LanguageSelect />
           <FontScale :target="null" />
+          <LanguageSelect />
+          <FetcherMode />
         </fieldset>
         <hr>
 
