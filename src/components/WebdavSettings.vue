@@ -88,36 +88,30 @@ onMounted(async () => {
             >
           </td>
         </tr>
-        <tr>
-          <td>
-            <button
-              type="button"
-              :disabled="!webdavEnabled"
-              class="outline"
-              @click="openWebdavDialog"
-            >
-              <Pencil />
-            </button>
-          </td>
-          <td>
-            <button
-              type="button"
-              :disabled="!webdavEnabled"
-              class="outline"
-              @click="goSync"
-            >
-              <CloudSync />
-            </button>
-          </td>
-        </tr>
-        <tr>
-          <td colspan="2">
-            <BadgeAlert />
-            <small data-i18n="webdav_sync_instruction" />
-          </td>
-        </tr>
       </tbody>
     </table>
+    <div role="group">
+      <button
+        type="button"
+        :disabled="!webdavEnabled"
+        class="outline"
+        @click="openWebdavDialog"
+      >
+        <Pencil />
+      </button>
+      <button
+        type="button"
+        :disabled="!webdavEnabled"
+        class="outline"
+        @click="goSync"
+      >
+        <CloudSync />
+      </button>
+    </div>
+    <small>
+      <BadgeAlert />
+      <span data-i18n="webdav_sync_instruction" />
+    </small>
   </fieldset>
   <dialog :open="showWebdavDialog">
     <article>
