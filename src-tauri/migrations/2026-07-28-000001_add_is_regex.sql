@@ -1,0 +1,1 @@
+ALTER TABLE pronunciation_rules ADD COLUMN is_regex INTEGER NOT NULL DEFAULT 0;

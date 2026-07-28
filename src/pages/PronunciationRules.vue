@@ -11,12 +11,13 @@ import ConfirmModal from '../components/ConfirmModal.vue'
 interface PronunciationRule {
   match_pattern: string
   replacement: string
+  is_regex: boolean
 }
 
 const alertContext = inject<AlertContext | null>('alert')
 const rules = ref<PronunciationRule[]>([])
 
-const editingRule = ref<PronunciationRule>({ match_pattern: '', replacement: '' })
+const editingRule = ref<PronunciationRule>({ match_pattern: '', replacement: '', is_regex: false })
 const isNewRule = ref(false)
 const showEditor = ref(false)
 const showDeleteConfirm = ref(false)
@@ -31,7 +32,7 @@ function openEditor(rule?: PronunciationRule) {
     editingRule.value = { ...rule }
     isNewRule.value = false
   } else {
-    editingRule.value = { match_pattern: '', replacement: '' }
+    editingRule.value = { match_pattern: '', replacement: '', is_regex: false }
     isNewRule.value = true
   }
   showEditor.value = true
@@ -47,6 +48,7 @@ async function saveRule() {
     await invokeParse('save_pronunciation_rule', {
       matchPattern: editingRule.value.match_pattern,
       replacement: editingRule.value.replacement,
+      isRegex: editingRule.value.is_regex,
     })
   } catch (err) {
     alertContext?.updateAlertContext?.('error', `${err}`)
@@ -94,6 +96,7 @@ onMounted(loadRules)
         >
           <header>
             <mark>{{ rule.match_pattern }}</mark>
+            <kbd v-if="rule.is_regex">regex</kbd>
           </header>
           <p>{{ rule.replacement }}</p>
           <footer>
@@ -143,6 +146,14 @@ onMounted(loadRules)
           v-model="editingRule.replacement"
           type="text"
         >
+      </label>
+      <label>
+        <input
+          v-model="editingRule.is_regex"
+          type="checkbox"
+          role="switch"
+        >
+        <span data-i18n="regex" />
       </label>
     </ConfirmModal>
 

@@ -59,6 +59,8 @@ pub struct Setting {
 pub struct PronunciationRule {
     pub match_pattern: String,
     pub replacement: String,
+    #[serde(default)]
+    pub is_regex: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -112,6 +114,12 @@ pub fn get_migrations() -> Vec<Migration> {
             version: 6,
             description: "add_pronunciation_rules",
             sql: include_str!("../migrations/2026-07-28-000000_add_pronunciation_rules.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 7,
+            description: "add_is_regex_to_pronunciation_rules",
+            sql: include_str!("../migrations/2026-07-28-000001_add_is_regex.sql"),
             kind: MigrationKind::Up,
         },
     ]
