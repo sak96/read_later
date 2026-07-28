@@ -291,11 +291,11 @@ onUnmounted(async () => {
         />
         <span data-i18n="speech_settings" />
       </header>
+      <FontScale :target="divRef" />
       <template v-if="ttsEnabled">
         <SpeakRate v-model="rate" />
         <LanguageSelect />
       </template>
-      <FontScale :target="divRef" />
       <div role="group">
         <button
           v-if="articleUrl"
