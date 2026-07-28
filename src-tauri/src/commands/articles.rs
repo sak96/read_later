@@ -2,7 +2,7 @@ use crate::fetcher::{new_fetcher, Fetcher, FetcherMode};
 use crate::models::*;
 use crate::parse::{build_snippet, process_html};
 use readabilityrs::Readability;
-use sqlx::{query, query_as};
+use sqlx::{query, query_as, query_scalar};
 use tauri::{State, ipc::Channel};
 use tauri_plugin_sql::DbInstances;
 
@@ -250,4 +250,34 @@ pub async fn delete_article(id: i32, db_instances: State<'_, DbInstances>) -> Re
             Ok(result.rows_affected())
         }
     }
+}
+
+#[tauri::command]
+pub async fn pick_import_file(
+    app: tauri::AppHandle,
+    db_instances: State<'_, DbInstances>,
+) -> Result<(), String> {
+    let urls: Vec<String> = crate::file_helpers::pick_and_read_json(&app)?;
+    for url in urls {
+        add_article(url, db_instances.clone()).await?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn pick_export_file(
+    app: tauri::AppHandle,
+    db_instances: State<'_, DbInstances>,
+) -> Result<(), String> {
+    let instances = db_instances.0.read().await;
+    let db = instances.get(DB_URL).ok_or("db not loaded")?;
+    let urls = match db {
+        tauri_plugin_sql::DbPool::Sqlite(pool) => query_scalar::<_, String>(
+            "SELECT url FROM articles where is_deleted == 0 ORDER BY created_at",
+        )
+        .fetch_all(pool)
+        .await
+        .map_err(|e| e.to_string())?,
+    };
+    crate::file_helpers::pick_and_write_json(&app, &urls, "read_later.json")
 }

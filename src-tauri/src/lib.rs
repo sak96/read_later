@@ -1,5 +1,11 @@
 pub mod commands;
 pub mod fetcher;
+#[cfg(not(target_os = "android"))]
+pub mod file_helpers;
+#[cfg(target_os = "android")]
+pub mod file_helpers_android;
+#[cfg(target_os = "android")]
+pub use file_helpers_android as file_helpers;
 pub mod models;
 pub mod parse;
 
