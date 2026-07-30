@@ -65,6 +65,15 @@ cargo tauri android build  --split-per-abi
 |![tts](fastlane/metadata/android/en-US/images/phoneScreenshots/3_tts.png)|![settings](fastlane/metadata/android/en-US/images/phoneScreenshots/4_settings.png)|
 |![dark](fastlane/metadata/android/en-US/images/phoneScreenshots/5_dark.png)|![dark](fastlane/metadata/android/en-US/images/phoneScreenshots/6_light.png)|
 
+## Translation
+
+| Location | Format | Purpose |
+|----------|--------|---------|
+| `src-tauri/locales/*.toml` | TOML | App UI strings |
+| `fastlane/metadata/android/{locale}/` | Text files | Android store listing |
+
+To contribute translations, edit or create the corresponding files and submit a pull request. For new locales, symlink the `images` folder to `../en-US/images` instead of copying screenshots.
+
 ## License
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
