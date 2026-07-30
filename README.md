@@ -17,8 +17,6 @@ Read it later app done using Tauri. Mainly for android.
 
 [![RB Status](https://shields.rbtlog.dev/simple/io.github.sak.read.it.later?style=for-the-badge)](https://shields.rbtlog.dev/io.github.sak.read.it.later)
 
-[![IzzyOnDroid Yearly Downloads](https://img.shields.io/badge/dynamic/json?url=https://dlstats.izzyondroid.org/iod-stats-collector/stats/basic/yearly/rolling.json&query=$.['io.github.sak.read.it.later']&label=IzzyOnDroid%20yearly%20downloads)](https://apt.izzysoft.de/packages/io.github.sak.read.it.later)
-
 ## Setup
 
 ```bash
