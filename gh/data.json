@@ -1,0 +1,15 @@
+{
+  "default": "en-US",
+  "locales": {
+    "en-US": {
+      "title": "{app title}",
+      "shortDescription": "{short description}",
+      "fullDescription": "{full description}",
+      "images": {
+        "featureGraphic": "{feature graphic}",
+        "icon": "{icon image}",
+        "screenshots": []
+      }
+    }
+  }
+}

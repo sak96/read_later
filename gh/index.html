@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Read Later — Store Listing</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+    />
+    <style>
+      .screenshot-scroll {
+        overflow-x: auto;
+        white-space: nowrap;
+        text-align: center;
+      }
+      .screenshot-scroll img {
+        height: 300px;
+        display: inline-block;
+        margin-right: 1rem;
+      }
+      .feature-graphic {
+        width: 100%;
+        max-width: 1024px;
+        display: block;
+        margin: 0 auto;
+      }
+      .app-icon {
+        max-height: 2em;
+        vertical-align: middle;
+      }
+      .description {
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="container">
+      <nav>
+        <ul>
+          <li><img id="navIcon" class="app-icon" /></li>
+          <li><strong id="navTitle">Read Later</strong></li>
+        </ul>
+        <ul>
+          <li>
+            <details class="dropdown" id="localeDropdown">
+              <summary id="localeSummary">en-US</summary>
+              <ul id="localeList"></ul>
+            </details>
+          </li>
+          <li>
+            <button id="themeToggle" aria-label="Toggle dark mode"></button>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="container">
+      <div id="app"></div>
+    </main>
+
+    <script>
+      const app = document.getElementById("app");
+      const localeList = document.getElementById("localeList");
+      const localeSummary = document.getElementById("localeSummary");
+      const toggle = document.getElementById("themeToggle");
+      const navIcon = document.getElementById("navIcon");
+      const navTitle = document.getElementById("navTitle");
+
+      const THEME_KEY = "theme";
+      const LOCALE_KEY = "locale";
+
+      function getTheme() {
+        return localStorage.getItem(THEME_KEY) || "light";
+      }
+
+      function setTheme(t) {
+        document.documentElement.setAttribute("data-theme", t);
+        localStorage.setItem(THEME_KEY, t);
+        toggle.textContent = t === "dark" ? "\u2600" : "\u263E";
+      }
+
+      function getLocale(data) {
+        const saved = localStorage.getItem(LOCALE_KEY);
+        if (saved && data.locales[saved]) return saved;
+        return data.default;
+      }
+
+      function setLocale(locale) {
+        localStorage.setItem(LOCALE_KEY, locale);
+      }
+
+      toggle.addEventListener("click", () => {
+        setTheme(getTheme() === "dark" ? "light" : "dark");
+      });
+      setTheme(getTheme());
+
+      function imgSrc(path) {
+        return path.startsWith("{") ? "" : "images/" + path;
+      }
+
+      function imgAlt(path, fallback) {
+        return path.startsWith("{") ? path : fallback;
+      }
+
+      function renderDescription(text) {
+        const escaped = text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+        const lines = escaped.split("\n");
+        let html = "";
+        let inList = false;
+
+        for (const raw of lines) {
+          const line = raw.replace(/&lt;br&gt;/gi, "<br>");
+
+          if (line.trim() === "") {
+            if (inList) {
+              html += "</ul>";
+              inList = false;
+            }
+            html += "<br />";
+            continue;
+          }
+
+          if (/^- /.test(line)) {
+            if (!inList) {
+              html += "<ul>";
+              inList = true;
+            }
+            html += "<li>" + line.slice(2) + "</li>";
+          } else {
+            if (inList) {
+              html += "</ul>";
+              inList = false;
+            }
+            html += "<p>" + line + "</p>";
+          }
+        }
+
+        if (inList) html += "</ul>";
+        return html;
+      }
+
+      function render(locale, data) {
+        const loc = data.locales[locale];
+        if (!loc) return;
+
+        setLocale(locale);
+        localeSummary.textContent = locale;
+
+        const isRtl = locale === "ar";
+        const dir = isRtl ? ' dir="rtl"' : "";
+        const lang = ` lang="${locale}"`;
+        const images = loc.images || {};
+
+        const iconSrc = imgSrc(images.icon || "");
+        const iconAlt = imgAlt(images.icon || "", loc.title + " icon");
+        const graphicSrc = imgSrc(images.featureGraphic || "");
+        const graphicAlt = imgAlt(images.featureGraphic || "", "Feature graphic");
+
+        navIcon.src = iconSrc;
+        navIcon.alt = iconAlt;
+        navTitle.textContent = loc.title;
+
+        const screenshots = (images.screenshots || [])
+          .map(
+            (s, i) =>
+              `<img src="images/phoneScreenshots/${s}" alt="Screenshot ${i + 1}" loading="lazy" />`
+          )
+          .join("\n            ");
+
+        app.innerHTML = `
+      <article${lang}${dir}>
+        <img class="feature-graphic" src="${graphicSrc}" alt="${graphicAlt}" />
+
+        <div class="description">
+          ${renderDescription(loc.fullDescription)}
+        </div>
+
+        ${screenshots ? `
+        <div class="screenshot-scroll">
+          ${screenshots}
+        </div>` : ""}
+      </article>`;
+      }
+
+      fetch("data.json")
+        .then((r) => r.json())
+        .then((data) => {
+          const locales = Object.keys(data.locales);
+
+          localeList.innerHTML = locales
+            .map(
+              (l) =>
+                `<li><a href="#" data-locale="${l}">${l}</a></li>`
+            )
+            .join("");
+
+          localeList.addEventListener("click", (e) => {
+            if (e.target.dataset.locale) {
+              e.preventDefault();
+              render(e.target.dataset.locale, data);
+            }
+          });
+
+          const initial = getLocale(data);
+          render(initial, data);
+        });
+    </script>
+  </body>
+</html>
