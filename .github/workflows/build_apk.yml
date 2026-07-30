@@ -124,6 +124,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Generate metadata JSON
+        run: python3 gh/generate_data.py
+
       - name: Copy images
         run: cp -r fastlane/metadata/android/en-US/images gh/images
 
