@@ -11,6 +11,14 @@ Read it later app done using Tauri. Mainly for android.
 [<img src="https://raw.githubusercontent.com/Kunzisoft/Github-badge/main/get-it-on-github.png" height="80px">](https://github.com/sak96/read_later/releases/latest)
 [<img src="https://www.openapk.net/images/openapk-badge.png" height="80px">](https://www.openapk.net/read-later/io.github.sak.read.it.later/)
 
+## Stats
+
+[![GitHub stars](https://img.shields.io/github/stars/sak96/read_later)](https://github.com/sak96/read_later/stargazers)
+
+[![RB Status](https://shields.rbtlog.dev/simple/io.github.sak.read.it.later?style=for-the-badge)](https://shields.rbtlog.dev/io.github.sak.read.it.later)
+
+[![IzzyOnDroid Yearly Downloads](https://img.shields.io/badge/dynamic/json?url=https://dlstats.izzyondroid.org/iod-stats-collector/stats/basic/yearly/rolling.json&query=$.['io.github.sak.read.it.later']&label=IzzyOnDroid%20yearly%20downloads)](https://apt.izzysoft.de/packages/io.github.sak.read.it.later)
+
 ## Setup
 
 ```bash
