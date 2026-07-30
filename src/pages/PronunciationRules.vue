@@ -31,7 +31,8 @@ function openEditor(rule?: PronunciationRule) {
   if (rule) {
     editingRule.value = { ...rule }
     isNewRule.value = false
-  } else {
+  }
+  else {
     editingRule.value = { match_pattern: '', replacement: '', is_regex: false }
     isNewRule.value = true
   }
@@ -50,7 +51,8 @@ async function saveRule() {
       replacement: editingRule.value.replacement,
       isRegex: editingRule.value.is_regex,
     })
-  } catch (err) {
+  }
+  catch (err) {
     alertContext?.updateAlertContext?.('error', `${err}`)
     return
   }
@@ -95,8 +97,8 @@ onMounted(loadRules)
           :key="rule.match_pattern"
         >
           <header>
-            <mark>{{ rule.match_pattern }}</mark>
-            <kbd v-if="rule.is_regex">regex</kbd>
+            {{ rule.match_pattern }}
+            <sub v-if="rule.is_regex">&nbsp;regex</sub>
           </header>
           <p>{{ rule.replacement }}</p>
           <footer>

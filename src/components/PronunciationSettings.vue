@@ -13,7 +13,8 @@ async function handleImport() {
   isLoading.value = true
   try {
     await invokeParse('pick_pronunciation_import_file', {})
-  } catch (err) {
+  }
+  catch (err) {
     alertContext?.updateAlertContext?.('error', `${err}`)
   }
   isLoading.value = false
@@ -23,7 +24,8 @@ async function handleExport() {
   isLoading.value = true
   try {
     await invokeParse('pick_pronunciation_export_file', {})
-  } catch (err) {
+  }
+  catch (err) {
     alertContext?.updateAlertContext?.('error', `${err}`)
   }
   isLoading.value = false

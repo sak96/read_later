@@ -11,7 +11,6 @@ const scale = ref(1)
 
 async function loadScale() {
   const value = await getSetting(FONT_SCALE)
-  console.log(value)
   if (value !== null) {
     const parsed = parseFloat(value)
     scale.value = parsed
