@@ -1,4 +1,4 @@
-# Read It Later
+# [Read It Later](https://sak96.github.io/read_later/)
 
 Read it later app done using Tauri. Mainly for android.
 
