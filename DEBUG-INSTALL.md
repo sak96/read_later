@@ -8,16 +8,22 @@ Instructions for installing debug and release APKs without losing your data.
 
 - Open the app
 - Tap Settings
-- Scroll to the **Restore** section
+- Scroll to the **Restore** section for saving articles
 - Tap the **Export** button (download icon)
+- Choose where to save the file on your device
+- For pronunciation rules: scroll to **Speech** section
+- Tap the **Export** button in the **Pronunciation Rules** row
 - Choose where to save the file on your device
 
 **Importing:**
 
 - Open the app
 - Tap Settings
-- Scroll to the **Restore** section
+- Scroll to the **Restore** section for importing articles
 - Tap the **Import** button (upload icon)
+- Select the previously exported file
+- For pronunciation rules: scroll to **Speech** section
+- Tap the **Import** button in the **Pronunciation Rules** row
 - Select the previously exported file
 
 ## Configuring WebDAV
