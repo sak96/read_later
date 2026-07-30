@@ -1,0 +1,22 @@
+[
+  {
+    "name": "GitHub",
+    "url": "https://github.com/sak96/read_later/releases/latest",
+    "icon": "https://gist.githubusercontent.com/eyecatchup/8928ba7f42b6cbc5d8f76cbbf3bb2316/raw/df7220127bb6275c5ad66b5c9377c63dce22c81d/github-mark.svg"
+  },
+  {
+    "name": "IzzyOnDroid",
+    "url": "https://apt.izzysoft.de/packages/io.github.sak.read.it.later",
+    "icon": "https://izzyondroid.org/assets/static/IzzyOnDroidLogo.svg"
+  },
+  {
+    "name": "Google Play",
+    "url": "https://play.google.com/store/apps/details?id=io.github.sak.read.it.later",
+    "icon": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Google_Play_Arrow_logo.svg"
+  },
+  {
+    "name": "OpenAPK",
+    "url": "https://www.openapk.net/read-later/io.github.sak.read.it.later/",
+    "icon": "https://raw.githubusercontent.com/mobilenetworkltd/openapk/refs/heads/main/public/openapk-blank.svg"
+  }
+]
