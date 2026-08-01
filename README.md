@@ -6,7 +6,7 @@ Read it later app done using Tauri. Mainly for android.
 
 ## Install
 
-[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroidButtonGreyBorder_nofont.png" height="50px" style="padding-left: 1.5%">](https://apt.izzysoft.de/packages/io.github.sak.read.it.later)
+[<img src="https://countdate.sk5s.com/assets/img/IzzyOnDroid.png" height="80px">](https://apt.izzysoft.de/packages/io.github.sak.read.it.later)
 [<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="80px">](https://play.google.com/store/apps/details?id=io.github.sak.read.it.later)
 [<img src="https://raw.githubusercontent.com/Kunzisoft/Github-badge/main/get-it-on-github.png" height="80px">](https://github.com/sak96/read_later/releases/latest)
 [<img src="https://www.openapk.net/images/openapk-badge.png" height="80px">](https://www.openapk.net/read-later/io.github.sak.read.it.later/)
