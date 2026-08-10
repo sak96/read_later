@@ -67,8 +67,6 @@ async fn fetch_parse_update_article(
 
     let options = readabilityrs::ReadabilityOptions::builder()
         .remove_title_from_content(true)
-        .clean_whitespace(false)
-        .debug(true)
         .build();
     let article_data = Readability::new(&html, Some(article_url), Some(options))
         .map_err(|e| format!("Failed to parse: {:?}", e))?
