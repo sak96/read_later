@@ -2,10 +2,9 @@
 import { ref, onMounted, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { invokeParse, invokeNoParseLogError } from '../composables/useTauri'
-import { Channel } from '@tauri-apps/api/core'
-import type { Article, FetchProgress, AlertContext } from '../types'
+import type { Article, AlertContext } from '../types'
 import ReadViewer from '../components/ReadViewer.vue'
-import { Trash2, Loader, CloudDownload, DatabaseSearch, LucideIcon } from 'lucide-vue-next'
+import { Trash2, Loader, CloudDownload, LucideIcon } from 'lucide-vue-next'
 
 const props = defineProps<{
   id: number
@@ -14,16 +13,13 @@ const props = defineProps<{
 const router = useRouter()
 
 type PageMode
-  = | { type: 'fetching', progress: FetchProgress | null }
+  = | { type: 'fetching' }
+    | { type: 'downloading' }
     | { type: 'returned', article: Article }
 
-const mode = ref<PageMode>({ type: 'fetching', progress: null })
+const mode = ref<PageMode>({ type: 'fetching' })
 
 const alertContext = inject<AlertContext | null>('alert')
-
-const onProgress = (progress: FetchProgress | null) => {
-  mode.value = { type: 'fetching', progress }
-}
 
 async function waitForTauriReady(): Promise<void> {
   while (!('__TAURI_INTERNALS__' in window)) {
@@ -32,12 +28,21 @@ async function waitForTauriReady(): Promise<void> {
 }
 
 async function loadArticle() {
+  mode.value = { type: 'fetching' }
+  await waitForTauriReady()
   try {
-    const channel = new Channel<FetchProgress>(onProgress)
-    const result = await invokeParse<Article>('get_article', { id: props.id, onProgress: channel })
+    let result: Article | null = null
+
+    while (result === null) {
+      result = await invokeParse<Article | null>('get_article', {
+        id: props.id,
+      })
+      if (result === null) {
+        await new Promise(resolve => setTimeout(resolve, 500))
+        mode.value = { type: 'downloading' }
+      }
+    }
     mode.value = { type: 'returned', article: result } as PageMode
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- call private functions
-    (channel as any).cleanupCallback()
   }
   catch (err) {
     alertContext?.updateAlertContext?.('error', `Failed to fetch article: ${err}`)
@@ -53,19 +58,12 @@ async function deleteArticle() {
 }
 
 onMounted(async () => {
-  mode.value = { type: 'fetching', progress: null }
-  await waitForTauriReady()
   await loadArticle()
 })
 
-function getProgressInfo(progress: FetchProgress | null): { icon: LucideIcon, title: string } {
-  if (progress) {
-    if (progress.type === 'Downloading') {
-      return { icon: CloudDownload, title: progress.message }
-    }
-    if (progress.type === 'Parsing') {
-      return { icon: DatabaseSearch, title: progress.message }
-    }
+function getProgressInfo(mode: PageMode): { icon: LucideIcon, title: string } {
+  if (mode.type === 'downloading') {
+    return { icon: CloudDownload, title: 'Downloading' }
   }
   return { icon: Loader, title: '...' }
 }
@@ -79,14 +77,11 @@ function getProgressInfo(progress: FetchProgress | null): { icon: LucideIcon, ti
   >
     <article style="width: 100%;">
       <h2>
-        <component :is="getProgressInfo(mode.progress).icon" />
-        <p>{{ getProgressInfo(mode.progress).title }}</p>
+        <component :is="getProgressInfo(mode).icon" />
+        <p>{{ getProgressInfo(mode).title }}</p>
       </h2>
       <progress />
-      <footer
-        v-if="mode.progress && 'Downloading' in mode.progress"
-        dir="rtl"
-      >
+      <footer dir="rtl">
         <button
           class="secondary"
           @click="deleteArticle"

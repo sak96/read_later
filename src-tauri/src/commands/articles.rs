@@ -1,6 +1,8 @@
+use crate::fetcher::{FetcherMode, fetch_parse_update_article, new_fetcher};
 use crate::models::*;
+use crate::parse::{build_snippet, process_html};
 use sqlx::{query, query_as, query_scalar};
-use tauri::{State, ipc::Channel};
+use tauri::{Manager, State};
 use tauri_plugin_sql::DbInstances;
 
 #[tauri::command]
@@ -50,47 +52,12 @@ pub async fn get_articles(
     }
 }
 
-use crate::fetcher::{new_fetcher, Fetcher, FetcherMode};
-use crate::parse::{build_snippet, process_html};
-use readabilityrs::Readability;
-
-async fn fetch_parse_update_article(
-    article_url: &str,
-    fetcher: &mut dyn Fetcher,
-    on_progress: &Channel<FetchProgress>,
-) -> Result<(String, String, String), String> {
-    on_progress
-        .send(FetchProgress::Downloading(article_url.to_string()))
-        .map_err(|e| e.to_string())?;
-
-    let html = fetcher.fetch().await?;
-
-    let options = readabilityrs::ReadabilityOptions::builder()
-        .remove_title_from_content(true)
-        .build();
-    let article_data = Readability::new(&html, Some(article_url), Some(options))
-        .map_err(|e| format!("Failed to parse: {:?}", e))?
-        .parse()
-        .ok_or("Failed to extract article")?;
-
-    let title = match article_data.title {
-        Some(v) if v.is_empty() => "Untitled".into(),
-        None => "Untitled".into(),
-        Some(v) => v,
-    };
-    let body = article_data.content.unwrap_or_default();
-    let text_content = article_data.text_content.unwrap_or_default();
-
-    Ok((title, body, text_content))
-}
-
 #[tauri::command]
 pub async fn get_article(
     id: i32,
     db_instances: State<'_, DbInstances>,
-    on_progress: Channel<FetchProgress>,
     app: tauri::AppHandle,
-) -> Result<Article, String> {
+) -> Result<Option<Article>, String> {
     let instances = db_instances.0.read().await;
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
@@ -113,51 +80,54 @@ pub async fn get_article(
                 .fetch_one(pool)
                 .await
                 .ok()
-                .map(|r| r.0)
-                .and_then(|v| FetcherMode::from_str(&v))
-                .unwrap_or(FetcherMode::Html);
+                .and_then(|r| r.0.parse::<FetcherMode>().ok())
+                .unwrap_or_default();
 
                 let mut fetcher = new_fetcher(&app, &article.url, mode)?;
-
-                article = match fetch_parse_update_article(
-                    &article.url,
-                    &mut *fetcher,
-                    &on_progress,
-                )
-                .await
-                {
-                    Ok((title, body, text_content)) => query_as::<_, Article>(
-                        r#"
-                                UPDATE articles
-                                SET title = $2, body = $3, url = $4, text_content = $5
-                                WHERE id = $1
-                                RETURNING id, title, body, created_at, url
-                            "#,
-                    )
-                    .bind(article.id)
-                    .bind(title)
-                    .bind(body)
-                    .bind(&article.url)
-                    .bind(text_content)
-                    .fetch_one(pool)
-                    .await
-                    .map_err(|e| e.to_string()),
-                    Err(e) => {
-                        let _ = query(
+                tauri::async_runtime::spawn(async move {
+                    let db_instances = app.state::<tauri_plugin_sql::DbInstances>();
+                    let instances = db_instances.0.read().await;
+                    if let Ok(tauri_plugin_sql::DbPool::Sqlite(pool)) =
+                        instances.get(DB_URL).ok_or("db not loaded")
+                    {
+                        match fetch_parse_update_article(&article.url, &mut *fetcher).await {
+                            Ok((title, body, text_content)) => {
+                                if let Err(e) = query_as::<_, Article>(
+                                    r#"
+                                    UPDATE articles
+                                    SET title = $2, body = $3, url = $4, text_content = $5
+                                    WHERE id = $1
+                                    RETURNING id, title, body, created_at, url
+                                    "#,
+                                )
+                                .bind(article.id)
+                                .bind(title)
+                                .bind(body)
+                                .bind(&article.url)
+                                .bind(text_content)
+                                .fetch_one(pool)
+                                .await
+                                {
+                                    eprintln!("{}", e);
+                                }
+                            }
+                            Err(e) => {
+                                eprintln!("{}", e);
+                                let _ = query(
                             "UPDATE articles SET is_deleted = 1, title = '', body = '', text_content = '' WHERE id = ?",
                         )
                         .bind(id)
                         .execute(pool)
                         .await;
-                        Err(e)
+                            }
+                        };
                     }
-                }?;
+                });
+                Ok(None)
+            } else {
+                article.body = process_html(&article.body, &article.url);
+                Ok(Some(article))
             }
-            on_progress
-                .send(FetchProgress::Parsing(article.title.to_string()))
-                .map_err(|e| e.to_string())?;
-            article.body = process_html(&article.body, &article.url);
-            Ok(article)
         }
     }
 }
@@ -209,7 +179,11 @@ pub async fn get_article_count(db_instances: State<'_, DbInstances>) -> Result<i
 }
 
 #[tauri::command]
-pub async fn refresh_article(id: i32, db_instances: State<'_, DbInstances>) -> Result<(), String> {
+pub async fn refresh_article(
+    id: i32,
+    db_instances: State<'_, DbInstances>,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
     let instances = db_instances.0.read().await;
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
@@ -225,6 +199,9 @@ pub async fn refresh_article(id: i32, db_instances: State<'_, DbInstances>) -> R
             .execute(pool)
             .await
             .map_err(|e| e.to_string())?;
+            // if let Some(window) = app.get_webview_window("main") {
+            //     let _ = window.navigate(window.url().map_err(|e| e.to_string())?);
+            // };
             Ok(())
         }
     }

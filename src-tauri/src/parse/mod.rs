@@ -603,8 +603,8 @@ fn process_element_tts(node: &NodeRef, current_id: &RefCell<u32>) {
     for (start, end) in sentences {
         let clipped = clip_items(&items, start, end);
 
-        if clipped.len() == 1 && is_single_path_to_text(&clipped[0]) {
-            if let ContentItem::Element { .. } = &clipped[0] {
+        if clipped.len() == 1 && is_single_path_to_text(&clipped[0])
+            && let ContentItem::Element { .. } = &clipped[0] {
                 let nodes = build_dom_from_items(&clipped);
                 if let Some(elem) = nodes.first() {
                     tag_innermost_text_element(elem, current_id);
@@ -612,7 +612,6 @@ fn process_element_tts(node: &NodeRef, current_id: &RefCell<u32>) {
                     continue;
                 }
             }
-        }
 
         let span =
             NodeRef::new_element(QualName::new(None, ns!(html), local_name!("span")), vec![]);
@@ -668,11 +667,10 @@ fn split_code_block(text: &str) -> Vec<String> {
         }
 
         let mut line_units = split_at_code_boundaries(line);
-        if i < line_count - 1 {
-            if let Some(last) = line_units.last_mut() {
+        if i < line_count - 1
+            && let Some(last) = line_units.last_mut() {
                 last.push('\n');
             }
-        }
         units.extend(line_units);
     }
 
@@ -762,7 +760,7 @@ fn process_node_url(node: &NodeRef, url: &str) {
                     *href = format!("#{}", absolute_url.fragment().unwrap());
                 } else {
                     *href = absolute_url.to_string();
-                    append_class(&mut *element, "tts_anchor");
+                    append_class(&mut element, "tts_anchor");
                 }
             }
         }

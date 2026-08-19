@@ -34,10 +34,6 @@ export type IntentEvent
   = | { type: 'TextIntent', payload: string }
     | { type: 'Empty' }
 
-export type FetchProgress
-  = | { type: 'Downloading', message: string }
-    | { type: 'Parsing', message: string }
-
 export interface GetInsetResponse {
   top: number
   bottom: number

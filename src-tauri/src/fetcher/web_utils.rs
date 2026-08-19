@@ -137,12 +137,11 @@ impl<R: Runtime> FetcherBase<R> {
             thread::sleep(PAGE_LOAD_CHECK_INTERVAL);
             attempts += 1;
 
-            if let Ok(current) = self.webview.url() {
-                if current.origin() == parsed.origin()
-                    && current.path().trim_end_matches('/') == parsed.path().trim_end_matches('/')
-                {
-                    break;
-                }
+            if let Ok(current) = self.webview.url()
+                && current.origin() == parsed.origin()
+                && current.path().trim_end_matches('/') == parsed.path().trim_end_matches('/')
+            {
+                break;
             }
 
             if attempts > PAGE_LOAD_MAX_ATTEMPTS {
