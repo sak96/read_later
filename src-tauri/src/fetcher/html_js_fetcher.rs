@@ -5,7 +5,7 @@ use std::sync::atomic::AtomicBool;
 use tauri::{AppHandle, Runtime};
 
 use super::Fetcher;
-use super::web_utils::{FetchGuard, FetcherBase, HISTORY_LEN_TIMEOUT};
+use super::web_utils::{FetchGuard, FetcherBase, PAGE_LOAD_CHECK_INTERVAL};
 
 const HTML_CAPTURE_JS: &str = r#"
     window.__TAURI__.event.emit('__experimental_fetcher_html_capture', {
@@ -36,7 +36,7 @@ impl<R: Runtime> HtmlJsFetcher<R> {
 
         let _ = self.base.webview.eval(HTML_CAPTURE_JS);
         let response = rx
-            .recv_timeout(HISTORY_LEN_TIMEOUT * 2)
+            .recv_timeout(PAGE_LOAD_CHECK_INTERVAL * 2)
             .map_err(|_| "Timed out waiting for page capture".to_string())?;
 
         let _guard = FetchGuard {

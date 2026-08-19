@@ -11,11 +11,8 @@ use tauri::webview::WebviewWindow;
 use tauri::{AppHandle, Listener, Manager, Runtime};
 
 pub(crate) const HTML_CAPTURE_EVENT: &str = "__experimental_fetcher_html_capture";
-pub(crate) const HISTORY_LEN_EVENT: &str = "__experimental_fetcher_history_len";
 pub(crate) const PAGE_LOADED_EVENT: &str = "__experimental_fetcher_page_loaded";
-pub(crate) const PAGE_RELOAD_DONE_EVENT: &str = "__experimental_fetcher_reload_done";
 
-pub(crate) const HISTORY_LEN_TIMEOUT: Duration = Duration::from_secs(5);
 pub(crate) const PAGE_LOAD_CHECK_INTERVAL: Duration = Duration::from_millis(50);
 pub(crate) const PAGE_LOAD_MAX_ATTEMPTS: u32 = 100;
 pub(crate) const PAGE_LOAD_INITIAL_DELAY: Duration = Duration::from_millis(500);
@@ -49,7 +46,6 @@ pub(crate) struct FetcherBase<R: Runtime> {
     pub back_url: Option<String>,
     pub self_origin: String,
     pub self_path: String,
-    pub initial_history_length: Option<u32>,
 }
 
 impl<R: Runtime> FetcherBase<R> {
@@ -67,7 +63,6 @@ impl<R: Runtime> FetcherBase<R> {
             back_url: None,
             self_origin: parsed.origin().ascii_serialization(),
             self_path: parsed.path().to_string(),
-            initial_history_length: None,
         })
     }
 

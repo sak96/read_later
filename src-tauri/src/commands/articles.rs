@@ -179,11 +179,7 @@ pub async fn get_article_count(db_instances: State<'_, DbInstances>) -> Result<i
 }
 
 #[tauri::command]
-pub async fn refresh_article(
-    id: i32,
-    db_instances: State<'_, DbInstances>,
-    app: tauri::AppHandle,
-) -> Result<(), String> {
+pub async fn refresh_article(id: i32, db_instances: State<'_, DbInstances>) -> Result<(), String> {
     let instances = db_instances.0.write().await;
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
@@ -199,9 +195,6 @@ pub async fn refresh_article(
             .execute(pool)
             .await
             .map_err(|e| e.to_string())?;
-            // if let Some(window) = app.get_webview_window("main") {
-            //     let _ = window.navigate(window.url().map_err(|e| e.to_string())?);
-            // };
             Ok(())
         }
     }
