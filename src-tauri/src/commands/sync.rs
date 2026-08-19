@@ -202,7 +202,7 @@ pub async fn sync_articles<R: Runtime>(
         .unwrap_or("false".to_string())
         == "true";
     if !webdav_enabled {
-        let instances = db_instances.0.read().await;
+        let instances = db_instances.0.write().await;
         let tauri_plugin_sql::DbPool::Sqlite(pool) =
             instances.get(DB_URL).ok_or("db not loaded")?;
         sqlx::query("DELETE FROM articles WHERE is_deleted = 1")

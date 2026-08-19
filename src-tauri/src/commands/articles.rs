@@ -86,7 +86,7 @@ pub async fn get_article(
                 let mut fetcher = new_fetcher(&app, &article.url, mode)?;
                 tauri::async_runtime::spawn(async move {
                     let db_instances = app.state::<tauri_plugin_sql::DbInstances>();
-                    let instances = db_instances.0.read().await;
+                    let instances = db_instances.0.write().await;
                     if let Ok(tauri_plugin_sql::DbPool::Sqlite(pool)) =
                         instances.get(DB_URL).ok_or("db not loaded")
                     {
@@ -137,7 +137,7 @@ pub async fn add_article(
     url: String,
     db_instances: State<'_, DbInstances>,
 ) -> Result<Article, String> {
-    let instances = db_instances.0.read().await;
+    let instances = db_instances.0.write().await;
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
@@ -184,7 +184,7 @@ pub async fn refresh_article(
     db_instances: State<'_, DbInstances>,
     app: tauri::AppHandle,
 ) -> Result<(), String> {
-    let instances = db_instances.0.read().await;
+    let instances = db_instances.0.write().await;
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
@@ -209,7 +209,7 @@ pub async fn refresh_article(
 
 #[tauri::command]
 pub async fn delete_article(id: i32, db_instances: State<'_, DbInstances>) -> Result<u64, String> {
-    let instances = db_instances.0.read().await;
+    let instances = db_instances.0.write().await;
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {

@@ -30,7 +30,7 @@ pub async fn set_setting(
     value: String,
     db_instances: State<'_, DbInstances>,
 ) -> Result<(), String> {
-    let instances = db_instances.0.read().await;
+    let instances = db_instances.0.write().await;
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
