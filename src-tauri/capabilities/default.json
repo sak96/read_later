@@ -37,6 +37,7 @@
     "core:webview:default",
     "core:default",
     "clipboard-manager:allow-read-text",
+    "clipboard-manager:allow-write-text",
     "i18n:default",
     "os:allow-os-type",
     "os:allow-locale",

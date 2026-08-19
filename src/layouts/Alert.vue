@@ -1,17 +1,36 @@
 <script setup lang="ts">
 import { ref, provide, computed } from 'vue'
+import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 import type { AlertContext, AlertStatus } from '../types'
 import { ALERT_DURATION_MS } from '../constants'
 
 const message = ref<string | null>(null)
 const status = ref<AlertStatus>('info')
+const alertTimeout = ref<ReturnType<typeof setTimeout> | undefined>()
+
+function clearAlertTimeout() {
+  if (alertTimeout.value) {
+    clearTimeout(alertTimeout.value)
+    alertTimeout.value = undefined
+  }
+}
 
 function updateAlertContext(newStatus: AlertStatus, newMessage: string) {
+  clearAlertTimeout()
   status.value = newStatus
   message.value = newMessage
-  setTimeout(() => {
+  alertTimeout.value = setTimeout(() => {
     message.value = null
   }, ALERT_DURATION_MS)
+}
+
+async function click() {
+  if (!message.value) {
+    return
+  }
+  await writeText(message.value)
+  message.value = null
+  clearAlertTimeout()
 }
 
 provide<AlertContext>('alert', {
@@ -36,6 +55,7 @@ const alertStyle = computed(() => {
     v-if="message"
     class="pico container-fluid"
     :style="alertStyle"
+    @click="click"
   >
     {{ message }}
   </article>
