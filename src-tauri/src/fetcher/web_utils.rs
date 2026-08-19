@@ -46,6 +46,7 @@ pub(crate) struct FetcherBase<R: Runtime> {
     pub app: AppHandle<R>,
     pub webview: WebviewWindow<R>,
     pub url: String,
+    pub back_url: Option<String>,
     pub self_origin: String,
     pub self_path: String,
     pub initial_history_length: Option<u32>,
@@ -63,33 +64,15 @@ impl<R: Runtime> FetcherBase<R> {
             app: app.clone(),
             webview,
             url: url.to_string(),
+            back_url: None,
             self_origin: parsed.origin().ascii_serialization(),
             self_path: parsed.path().to_string(),
             initial_history_length: None,
         })
     }
 
-    pub fn get_history(&self) -> Result<u32, String> {
-        let (hist_tx, hist_rx) = mpsc::channel::<u32>();
-        let hist_listener = self.app.listen(HISTORY_LEN_EVENT, move |event| {
-            if let Ok(len) = serde_json::from_str::<u32>(event.payload()) {
-                let _ = hist_tx.send(len);
-            }
-        });
-
-        self.webview
-            .eval(format!(
-                r#"window.__TAURI__.event.emit("{event_name}", window.history.length)"#,
-                event_name = HISTORY_LEN_EVENT,
-            ))
-            .map_err(|e| format!("Failed to get current window history: {e}"))?;
-
-        let history_length = hist_rx
-            .recv_timeout(HISTORY_LEN_TIMEOUT)
-            .map_err(|_| "Failed to get current window history".to_string())?;
-        self.app.unlisten(hist_listener);
-
-        Ok(history_length)
+    pub fn remember_history(&mut self) {
+        self.back_url = self.webview.url().map(|url| url.to_string()).ok();
     }
 
     pub fn wait_for_page_ready(&self, event_name: &str) -> Result<(), String> {
@@ -191,12 +174,51 @@ impl<R: Runtime> FetcherBase<R> {
     }
 
     pub fn navigate_back_if_needed(&mut self) {
-        if let Some(initial) = self.initial_history_length {
-            let _ = self.webview.eval(format!(
-                "window.history.go(-(window.history.length - {initial}));",
-                initial = initial,
-            ));
-            let _ = self.wait_for_page_ready(PAGE_RELOAD_DONE_EVENT);
+        if let Some(target_url) = self.back_url.take() {
+            let event_name = "__GO_BACK__";
+
+            let js = format!(
+                r#"
+                (() => {{
+                    window.addEventListener("popstate", () => {{
+                        window.__TAURI__.event.emit(
+                            {event},
+                            window.location.href
+                        );
+                    }}, {{ once: true }});
+                    window.history.back();
+                }})()
+                "#,
+                event = event_name,
+            );
+            loop {
+                let (tx, rx) = mpsc::channel::<String>();
+
+                let listener_id = self.app.listen(event_name, move |event| {
+                    let _ = tx.send(event.payload().to_string());
+                });
+
+                let _ = self.webview.eval(&js);
+
+                match rx.recv_timeout(Duration::from_millis(500)) {
+                    Ok(url) => {
+                        self.app.unlisten(listener_id);
+                        if url == target_url {
+                            break;
+                        }
+                    }
+
+                    Err(mpsc::RecvTimeoutError::Timeout) => {
+                        self.app.unlisten(listener_id);
+                        break;
+                    }
+
+                    Err(mpsc::RecvTimeoutError::Disconnected) => {
+                        self.app.unlisten(listener_id);
+                        break;
+                    }
+                }
+            }
         }
     }
 }

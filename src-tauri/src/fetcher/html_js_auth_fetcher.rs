@@ -1,5 +1,5 @@
-use std::pin::Pin;
 use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use tauri::{AppHandle, Runtime};
@@ -7,9 +7,7 @@ use tauri::{AppHandle, Runtime};
 use tauri_plugin_safe_area_insets_css::SafeAreaInsetsCssExt;
 
 use super::Fetcher;
-use super::web_utils::{
-    FetcherBase, FetchGuard, ToolbarInjector,
-};
+use super::web_utils::{FetchGuard, FetcherBase, ToolbarInjector};
 
 pub struct HtmlJsAuthFetcher<R: Runtime> {
     base: FetcherBase<R>,
@@ -23,7 +21,7 @@ impl<R: Runtime> HtmlJsAuthFetcher<R> {
     }
 
     fn fetch_inner(&mut self) -> Result<String, String> {
-        self.base.initial_history_length = self.base.get_history().ok();
+        self.base.remember_history();
         self.base.navigate_to_url(&self.base.url)?;
 
         #[cfg(target_os = "android")]
@@ -40,8 +38,7 @@ impl<R: Runtime> HtmlJsAuthFetcher<R> {
 
         let running = Arc::new(AtomicBool::new(true));
         let (listener_id, rx) = self.base.listen_for_capture(running.clone());
-        let injector =
-            ToolbarInjector::spawn(self.base.webview.clone(), running, bottom_inset);
+        let injector = ToolbarInjector::spawn(self.base.webview.clone(), running, bottom_inset);
 
         let guard = FetchGuard {
             app: self.base.app.clone(),
