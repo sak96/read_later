@@ -37,7 +37,7 @@ impl<R: Runtime> HtmlJsAuthFetcher<R> {
         let bottom_inset = 0.0;
 
         let running = Arc::new(AtomicBool::new(true));
-        let (listener_id, rx) = self.base.listen_for_capture(running.clone());
+        let (listener_id, rx) = self.base.listen_for_capture(&running);
         let injector = ToolbarInjector::spawn(self.base.webview.clone(), running, bottom_inset);
 
         let guard = FetchGuard {

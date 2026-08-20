@@ -1,5 +1,5 @@
 use crate::fetcher::{FetcherMode, fetch_parse_update_article, new_fetcher};
-use crate::models::*;
+use crate::models::{ArticleEntry, DB_URL, ArticleEntryRow, Article};
 use crate::parse::{build_snippet, process_html};
 use sqlx::{query, query_as, query_scalar};
 use tauri::{Manager, State};
@@ -15,9 +15,9 @@ pub async fn get_articles(
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            let query: Option<&str> = query.as_ref().filter(|s| s.len() >= 3).map(|s| s.as_str());
+            let query: Option<&str> = query.as_ref().filter(|s| s.len() >= 3).map(std::string::String::as_str);
             let rows = sqlx::query_as::<_, ArticleEntryRow>(
-                r#"
+                r"
                 SELECT id, url, title, text_content,
                        datetime(created_at, 'localtime') as created_at
                 FROM articles
@@ -28,7 +28,7 @@ pub async fn get_articles(
                 ) and is_deleted == 0
                 ORDER BY created_at DESC
                 LIMIT 100 OFFSET ?2
-               "#,
+               ",
             )
             .bind(query)
             .bind(offset.to_string())
@@ -63,11 +63,11 @@ pub async fn get_article(
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
             let mut article = query_as::<_, Article>(
-                r#"
+                r"
                 SELECT id, title, body, url
                 FROM articles
                 WHERE is_deleted == 0 AND id = ?
-                "#,
+                ",
             )
             .bind(id)
             .fetch_one(pool)
@@ -93,12 +93,12 @@ pub async fn get_article(
                         match fetch_parse_update_article(&article.url, &mut *fetcher).await {
                             Ok((title, body, text_content)) => {
                                 if let Err(e) = query_as::<_, Article>(
-                                    r#"
+                                    r"
                                     UPDATE articles
                                     SET title = $2, body = $3, url = $4, text_content = $5
                                     WHERE id = $1
                                     RETURNING id, title, body, created_at, url
-                                    "#,
+                                    ",
                                 )
                                 .bind(article.id)
                                 .bind(title)
@@ -108,11 +108,11 @@ pub async fn get_article(
                                 .fetch_one(pool)
                                 .await
                                 {
-                                    eprintln!("{}", e);
+                                    eprintln!("{e}");
                                 }
                             }
                             Err(e) => {
-                                eprintln!("{}", e);
+                                eprintln!("{e}");
                                 let _ = query(
                             "UPDATE articles SET is_deleted = 1, title = '', body = '', text_content = '' WHERE id = ?",
                         )
@@ -120,7 +120,7 @@ pub async fn get_article(
                         .execute(pool)
                         .await;
                             }
-                        };
+                        }
                     }
                 });
                 Ok(None)
@@ -142,14 +142,14 @@ pub async fn add_article(
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
             let article = query_as::<_, Article>(
-                r#"
+                r"
                 INSERT INTO articles (title, body, url, updated_at)
                 VALUES ('', '', $1, datetime('now'))
                 ON CONFLICT(url) DO UPDATE SET
                     is_deleted = 0,
                     updated_at = datetime('now')
                 RETURNING id, title, body, created_at, url
-                "#,
+                ",
             )
             .bind(url)
             .fetch_one(pool)
@@ -185,11 +185,11 @@ pub async fn refresh_article(id: i32, db_instances: State<'_, DbInstances>) -> R
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
             query(
-                r#"
+                r"
                 UPDATE articles
                 SET title = '', body = '', text_content = '', updated_at = datetime('now')
                 WHERE id = ?
-            "#,
+            ",
             )
             .bind(id)
             .execute(pool)
@@ -206,11 +206,11 @@ pub async fn delete_article(id: i32, db_instances: State<'_, DbInstances>) -> Re
     let db = instances.get(DB_URL).ok_or("db not loaded")?;
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            let result = query(r#"
+            let result = query(r"
                 UPDATE articles
                 SET is_deleted = 1, title = '', body = '', text_content = '', updated_at = datetime('now')
                 WHERE id = ? AND is_deleted = 0
-            "#)
+            ")
                 .bind(id)
                 .execute(pool)
                 .await

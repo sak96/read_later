@@ -7,14 +7,14 @@ use tauri::{AppHandle, Runtime};
 use super::Fetcher;
 use super::web_utils::{FetchGuard, FetcherBase, PAGE_LOAD_CHECK_INTERVAL};
 
-const HTML_CAPTURE_JS: &str = r#"
+const HTML_CAPTURE_JS: &str = r"
     window.__TAURI__.event.emit('__experimental_fetcher_html_capture', {
         url: window.location.href,
         origin: window.location.origin,
         path: window.location.pathname,
         html: document.documentElement.outerHTML
     });
-"#;
+";
 
 pub struct HtmlJsFetcher<R: Runtime> {
     base: FetcherBase<R>,
@@ -32,21 +32,21 @@ impl<R: Runtime> HtmlJsFetcher<R> {
         self.base.navigate_to_url(&self.base.url)?;
 
         let running = Arc::new(AtomicBool::new(true));
-        let (listener_id, rx) = self.base.listen_for_capture(running);
+        let (listener_id, rx) = self.base.listen_for_capture(&running);
 
         let _ = self.base.webview.eval(HTML_CAPTURE_JS);
         let response = rx
             .recv_timeout(PAGE_LOAD_CHECK_INTERVAL * 2)
             .map_err(|_| "Timed out waiting for page capture".to_string())?;
 
-        let _guard = FetchGuard {
+        let guard = FetchGuard {
             app: self.base.app.clone(),
             webview: self.base.webview.clone(),
             listener_id,
             injector: None,
             remove_toolbar: false,
         };
-        drop(_guard);
+        drop(guard);
 
         self.base.validate_response(response)
     }

@@ -29,6 +29,7 @@ pub enum Mode {
 }
 
 impl Mode {
+    #[must_use]
     pub fn from_is_playing(is_playing: bool) -> Self {
         if is_playing { Mode::Reader } else { Mode::View }
     }
@@ -193,12 +194,12 @@ pub async fn start_reading(
     #[cfg(any(target_os = "android", target_os = "ios"))]
     let _ = update_media_session(&app).await;
 
-    read_next_para(app, state.clone()).await?;
+    read_next_para(&app, &state)?;
 
     Ok(())
 }
 
-async fn read_next_para(app: AppHandle, state: State<'_, SpeakBarState>) -> Result<(), String> {
+fn read_next_para(app: &AppHandle, state: &State<'_, SpeakBarState>) -> Result<(), String> {
     let should_stop = {
         let is_playing = *state.is_playing.read().map_err(|e| e.to_string())?;
         let positions = state.paragraphs.read().map_err(|e| e.to_string())?;
@@ -207,7 +208,7 @@ async fn read_next_para(app: AppHandle, state: State<'_, SpeakBarState>) -> Resu
     };
 
     if !should_stop {
-        stop_reading_internal(&app, state).await?;
+        stop_reading_internal(app, state)?;
         return Ok(());
     }
 
@@ -258,10 +259,7 @@ async fn read_next_para(app: AppHandle, state: State<'_, SpeakBarState>) -> Resu
     Ok(())
 }
 
-async fn stop_reading_internal(
-    app: &AppHandle,
-    state: State<'_, SpeakBarState>,
-) -> Result<(), String> {
+fn stop_reading_internal(app: &AppHandle, state: &State<'_, SpeakBarState>) -> Result<(), String> {
     *state.is_playing.write().map_err(|e| e.to_string())? = false;
 
     #[cfg(any(target_os = "android", target_os = "ios"))]
@@ -304,7 +302,7 @@ async fn update_media_session(app: &AppHandle) -> Result<(), String> {
 #[tauri::command]
 pub async fn stop_reading(app: AppHandle, state: State<'_, SpeakBarState>) -> Result<(), String> {
     let _ = app.tts().stop();
-    stop_reading_internal(&app, state).await
+    stop_reading_internal(&app, &state)
 }
 
 #[tauri::command]

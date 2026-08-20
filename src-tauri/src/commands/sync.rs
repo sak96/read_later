@@ -20,13 +20,8 @@ fn url_to_path(url: &str) -> String {
     format!("{}.json", hash.to_hex())
 }
 
-fn setup_webdav_client(
-    url: String,
-    username: String,
-    password: String,
-    auth_type: String,
-) -> Client {
-    let auth = match auth_type.as_str() {
+fn setup_webdav_client(url: String, username: String, password: String, auth_type: &str) -> Client {
+    let auth = match auth_type {
         "basic" => Auth::Basic(username, password),
         "digest" => Auth::Digest(username, password),
         _ => Auth::Anonymous,
@@ -41,8 +36,7 @@ fn setup_webdav_client(
 
 fn iso_to_timestamp(iso_str: &str) -> i64 {
     NaiveDateTime::parse_from_str(iso_str, "%Y-%m-%d %H:%M:%S")
-        .map(|naive| naive.and_utc().timestamp())
-        .unwrap_or(0)
+        .map_or(0, |naive| naive.and_utc().timestamp())
 }
 
 async fn get_remote_entities(
@@ -77,15 +71,17 @@ async fn get_local_sync_data(
     pool: &sqlx::SqlitePool,
     last_synced_at: i64,
 ) -> Result<Vec<ArticleSync>, String> {
-    sqlx::query_as::<_, ArticleSync>(r#"
+    sqlx::query_as::<_, ArticleSync>(
+        r"
         SELECT url, created_at, updated_at, is_deleted
         FROM articles
         WHERE datetime(updated_at) > datetime(?, 'unixepoch')
-    "#)
-        .bind(last_synced_at)
-        .fetch_all(pool)
-        .await
-        .map_err(|e| e.to_string())
+    ",
+    )
+    .bind(last_synced_at)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())
 }
 
 async fn reconcile_and_process(
@@ -112,7 +108,7 @@ async fn reconcile_and_process(
 
     let total = all_hashes.len();
     for (i, hash) in all_hashes.iter().enumerate() {
-        let path = format!("{}/{}", sync_path, hash);
+        let path = format!("{sync_path}/{hash}");
 
         let local_article = local_articles.iter().find(|a| &url_to_path(&a.url) == hash);
 
@@ -136,7 +132,8 @@ async fn reconcile_and_process(
                         .await
                         .map_err(|e| e.to_string())?;
                 } else if remote_ts > local_ts {
-                    sqlx::query(r#"
+                    sqlx::query(
+                        r"
                         UPDATE articles SET
                             updated_at = $1,
                             is_deleted = $2,
@@ -144,13 +141,14 @@ async fn reconcile_and_process(
                             body = CASE WHEN $2 = 1 THEN '' ELSE body END,
                             text_content = CASE WHEN $2 = 1 THEN '' ELSE text_content END
                         WHERE url = $3
-                    "#)
-                        .bind(&remote.updated_at)
-                        .bind(remote.is_deleted)
-                        .bind(&remote.url)
-                        .execute(pool)
-                        .await
-                        .map_err(|e| e.to_string())?;
+                    ",
+                    )
+                    .bind(&remote.updated_at)
+                    .bind(remote.is_deleted)
+                    .bind(&remote.url)
+                    .execute(pool)
+                    .await
+                    .map_err(|e| e.to_string())?;
                 }
             }
             (Some(local), None) => {
@@ -161,7 +159,7 @@ async fn reconcile_and_process(
                     .map_err(|e| e.to_string())?;
             }
             (None, Some(remote)) => {
-                sqlx::query(r#"
+                sqlx::query(r"
                     INSERT INTO articles (url, created_at, updated_at, is_deleted, title, body, text_content)
                     VALUES ($1, $2, $3, $4, '', '', '')
                     ON CONFLICT(url) DO UPDATE SET
@@ -171,7 +169,7 @@ async fn reconcile_and_process(
                         title = CASE WHEN excluded.is_deleted = 1 THEN '' ELSE title END,
                         body = CASE WHEN excluded.is_deleted = 1 THEN '' ELSE body END,
                         text_content = CASE WHEN excluded.is_deleted = 1 THEN '' ELSE text_content END
-                "#)
+                ")
                     .bind(&remote.url)
                     .bind(&remote.created_at)
                     .bind(&remote.updated_at)
@@ -226,7 +224,7 @@ pub async fn sync_articles<R: Runtime>(
         .await
         .unwrap_or_default();
 
-    let client = setup_webdav_client(url, username, password, auth_type);
+    let client = setup_webdav_client(url, username, password, &auth_type);
     let sync_path = format!("{}/.io.github.sak.read.it.later", &path);
 
     let instances = db_instances.0.read().await;
@@ -259,15 +257,17 @@ pub async fn sync_articles<R: Runtime>(
     )
     .await?;
 
-    sqlx::query(r#"
+    sqlx::query(
+        r"
         DELETE FROM articles
         WHERE is_deleted = 1
         AND datetime(updated_at) < datetime(?, 'unixepoch')
-    "#)
-        .bind(last_synced_at)
-        .execute(pool)
-        .await
-        .map_err(|e| e.to_string())?;
+    ",
+    )
+    .bind(last_synced_at)
+    .execute(pool)
+    .await
+    .map_err(|e| e.to_string())?;
 
     Ok(())
 }

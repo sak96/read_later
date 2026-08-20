@@ -1,4 +1,4 @@
-use crate::models::*;
+use crate::models::{PronunciationRule, DB_URL};
 use regex::Regex;
 use sqlx::{query, query_as, SqlitePool};
 use tauri::{AppHandle, Manager, State};
@@ -26,13 +26,13 @@ async fn save_rule(
         })?;
     }
     query(
-        r#"
+        r"
         INSERT INTO pronunciation_rules (match_pattern, replacement, is_regex)
         VALUES ($1, $2, $3)
         ON CONFLICT(match_pattern) DO UPDATE SET
             replacement = $2,
             is_regex = $3
-        "#,
+        ",
     )
     .bind(match_pattern)
     .bind(replacement)

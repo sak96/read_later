@@ -64,7 +64,7 @@ pub async fn fetch_parse_update_article(
         .remove_title_from_content(true)
         .build();
     let article_data = Readability::new(&html, Some(article_url), Some(options))
-        .map_err(|e| format!("Failed to parse: {:?}", e))?
+        .map_err(|e| format!("Failed to parse: {e:?}"))?
         .parse()
         .ok_or("Failed to extract article")?;
 

@@ -1,8 +1,8 @@
-use std::{env, fs, path::Path};
+use std::{env, fmt::Write, fs, path::Path};
 
 fn main() {
     bundle_locales();
-    tauri_build::build()
+    tauri_build::build();
 }
 
 fn bundle_locales() {
@@ -12,13 +12,12 @@ fn bundle_locales() {
     let bundle_paths: Vec<_> = build_path
         .read_dir()
         .expect("Failed to read directory")
-        .filter_map(|e| e.ok())
+        .filter_map(std::result::Result::ok)
         .filter(|e| {
             e.path()
                 .file_name()
                 .and_then(|s| s.to_str())
-                .map(|s| s.starts_with("tauri-plugin-i18n"))
-                .unwrap_or(false)
+                .is_some_and(|s| s.starts_with("tauri-plugin-i18n"))
         })
         .map(|e| e.path().join("out").join("bundled_locales.rs"))
         .collect();
@@ -31,12 +30,11 @@ fn bundle_locales() {
     let manifest_dir = env::var("CARGO_MANIFEST_PATH").unwrap();
     let locales_path = Path::new(&manifest_dir).parent().unwrap().join("locales");
 
-    if !locales_path.exists() {
-        panic!(
-            "Locales directory does not exist: {}",
-            locales_path.display()
-        );
-    }
+    assert!(
+        locales_path.exists(),
+        "Locales directory does not exist: {}",
+        locales_path.display()
+    );
 
     println!("cargo:rerun-if-changed={}", locales_path.display());
 
@@ -46,11 +44,11 @@ fn bundle_locales() {
 
     let mut entries: Vec<_> = fs::read_dir(&locales_path)
         .expect("Failed to read locales")
-        .filter_map(|e| e.ok())
+        .filter_map(std::result::Result::ok)
         .filter(|e| e.path().is_file())
         .collect();
 
-    entries.sort_by_key(|e| e.file_name());
+    entries.sort_by_key(std::fs::DirEntry::file_name);
 
     let count = entries.len();
 
@@ -62,17 +60,17 @@ fn bundle_locales() {
         ) else {
             continue;
         };
-
-        println!("cargo:info=  Bundling: {}.{}", stem, ext);
-        code.push_str(&format!(
-            "        ({:?}, {:?}, include_str!(r#\"{}\"#)),\n",
+        println!("cargo:info=  Bundling: {stem}.{ext}");
+        let _ = writeln!(
+            code,
+            "        ({:?}, {:?}, include_str!(r#\"{}\"#)),",
             stem,
             ext,
             path.display()
-        ));
+        );
     }
 
-    println!("cargo:info=Successfully bundled {} locale file(s)", count);
+    println!("cargo:info=Successfully bundled {count} locale file(s)");
     code.push_str("    ]\n}\n");
 
     for bundle_path in &bundle_paths {

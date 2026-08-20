@@ -76,6 +76,7 @@ pub enum FetchProgress {
     Parsing(String),
 }
 
+#[must_use]
 pub fn get_migrations() -> Vec<Migration> {
     vec![
         Migration {

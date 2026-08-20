@@ -1,7 +1,7 @@
 use html5ever::QualName;
 use html5ever::{local_name, ns};
-use kuchikikiki::traits::*;
-use kuchikikiki::{parse_fragment, Attribute, Attributes, ElementData, ExpandedName, NodeRef};
+use kuchikikiki::traits::TendrilSink;
+use kuchikikiki::{Attribute, Attributes, ElementData, ExpandedName, NodeRef, parse_fragment};
 use std::cell::RefCell;
 
 // HTML TTS Processing Rules:
@@ -493,11 +493,11 @@ fn tag_element(element: &ElementData, current_id: &RefCell<u32>) {
         *id += 1;
         val
     };
-    let class = format!("tts_para_{}", id_val);
+    let class = format!("tts_para_{id_val}");
     let mut attrs = element.attributes.borrow_mut();
     if let Some(existing) = attrs.get_mut("class") {
         let old = existing.clone();
-        *existing = format!("{} {}", class, old);
+        *existing = format!("{class} {old}");
     } else {
         attrs.insert("class", class);
     }
@@ -603,15 +603,17 @@ fn process_element_tts(node: &NodeRef, current_id: &RefCell<u32>) {
     for (start, end) in sentences {
         let clipped = clip_items(&items, start, end);
 
-        if clipped.len() == 1 && is_single_path_to_text(&clipped[0])
-            && let ContentItem::Element { .. } = &clipped[0] {
-                let nodes = build_dom_from_items(&clipped);
-                if let Some(elem) = nodes.first() {
-                    tag_innermost_text_element(elem, current_id);
-                    node.append(elem.clone());
-                    continue;
-                }
+        if clipped.len() == 1
+            && is_single_path_to_text(&clipped[0])
+            && let ContentItem::Element { .. } = &clipped[0]
+        {
+            let nodes = build_dom_from_items(&clipped);
+            if let Some(elem) = nodes.first() {
+                tag_innermost_text_element(elem, current_id);
+                node.append(elem.clone());
+                continue;
             }
+        }
 
         let span =
             NodeRef::new_element(QualName::new(None, ns!(html), local_name!("span")), vec![]);
@@ -668,9 +670,10 @@ fn split_code_block(text: &str) -> Vec<String> {
 
         let mut line_units = split_at_code_boundaries(line);
         if i < line_count - 1
-            && let Some(last) = line_units.last_mut() {
-                last.push('\n');
-            }
+            && let Some(last) = line_units.last_mut()
+        {
+            last.push('\n');
+        }
         units.extend(line_units);
     }
 
@@ -740,7 +743,7 @@ fn process_node_url(node: &NodeRef, url: &str) {
     let base_url = match url::Url::parse(url) {
         Ok(u) => u,
         Err(e) => {
-            eprintln!("Invalid base URL '{}': {}", url, e);
+            eprintln!("Invalid base URL '{url}': {e}");
             return;
         }
     };
@@ -779,6 +782,7 @@ fn process_node_url(node: &NodeRef, url: &str) {
     }
 }
 
+#[must_use]
 pub fn process_html(frag: &str, url: &str) -> String {
     let ctx_name = QualName::new(None, ns!(html), local_name!("article"));
     let document = parse_fragment(ctx_name, vec![]).one(frag);
@@ -793,15 +797,16 @@ pub fn process_html(frag: &str, url: &str) -> String {
         let bytes = bytes.as_mut_slice();
         if bytes.starts_with(HTML_OPEN) {
             bytes[..HTML_OPEN.len()].copy_from_slice(DIV_OPEN);
-        };
+        }
         if bytes.ends_with(HTML_CLOSE) {
             let start = bytes.len() - HTML_CLOSE.len();
             bytes[start..].copy_from_slice(DIV_CLOSE);
-        };
+        }
     }
     String::from_utf8(bytes).unwrap_or_else(|_| "<p>not valid utf8</p>".to_string())
 }
 
+#[must_use]
 pub fn build_snippet(body: &str, query: Option<&str>) -> Snippet {
     const SNIPPET_LENGTH: usize = 100;
     const HALF_SNIPPET_LENGTH: usize = SNIPPET_LENGTH / 2;

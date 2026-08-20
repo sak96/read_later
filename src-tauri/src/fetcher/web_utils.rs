@@ -24,10 +24,9 @@ pub(crate) fn page_ready_check_js(event_name: &str) -> String {
     format!(
         r#"(function() {{
             if (document.readyState === "complete" || document.readyState === "interactive") {{
-                window.__TAURI__.event.emit("{event}");
+                window.__TAURI__.event.emit("{event_name}");
             }}
         }})()"#,
-        event = event_name,
     )
 }
 
@@ -132,7 +131,7 @@ impl<R: Runtime> FetcherBase<R> {
 
     pub fn listen_for_capture(
         &self,
-        running: Arc<AtomicBool>,
+        running: &Arc<AtomicBool>,
     ) -> (tauri::EventId, mpsc::Receiver<CaptureResponse>) {
         let (tx, rx) = mpsc::channel();
         let running_clone = running.clone();
@@ -177,14 +176,13 @@ impl<R: Runtime> FetcherBase<R> {
                 (() => {{
                     window.addEventListener("popstate", () => {{
                         window.__TAURI__.event.emit(
-                            {event},
+                            {event_name},
                             window.location.href
                         );
                     }}, {{ once: true }});
                     window.history.back();
                 }})()
                 "#,
-                event = event_name,
             );
             loop {
                 let (tx, rx) = mpsc::channel::<String>();
@@ -195,23 +193,14 @@ impl<R: Runtime> FetcherBase<R> {
 
                 let _ = self.webview.eval(&js);
 
-                match rx.recv_timeout(Duration::from_millis(500)) {
-                    Ok(url) => {
-                        self.app.unlisten(listener_id);
-                        if url == target_url {
-                            break;
-                        }
-                    }
-
-                    Err(mpsc::RecvTimeoutError::Timeout) => {
-                        self.app.unlisten(listener_id);
+                if let Ok(url) = rx.recv_timeout(Duration::from_millis(500)) {
+                    self.app.unlisten(listener_id);
+                    if url == target_url {
                         break;
                     }
-
-                    Err(mpsc::RecvTimeoutError::Disconnected) => {
-                        self.app.unlisten(listener_id);
-                        break;
-                    }
+                } else {
+                    self.app.unlisten(listener_id);
+                    break;
                 }
             }
         }
@@ -281,7 +270,7 @@ impl<R: Runtime> Drop for FetchGuard<R> {
 
 const INJECTOR_INTERVAL: Duration = Duration::from_millis(500);
 
-const IFRAME_STYLE: &str = r#"
+const IFRAME_STYLE: &str = r"
     body { margin: 0; padding: 4px; background: transparent; overflow: visible }
     .bar { display: flex; flex-direction: column; gap: 5px; font-family: sans-serif }
     .btn {
@@ -290,7 +279,7 @@ const IFRAME_STYLE: &str = r#"
         padding: 0.75rem 1.25rem; border: 1px solid transparent;
         border-radius: 0.5rem; cursor: pointer; font-weight: 600; text-align: center
     }
-"#;
+";
 
 const IFRAME_BUTTONS_HTML: &str = r#"
     <div class="bar">
@@ -301,9 +290,9 @@ const IFRAME_BUTTONS_HTML: &str = r#"
 
 fn build_iframe_html() -> String {
     format!(
-        r#"<!DOCTYPE html><html><head><style>{style}</style></head><body>{buttons}<script>
+        r"<!DOCTYPE html><html><head><style>{IFRAME_STYLE}</style></head><body>{IFRAME_BUTTONS_HTML}<script>
             document.getElementById('__tauri_cap_ok').onclick = function() {{
-                window.parent.__TAURI__.event.emit('{event}', {{
+                window.parent.__TAURI__.event.emit('{HTML_CAPTURE_EVENT}', {{
                     url: window.parent.location.href,
                     origin: window.parent.location.origin,
                     path: window.parent.location.pathname,
@@ -311,17 +300,14 @@ fn build_iframe_html() -> String {
                 }});
             }};
             document.getElementById('__tauri_cap_cancel').onclick = function() {{
-                window.parent.__TAURI__.event.emit('{event}', {{
+                window.parent.__TAURI__.event.emit('{HTML_CAPTURE_EVENT}', {{
                     url: window.parent.location.href,
                     origin: window.parent.location.origin,
                     path: window.parent.location.pathname,
                     html: null
                 }});
             }};
-        </script></body></html>"#,
-        style = IFRAME_STYLE,
-        buttons = IFRAME_BUTTONS_HTML,
-        event = HTML_CAPTURE_EVENT,
+        </script></body></html>",
     )
 }
 
@@ -332,7 +318,7 @@ fn build_toolbar_inject_js(iframe_html: &str, bottom_inset: f64) -> String {
             if (!document.getElementById("__tauri_capture_toolbar_host")) {{
                 const iframe = document.createElement("iframe");
                 iframe.id = "__tauri_capture_toolbar_host";
-                iframe.style.cssText = "position:fixed !important;right:20px !important;bottom: {bottom}px !important;z-index:2147483647 !important;border:none !important;width:60px !important;height:auto !important;pointer-events:auto !important;background:transparent !important;";
+                iframe.style.cssText = "position:fixed !important;right:20px !important;bottom: {bottom_inset}px !important;z-index:2147483647 !important;border:none !important;width:60px !important;height:auto !important;pointer-events:auto !important;background:transparent !important;";
                 (document.documentElement || document.body).appendChild(iframe);
                 iframe.scrollIntoView({{behavior: "smooth", block: "center"}});
                 iframe.contentDocument.open();
@@ -340,7 +326,5 @@ fn build_toolbar_inject_js(iframe_html: &str, bottom_inset: f64) -> String {
                 iframe.contentDocument.close();
             }}
         "#,
-        bottom = bottom_inset,
-        html = html,
     )
 }
