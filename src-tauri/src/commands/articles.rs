@@ -80,7 +80,7 @@ pub async fn get_article(
 
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            let mut article = query_as::<_, Article>(
+            let article = query_as::<_, Article>(
                 r"
                 SELECT id, title, body, url
                 FROM articles
