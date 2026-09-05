@@ -9,7 +9,7 @@ pub fn pick_and_read_json<T: DeserializeOwned>(app: &AppHandle) -> Result<T, Err
     let api = app.android_fs();
 
     let Some(file_path) = api
-        .file_picker()
+        .picker()
         .pick_file(None, &["application/json"], true)
         .map_err(|e| anyhow::anyhow!(e))
         .context("failed to open file picker")?
@@ -36,7 +36,7 @@ pub fn pick_and_write_json<T: Serialize>(
     let api = app.android_fs();
 
     let Some(file_path) = api
-        .file_picker()
+        .picker()
         .save_file(None, filename, Some("application/json"), true)
         .map_err(|e| anyhow::anyhow!(e))
         .context("failed to open save file picker")?

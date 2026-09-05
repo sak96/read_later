@@ -7,33 +7,33 @@ edition = "2024"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "^2.11.0", features = [] }
+tauri = { version = "2.11", features = [] }
 anyhow = { version = "1.0", default-features = false }
 thiserror = "2.0"
-reqwest_dav = { version = "0.2.0", features = ["rustls-tls"],  default-features = false }
+reqwest_dav = { version = "0.3", features = ["rustls-tls"],  default-features = false }
 chrono = { version = "0.4", features = ["serde"] }
-blake3 = "1.5.0"
+blake3 = "1.8"
 serde_json = "1"
 serde = { version = "1", features = ["derive"] }
 readabilityrs = "0.1.4"
-tauri-plugin-opener = "2.5.0"
-tauri-plugin-clipboard-manager = "2.2.3"
-tauri-plugin-dialog = "^2.4.2"
-tauri-plugin-os = "2.3.2"
+tauri-plugin-opener = "2.5"
+tauri-plugin-clipboard-manager = "2.3"
+tauri-plugin-dialog = "2.7"
+tauri-plugin-os = "2.3"
 tauri-plugin-http = "2"
-tauri-plugin-sql = { version = "2.3.1", features = ["sqlite"] }
-tauri-plugin-tts = "0.1.11"
-tauri-plugin-i18n = "2.0.2"
-sqlx = "0.8.0"
+tauri-plugin-sql = { version = "2.4", features = ["sqlite"] }
+tauri-plugin-tts = "0.1"
+tauri-plugin-i18n = "2.0"
+sqlx = "0.8"
 regex = "1"
-kuchikikiki = "0.9"
-html5ever = "0.38"
-url = "2.5.7"
+kuchikikiki = "0.12"
+html5ever = "0.39"
+url = "2.5"
 
 [target."cfg(any(target_os = \"android\", target_os = \"ios\"))".dependencies]
-tauri-plugin-mobile-sharetarget = "2"
-tauri-plugin-safe-area-insets-css = "0.1"
-tauri-plugin-android-fs = "23.0.1"
+tauri-plugin-mobile-sharetarget = "2.0"
+tauri-plugin-safe-area-insets-css = "0.2"
+tauri-plugin-android-fs = "29.0"
 tauri-plugin-media-session = { git = "https://github.com/sak96/tauri-plugin-media-session", rev = "6132ca7c6875644a1e5da22062a289d056603c5f" }
 
 [lib]

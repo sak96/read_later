@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import path from 'path'
+import path from 'node:path'
 
 const host = process.env.TAURI_DEV_HOST
 const platform = process.env.TAURI_ENV_PLATFORM
@@ -12,8 +12,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@/src/layouts/focus.vue': isMobile
-        ? path.resolve(__dirname, './src/layouts/Focus.mobile.vue')
-        : path.resolve(__dirname, './src/layouts/Focus.desktop.vue'),
+        ? path.resolve(import.meta.dirname, './src/layouts/Focus.mobile.vue')
+        : path.resolve(import.meta.dirname, './src/layouts/Focus.desktop.vue'),
     },
   },
   clearScreen: false,
@@ -35,10 +35,11 @@ export default defineConfig({
   envPrefix: ['VITE_', 'TAURI_ENV_*'],
   build: {
     target:
-      process.env.TAURI_ENV_PLATFORM == 'windows'
+      process.env.TAURI_ENV_PLATFORM === 'windows'
         ? 'chrome105'
         : 'safari15',
     minify: !process.env.TAURI_ENV_DEBUG ? 'esbuild' : false,
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
   },
 })
+
