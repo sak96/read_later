@@ -1,4 +1,5 @@
 pub mod commands;
+pub mod error;
 pub mod fetcher;
 #[cfg(not(target_os = "android"))]
 pub mod file_helpers;

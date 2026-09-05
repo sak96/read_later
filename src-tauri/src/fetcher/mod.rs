@@ -1,3 +1,4 @@
+use anyhow::{Context, Error, Result};
 use readabilityrs::Readability;
 use std::future::Future;
 use std::pin::Pin;
@@ -15,15 +16,13 @@ pub use html_js_auth_fetcher::HtmlJsAuthFetcher;
 pub use html_js_fetcher::HtmlJsFetcher;
 use std::str::FromStr;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum FetcherMode {
     #[default]
     Html,
     HtmlJs,
     HtmlJsAuth,
 }
-
 
 impl FromStr for FetcherMode {
     type Err = ();
@@ -39,14 +38,14 @@ impl FromStr for FetcherMode {
 }
 
 pub trait Fetcher: Send {
-    fn fetch(&mut self) -> Pin<Box<dyn Future<Output = Result<String, String>> + Send + '_>>;
+    fn fetch(&mut self) -> Pin<Box<dyn Future<Output = Result<String, Error>> + Send + '_>>;
 }
 
 pub fn new_fetcher(
     app: &AppHandle<Wry>,
     url: &str,
     mode: FetcherMode,
-) -> Result<Box<dyn Fetcher>, String> {
+) -> Result<Box<dyn Fetcher>, Error> {
     match mode {
         FetcherMode::Html => Ok(Box::new(HtmlFetcher::new(url)?)),
         FetcherMode::HtmlJs => Ok(Box::new(HtmlJsFetcher::new(app, url)?)),
@@ -57,16 +56,16 @@ pub fn new_fetcher(
 pub async fn fetch_parse_update_article(
     article_url: &str,
     fetcher: &mut dyn Fetcher,
-) -> Result<(String, String, String), String> {
+) -> Result<(String, String, String), Error> {
     let html = fetcher.fetch().await?;
 
     let options = readabilityrs::ReadabilityOptions::builder()
         .remove_title_from_content(true)
         .build();
     let article_data = Readability::new(&html, Some(article_url), Some(options))
-        .map_err(|e| format!("Failed to parse: {e:?}"))?
+        .with_context(|| format!("Failed to create readability for {article_url}"))?
         .parse()
-        .ok_or("Failed to extract article")?;
+        .context("Failed to parse article")?;
 
     let title = match article_data.title {
         Some(v) if v.is_empty() => "Untitled".into(),

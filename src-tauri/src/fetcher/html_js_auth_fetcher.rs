@@ -1,8 +1,11 @@
+use anyhow::{Context, Error, Result};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
+
 use tauri::{AppHandle, Runtime};
+
 #[cfg(target_os = "android")]
 use tauri_plugin_safe_area_insets_css::SafeAreaInsetsCssExt;
 
@@ -14,15 +17,18 @@ pub struct HtmlJsAuthFetcher<R: Runtime> {
 }
 
 impl<R: Runtime> HtmlJsAuthFetcher<R> {
-    pub fn new(app: &AppHandle<R>, url: &str) -> Result<Self, String> {
+    pub fn new(app: &AppHandle<R>, url: &str) -> Result<Self, Error> {
         Ok(Self {
-            base: FetcherBase::new(app, url)?,
+            base: FetcherBase::new(app, url).context("failed to create fetcher base")?,
         })
     }
 
-    fn fetch_inner(&mut self) -> Result<String, String> {
+    fn fetch_inner(&mut self) -> Result<String, Error> {
         self.base.remember_history();
-        self.base.navigate_to_url(&self.base.url)?;
+
+        self.base
+            .navigate_to_url(&self.base.url)
+            .with_context(|| format!("failed to navigate to {}", self.base.url))?;
 
         #[cfg(target_os = "android")]
         let bottom_inset = self
@@ -37,7 +43,9 @@ impl<R: Runtime> HtmlJsAuthFetcher<R> {
         let bottom_inset = 0.0;
 
         let running = Arc::new(AtomicBool::new(true));
+
         let (listener_id, rx) = self.base.listen_for_capture(&running);
+
         let injector = ToolbarInjector::spawn(self.base.webview.clone(), running, bottom_inset);
 
         let guard = FetchGuard {
@@ -48,15 +56,18 @@ impl<R: Runtime> HtmlJsAuthFetcher<R> {
             remove_toolbar: true,
         };
 
-        let response = rx.recv().map_err(|e| e.to_string())?;
+        let response = rx.recv().context("failed to receive captured response")?;
+
         drop(guard);
 
-        self.base.validate_response(response)
+        self.base
+            .validate_response(response)
+            .context("failed to validate captured response")
     }
 }
 
 impl<R: Runtime> Fetcher for HtmlJsAuthFetcher<R> {
-    fn fetch(&mut self) -> Pin<Box<dyn Future<Output = Result<String, String>> + Send + '_>> {
+    fn fetch(&mut self) -> Pin<Box<dyn Future<Output = Result<String, Error>> + Send + '_>> {
         Box::pin(async { self.fetch_inner() })
     }
 }

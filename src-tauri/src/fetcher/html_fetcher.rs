@@ -1,5 +1,6 @@
-use std::pin::Pin;
+use anyhow::{Context, Error, Result};
 use std::future::Future;
+use std::pin::Pin;
 
 use tauri_plugin_http::reqwest;
 
@@ -12,7 +13,7 @@ pub struct HtmlFetcher {
 }
 
 impl HtmlFetcher {
-    pub fn new(url: &str) -> Result<Self, String> {
+    pub fn new(url: &str) -> Result<Self, Error> {
         Ok(Self {
             url: url.to_string(),
         })
@@ -20,18 +21,20 @@ impl HtmlFetcher {
 }
 
 impl Fetcher for HtmlFetcher {
-    fn fetch(&mut self) -> Pin<Box<dyn Future<Output = Result<String, String>> + Send + '_>> {
+    fn fetch(&mut self) -> Pin<Box<dyn Future<Output = Result<String, Error>> + Send + '_>> {
         let url = self.url.clone();
         Box::pin(async move {
-            reqwest::Client::new()
+            let response = reqwest::Client::new()
                 .get(&url)
                 .header(reqwest::header::USER_AGENT, CHROME_USER_AGENT)
                 .send()
                 .await
-                .map_err(|e| e.to_string())?
+                .with_context(|| format!("failed to send request to {url}"))?;
+            let text = response
                 .text()
                 .await
-                .map_err(|e| e.to_string())
+                .with_context(|| format!("failed to read text response from {url}"))?;
+            Ok(text)
         })
     }
 }

@@ -1,3 +1,4 @@
+use anyhow::{Context, Error, Result};
 use serde::Deserialize;
 use std::marker::PhantomData;
 use std::sync::{
@@ -48,12 +49,12 @@ pub(crate) struct FetcherBase<R: Runtime> {
 }
 
 impl<R: Runtime> FetcherBase<R> {
-    pub fn new(app: &AppHandle<R>, url: &str) -> Result<Self, String> {
+    pub fn new(app: &AppHandle<R>, url: &str) -> Result<Self, Error> {
         let webview = app
             .get_webview_window("main")
-            .ok_or("Failed to get main webview")?;
+            .context("Failed to get main webview")?;
 
-        let parsed = url::Url::parse(url).map_err(|e| format!("Invalid URL: {e}"))?;
+        let parsed = url::Url::parse(url).with_context(|| format!("Invalid URL: {url}"))?;
 
         Ok(Self {
             app: app.clone(),
@@ -69,7 +70,7 @@ impl<R: Runtime> FetcherBase<R> {
         self.back_url = self.webview.url().map(|url| url.to_string()).ok();
     }
 
-    pub fn wait_for_page_ready(&self, event_name: &str) -> Result<(), String> {
+    pub fn wait_for_page_ready(&self, event_name: &str) -> Result<(), Error> {
         let webview_clone = self.webview.clone();
         let page_ready = Arc::new(AtomicBool::new(false));
         let page_ready_thread = page_ready.clone();
@@ -96,17 +97,17 @@ impl<R: Runtime> FetcherBase<R> {
         let _ = handle.join();
         self.app.unlisten(listener);
         if !page_ready_main.load(Ordering::Acquire) {
-            return Err("Timed out waiting for page to load".to_string());
+            return Err(Error::msg("Timed out waiting for page to load"));
         }
 
         Ok(())
     }
 
-    pub fn navigate_to_url(&self, url: &str) -> Result<(), String> {
-        let parsed = url::Url::parse(url).map_err(|e| format!("Invalid URL: {e}"))?;
+    pub fn navigate_to_url(&self, url: &str) -> Result<(), Error> {
+        let parsed = url::Url::parse(url).with_context(|| format!("Invalid URL: {url}"))?;
         self.webview
             .navigate(parsed.clone())
-            .map_err(|e| format!("Failed to navigate: {e}"))?;
+            .with_context(|| format!("Failed to navigate: {url}"))?;
 
         thread::sleep(PAGE_LOAD_INITIAL_DELAY);
         let mut attempts = 0u32;
@@ -122,7 +123,7 @@ impl<R: Runtime> FetcherBase<R> {
             }
 
             if attempts > PAGE_LOAD_MAX_ATTEMPTS {
-                return Err("Timed out waiting for navigation URL to match".into());
+                return Err(Error::msg("Timed out waiting for navigation URL to match"));
             }
         }
 
@@ -149,19 +150,19 @@ impl<R: Runtime> FetcherBase<R> {
         (listener_id, rx)
     }
 
-    pub fn validate_response(&self, response: CaptureResponse) -> Result<String, String> {
+    pub fn validate_response(&self, response: CaptureResponse) -> Result<String, Error> {
         match response.html {
-            None => Err("Cancelled by user".into()),
-            Some(html) if html.is_empty() => Err("Page returned empty content".into()),
+            None => Err(Error::msg("Cancelled by user")),
+            Some(html) if html.is_empty() => Err(Error::msg("Page returned empty content")),
             Some(_)
                 if response.origin != self.self_origin
                     || response.path.trim_end_matches('/')
                         != self.self_path.trim_end_matches('/') =>
             {
-                Err(format!(
+                Err(Error::msg(format!(
                     "Page navigated from {} to {} during fetch",
                     self.url, response.url
-                ))
+                )))
             }
             Some(html) => Ok(html),
         }
@@ -196,6 +197,7 @@ impl<R: Runtime> FetcherBase<R> {
                 if let Ok(url) = rx.recv_timeout(Duration::from_millis(500)) {
                     self.app.unlisten(listener_id);
                     if url == target_url {
+                        let _ = self.webview.reload();
                         break;
                     }
                 } else {

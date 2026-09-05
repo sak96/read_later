@@ -1,10 +1,16 @@
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::sync::RwLock;
 use tauri::{AppHandle, Emitter, Listener, Manager, State};
 use tauri_plugin_tts::TtsExt;
 
+use crate::error::TauriError;
+
 #[cfg(any(target_os = "android", target_os = "ios"))]
 use tauri_plugin_media_session::{MediaSessionExt, MediaState};
+
+#[cfg(any(target_os = "android", target_os = "ios"))]
+use anyhow::Error;
 
 #[derive(Debug, Deserialize, Default, PartialEq)]
 pub enum MediaAction {
@@ -31,7 +37,7 @@ pub enum Mode {
 impl Mode {
     #[must_use]
     pub fn from_is_playing(is_playing: bool) -> Self {
-        if is_playing { Mode::Reader } else { Mode::View }
+        if is_playing { Self::Reader } else { Self::View }
     }
 }
 
@@ -71,6 +77,19 @@ pub struct ReadState {
     pub position: usize,
 }
 
+fn write_lock<'a, T>(
+    lock: &'a RwLock<T>,
+    name: &str,
+) -> Result<std::sync::RwLockWriteGuard<'a, T>> {
+    lock.write()
+        .map_err(|_| anyhow::anyhow!("failed to acquire {name} write lock"))
+}
+
+fn read_lock<'a, T>(lock: &'a RwLock<T>, name: &str) -> Result<std::sync::RwLockReadGuard<'a, T>> {
+    lock.read()
+        .map_err(|_| anyhow::anyhow!("failed to acquire {name} read lock"))
+}
+
 #[tauri::command]
 pub async fn init_reading(
     app: AppHandle,
@@ -78,150 +97,191 @@ pub async fn init_reading(
     title: String,
     paragraphs: Vec<String>,
     state: State<'_, SpeakBarState>,
-) -> Result<(), String> {
-    let processed = super::pronunciation::apply_pronunciation_rules(&app, paragraphs).await?;
-    *state.paragraphs.write().map_err(|e| e.to_string())? = processed;
-    *state.title.write().map_err(|e| e.to_string())? = title;
-    *state.rate.write().map_err(|e| e.to_string())? = rate;
-    *state.current_position.write().map_err(|e| e.to_string())? = 0;
+) -> Result<(), TauriError> {
+    init_reading_inner(app, rate, title, paragraphs, state)
+        .await
+        .map_err(TauriError::from)
+}
+
+async fn init_reading_inner(
+    app: AppHandle,
+    rate: f32,
+    title: String,
+    paragraphs: Vec<String>,
+    state: State<'_, SpeakBarState>,
+) -> Result<()> {
+    let processed = super::pronunciation::apply_pronunciation_rules(&app, paragraphs)
+        .await
+        .context("failed to apply pronunciation rules")?;
+
+    *write_lock(&state.paragraphs, "paragraphs").context("failed to update paragraphs")? =
+        processed;
+
+    *write_lock(&state.title, "title").context("failed to update title")? = title;
+
+    *write_lock(&state.rate, "rate").context("failed to update rate")? = rate;
+
+    *write_lock(&state.current_position, "current position")
+        .context("failed to reset current position")? = 0;
 
     let listener_finish = {
-        let app_clone = app.clone();
-        app_clone.clone().listen("tts://speech:finish", {
-            move |_event: tauri::Event| {
-                let app = app_clone.clone();
-                tauri::async_runtime::spawn(async move {
-                    if let Some(state) = app.try_state::<SpeakBarState>() {
-                        let pos = *state
-                            .current_position
-                            .read()
-                            .map_err(|e| e.to_string())
-                            .unwrap();
-                        *state
-                            .current_position
-                            .write()
-                            .map_err(|e| e.to_string())
-                            .unwrap() = pos + 1;
-                        let app = app.clone();
-                        let _ = start_reading(app, None, state).await;
+        let app_ = app.clone();
+
+        app.listen("tts://speech:finish", move |_event: tauri::Event| {
+            let app = app_.clone();
+
+            tauri::async_runtime::spawn(async move {
+                if let Some(state) = app.try_state::<SpeakBarState>() {
+                    let result: Result<()> = async {
+                        {
+                            let mut position =
+                                write_lock(&state.current_position, "current position")
+                                    .context("failed to update current position")?;
+
+                            *position = position.saturating_add(1);
+                        }
+
+                        // current_position was already advanced above,
+                        // so let start_reading_inner use the new position.
+                        start_reading_inner(&app, None, &state)
+                            .await
+                            .context("failed to start reading after speech finished")?;
+
+                        Ok(())
                     }
-                });
-            }
+                    .await;
+
+                    if let Err(error) = result {
+                        eprintln!("TTS finish handler failed: {error:#}");
+                    }
+                }
+            });
         })
     };
 
     let listener_error = {
-        let app_clone = app.clone();
-        app_clone.clone().listen("tts://speech:error", {
-            move |_event: tauri::Event| {
-                let app = app_clone.clone();
-                tauri::async_runtime::spawn(async move {
-                    if let Some(state) = app.try_state::<SpeakBarState>() {
-                        let app = app.clone();
-                        let _ = stop_reading(app, state).await;
+        let app_ = app.clone();
+
+        app.listen("tts://speech:error", move |_event: tauri::Event| {
+            let app = app_.clone();
+
+            tauri::async_runtime::spawn(async move {
+                if let Some(state) = app.try_state::<SpeakBarState>() {
+                    if let Err(error) = stop_reading_inner(&app, &state).await {
+                        eprintln!("failed to stop reading after TTS error: {error:#}");
                     }
-                });
-            }
+                }
+            });
         })
     };
 
     let listener_interrupted = {
-        let app_clone = app.clone();
-        app_clone.clone().listen("tts://speech:interrupted", {
-            move |_event: tauri::Event| {
-                let app = app_clone.clone();
-                tauri::async_runtime::spawn(async move {
-                    if let Some(state) = app.try_state::<SpeakBarState>() {
-                        let app = app.clone();
-                        let _ = stop_reading(app, state).await;
+        let app_ = app.clone();
+
+        app.listen("tts://speech:interrupted", move |_event: tauri::Event| {
+            let app = app_.clone();
+
+            tauri::async_runtime::spawn(async move {
+                if let Some(state) = app.try_state::<SpeakBarState>() {
+                    if let Err(error) = stop_reading_inner(&app, &state).await {
+                        eprintln!("failed to stop reading after TTS interruption: {error:#}");
                     }
-                });
-            }
+                }
+            });
         })
     };
 
-    state
-        .tts_listener_ids
-        .write()
-        .map_err(|e| e.to_string())?
-        .clear();
-    state
-        .tts_listener_ids
-        .write()
-        .map_err(|e| e.to_string())?
-        .push(listener_finish);
-    state
-        .tts_listener_ids
-        .write()
-        .map_err(|e| e.to_string())?
-        .push(listener_error);
-    state
-        .tts_listener_ids
-        .write()
-        .map_err(|e| e.to_string())?
-        .push(listener_interrupted);
+    let mut listener_ids = write_lock(&state.tts_listener_ids, "TTS listener IDs")
+        .context("failed to update TTS listener IDs")?;
+
+    listener_ids.clear();
+    listener_ids.extend([listener_finish, listener_error, listener_interrupted]);
 
     Ok(())
 }
 
-#[tauri::command]
-pub async fn start_reading(
-    app: AppHandle,
+async fn start_reading_inner(
+    app: &AppHandle,
     start_para: Option<usize>,
-    state: State<'_, SpeakBarState>,
-) -> Result<(), String> {
-    let len = {
-        let paragraphs = state.paragraphs.read().map_err(|e| e.to_string())?;
-        paragraphs.len()
-    };
+    state: &State<'_, SpeakBarState>,
+) -> Result<()> {
+    let len = read_lock(&state.paragraphs, "paragraphs")
+        .context("failed to read paragraphs")?
+        .len();
 
-    let pos = start_para.unwrap_or_else(|| {
-        *state
-            .current_position
-            .read()
-            .map_err(|e| e.to_string())
-            .unwrap()
-    });
+    let pos = match start_para {
+        Some(pos) => pos,
+        None => *read_lock(&state.current_position, "current position")
+            .context("failed to read current position")?,
+    };
 
     if pos >= len {
-        *state.is_playing.write().map_err(|e| e.to_string())? = false;
-        return stop_reading(app, state).await;
-    }
+        *write_lock(&state.is_playing, "is playing").context("failed to update playing state")? =
+            false;
 
-    *state.current_position.write().map_err(|e| e.to_string())? = pos;
-    *state.is_playing.write().map_err(|e| e.to_string())? = true;
+        stop_reading_inner(app, state)
+            .await
+            .context("failed to stop reading")?;
 
-    #[cfg(any(target_os = "android", target_os = "ios"))]
-    let _ = update_media_session(&app).await;
-
-    read_next_para(&app, &state)?;
-
-    Ok(())
-}
-
-fn read_next_para(app: &AppHandle, state: &State<'_, SpeakBarState>) -> Result<(), String> {
-    let should_stop = {
-        let is_playing = *state.is_playing.read().map_err(|e| e.to_string())?;
-        let positions = state.paragraphs.read().map_err(|e| e.to_string())?;
-        let pos = *state.current_position.read().map_err(|e| e.to_string())?;
-        is_playing && pos < positions.len()
-    };
-
-    if !should_stop {
-        stop_reading_internal(app, state)?;
         return Ok(());
     }
 
-    let pos = *state.current_position.read().map_err(|e| e.to_string())?;
-    let rate = *state.rate.read().map_err(|e| e.to_string())?;
-    let voice_id = state.voice_id.read().map_err(|e| e.to_string())?.clone();
-    let text = {
-        let positions = state.paragraphs.read().map_err(|e| e.to_string())?;
-        positions[pos].clone()
+    *write_lock(&state.current_position, "current position")
+        .context("failed to update current position")? = pos;
+
+    *write_lock(&state.is_playing, "is playing").context("failed to update playing state")? = true;
+
+    #[cfg(any(target_os = "android", target_os = "ios"))]
+    update_media_session(app)
+        .await
+        .context("failed to update media session")?;
+
+    read_next_para(app, state)
+        .await
+        .context("failed to read next paragraph")?;
+
+    Ok(())
+}
+
+async fn read_next_para(app: &AppHandle, state: &State<'_, SpeakBarState>) -> Result<()> {
+    // Keep all RwLock guards inside this scope. Nothing returned from this
+    // block contains a lock guard, so no non-Send guard can live across await.
+    let reading_data = {
+        let is_playing =
+            *read_lock(&state.is_playing, "is playing").context("failed to read playing state")?;
+
+        let pos = *read_lock(&state.current_position, "current position")
+            .context("failed to read current position")?;
+
+        let paragraphs =
+            read_lock(&state.paragraphs, "paragraphs").context("failed to read paragraphs")?;
+
+        if !is_playing || pos >= paragraphs.len() {
+            None
+        } else {
+            let text = paragraphs
+                .get(pos)
+                .cloned()
+                .context("paragraph position is out of bounds")?;
+
+            let rate = *read_lock(&state.rate, "rate").context("failed to read rate")?;
+
+            let voice_id = read_lock(&state.voice_id, "voice ID")
+                .context("failed to read voice ID")?
+                .clone();
+
+            Some((pos, text, rate, voice_id))
+        }
     };
 
-    let is_playing = *state.is_playing.read().map_err(|e| e.to_string())?;
-    let mode = Mode::from_is_playing(is_playing);
+    let Some((pos, text, rate, voice_id)) = reading_data else {
+        stop_reading_internal(app, state).context("failed to stop reading internally")?;
+
+        return Ok(());
+    };
+
+    let mode = Mode::from_is_playing(true);
+
     app.emit(
         "speakbar:state-changed",
         StateChanged {
@@ -229,10 +289,12 @@ fn read_next_para(app: &AppHandle, state: &State<'_, SpeakBarState>) -> Result<(
             mode,
         },
     )
-    .map_err(|e| e.to_string())?;
+    .context("failed to emit speakbar state-changed event")?;
 
     #[cfg(any(target_os = "android", target_os = "ios"))]
-    let _ = update_media_session(&app).await;
+    update_media_session(app)
+        .await
+        .context("failed to update media session")?;
 
     let speak_req = tauri_plugin_tts::SpeakRequest {
         text,
@@ -244,7 +306,7 @@ fn read_next_para(app: &AppHandle, state: &State<'_, SpeakBarState>) -> Result<(
         queue_mode: tauri_plugin_tts::QueueMode::Flush,
     };
 
-    if let Err(e) = app.tts().speak(speak_req) {
+    if let Err(error) = app.tts().speak(speak_req) {
         app.emit(
             "speakbar:state-changed",
             StateChanged {
@@ -252,18 +314,21 @@ fn read_next_para(app: &AppHandle, state: &State<'_, SpeakBarState>) -> Result<(
                 mode: Mode::View,
             },
         )
-        .map_err(|e| e.to_string())?;
-        return Err(e.to_string());
+        .context("failed to emit state after TTS error")?;
+
+        return Err(error).context("failed to start TTS speech");
     }
 
     Ok(())
 }
 
-fn stop_reading_internal(app: &AppHandle, state: &State<'_, SpeakBarState>) -> Result<(), String> {
-    *state.is_playing.write().map_err(|e| e.to_string())? = false;
+fn stop_reading_internal(app: &AppHandle, state: &State<'_, SpeakBarState>) -> Result<()> {
+    *write_lock(&state.is_playing, "is playing").context("failed to update playing state")? = false;
 
     #[cfg(any(target_os = "android", target_os = "ios"))]
-    let _ = app.media_session().clear();
+    app.media_session()
+        .clear()
+        .map_err(|e| anyhow::anyhow!("failed to clear media session: {e}"))?;
 
     app.emit(
         "speakbar:state-changed",
@@ -272,49 +337,94 @@ fn stop_reading_internal(app: &AppHandle, state: &State<'_, SpeakBarState>) -> R
             mode: Mode::View,
         },
     )
-    .map_err(|e| e.to_string())?;
+    .context("failed to emit speakbar state-changed event")?;
 
     Ok(())
 }
 
 #[cfg(any(target_os = "android", target_os = "ios"))]
-async fn update_media_session(app: &AppHandle) -> Result<(), String> {
-    if let Some(state) = app.try_state::<SpeakBarState>() {
-        let is_playing = *state.is_playing.read().map_err(|e| e.to_string())?;
-        let title = state.title.read().map_err(|e| e.to_string())?.clone();
-        let title = if title.is_empty() {
-            "Untitled".to_string()
-        } else {
-            title
-        };
+async fn update_media_session(app: &AppHandle) -> Result<(), Error> {
+    let Some(state) = app.try_state::<SpeakBarState>() else {
+        return Ok(());
+    };
 
-        app.media_session()
-            .update_state(MediaState {
-                title: Some(title),
-                is_playing: Some(is_playing),
-                ..Default::default()
-            })
-            .map_err(|e| e.to_string())?;
-    }
+    let is_playing = {
+        let guard =
+            read_lock(&state.is_playing, "is playing").context("failed to read playing state")?;
+
+        *guard
+    };
+
+    let title = {
+        let guard = read_lock(&state.title, "title").context("failed to read title")?;
+
+        guard.clone()
+    };
+
+    let title = if title.is_empty() {
+        "Untitled".to_string()
+    } else {
+        title
+    };
+
+    app.media_session()
+        .update_state(MediaState {
+            title: Some(title),
+            is_playing: Some(is_playing),
+            ..Default::default()
+        })
+        .map_err(|e| anyhow::anyhow!("failed to update media session: {e}"))?;
+
     Ok(())
 }
 
 #[tauri::command]
-pub async fn stop_reading(app: AppHandle, state: State<'_, SpeakBarState>) -> Result<(), String> {
-    let _ = app.tts().stop();
-    stop_reading_internal(&app, &state)
+pub async fn start_reading(
+    app: AppHandle,
+    start_para: Option<usize>,
+    state: State<'_, SpeakBarState>,
+) -> Result<(), TauriError> {
+    start_reading_inner(&app, start_para, &state)
+        .await
+        .map_err(TauriError::from)
 }
 
 #[tauri::command]
-pub async fn change_rate(rate: f32, state: State<'_, SpeakBarState>) -> Result<(), String> {
-    *state.rate.write().map_err(|e| e.to_string())? = rate;
+pub async fn stop_reading(
+    app: AppHandle,
+    state: State<'_, SpeakBarState>,
+) -> Result<(), TauriError> {
+    stop_reading_inner(&app, &state)
+        .await
+        .map_err(TauriError::from)
+}
+
+async fn stop_reading_inner(app: &AppHandle, state: &State<'_, SpeakBarState>) -> Result<()> {
+    app.tts().stop().context("failed to stop TTS")?;
+
+    stop_reading_internal(app, state).context("failed to stop reading internally")?;
+
     Ok(())
 }
 
 #[tauri::command]
-pub async fn get_read_state(state: State<'_, SpeakBarState>) -> Result<ReadState, String> {
-    let is_playing = *state.is_playing.read().map_err(|e| e.to_string())?;
-    let position = *state.current_position.read().map_err(|e| e.to_string())?;
+pub async fn change_rate(rate: f32, state: State<'_, SpeakBarState>) -> Result<(), TauriError> {
+    *write_lock(&state.rate, "rate")
+        .context("failed to update rate")
+        .map_err(TauriError::from)? = rate;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_read_state(state: State<'_, SpeakBarState>) -> Result<ReadState, TauriError> {
+    let is_playing = *read_lock(&state.is_playing, "is playing")
+        .context("failed to read playing state")
+        .map_err(TauriError::from)?;
+
+    let position = *read_lock(&state.current_position, "current position")
+        .context("failed to read current position")
+        .map_err(TauriError::from)?;
 
     Ok(ReadState {
         mode: Mode::from_is_playing(is_playing),
@@ -326,8 +436,11 @@ pub async fn get_read_state(state: State<'_, SpeakBarState>) -> Result<ReadState
 pub async fn set_voice_id(
     voice_id: Option<String>,
     state: State<'_, SpeakBarState>,
-) -> Result<(), String> {
-    *state.voice_id.write().map_err(|e| e.to_string())? = voice_id;
+) -> Result<(), TauriError> {
+    *write_lock(&state.voice_id, "voice ID")
+        .context("failed to update voice ID")
+        .map_err(TauriError::from)? = voice_id;
+
     Ok(())
 }
 
@@ -335,29 +448,45 @@ pub async fn set_voice_id(
 pub async fn cleanup_reading(
     app: AppHandle,
     state: State<'_, SpeakBarState>,
-) -> Result<(), String> {
-    let _ = app.tts().stop();
+) -> Result<(), TauriError> {
+    app.tts()
+        .stop()
+        .context("failed to stop TTS during cleanup")
+        .map_err(TauriError::from)?;
 
-    *state.paragraphs.write().map_err(|e| e.to_string())? = Vec::new();
-    *state.title.write().map_err(|e| e.to_string())? = String::new();
-    *state.current_position.write().map_err(|e| e.to_string())? = 0;
-    *state.is_playing.write().map_err(|e| e.to_string())? = false;
+    *write_lock(&state.paragraphs, "paragraphs")
+        .context("failed to clear paragraphs")
+        .map_err(TauriError::from)? = Vec::new();
+
+    *write_lock(&state.title, "title")
+        .context("failed to clear title")
+        .map_err(TauriError::from)? = String::new();
+
+    *write_lock(&state.current_position, "current position")
+        .context("failed to reset current position")
+        .map_err(TauriError::from)? = 0;
+
+    *write_lock(&state.is_playing, "is playing")
+        .context("failed to reset playing state")
+        .map_err(TauriError::from)? = false;
 
     #[cfg(any(target_os = "android", target_os = "ios"))]
-    let _ = app.media_session().clear();
+    app.media_session()
+        .clear()
+        .map_err(|e| TauriError::from(anyhow::anyhow!("failed to clear media session: {e}")))?;
 
-    for id in state
-        .tts_listener_ids
-        .read()
-        .map_err(|e| e.to_string())?
-        .iter()
-    {
-        app.unlisten(*id);
+    let listener_ids = read_lock(&state.tts_listener_ids, "TTS listener IDs")
+        .context("failed to read TTS listener IDs")
+        .map_err(TauriError::from)?
+        .clone();
+
+    for id in listener_ids {
+        app.unlisten(id);
     }
-    state
-        .tts_listener_ids
-        .write()
-        .map_err(|e| e.to_string())?
+
+    write_lock(&state.tts_listener_ids, "TTS listener IDs")
+        .context("failed to clear TTS listener IDs")
+        .map_err(TauriError::from)?
         .clear();
 
     Ok(())
