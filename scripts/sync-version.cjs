@@ -12,6 +12,17 @@ const tauri = JSON.parse(fs.readFileSync(tauriPath, "utf-8"));
 
 tauri.version = newVersion;
 
+// Generate versionCode (supports beta/alpha/rc)
+const [major, minor, patch] = newVersion
+  .match(/^(\d+)\.(\d+)\.(\d+)/)
+  .slice(1)
+  .map(Number);
+
+tauri.bundle ??= {};
+tauri.bundle.android ??= {};
+tauri.bundle.android.versionCode =
+  major * 1_000_000 + minor * 1_000 + patch;
+
 fs.writeFileSync(tauriPath, JSON.stringify(tauri, null, 2));
 
 // --- Update Cargo.toml ---
