@@ -27,6 +27,9 @@
     }
   },
   "bundle": {
+    "android": {
+      "versionCode": 1085
+    },
     "active": true,
     "targets": "all",
     "icon": [
