@@ -92,4 +92,5 @@ Distributed under the MIT License. See `LICENSE.md` for more information.
 
 - [SherpaTTS](https://f-droid.org/packages/org.woheller69.ttsengine/)
 - [SupertonicTTS](https://f-droid.org/en/packages/com.brahmadeo.supertonic.tts/)
-- [Rh voice](https://f-droid.org/en/packages/com.github.olga_yakovleva.rhvoice.android/)
+- [RH voice](https://f-droid.org/en/packages/com.github.olga_yakovleva.rhvoice.android/)
+- [Marmalade TTS](https://f-droid.org/en/packages/app.marmalade.tts/)
