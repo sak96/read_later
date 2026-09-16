@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { invokeParse, invokeNoParseLogError } from '../composables/useTauri'
 import type { Article, AlertContext } from '../types'
 import ReadViewer from '../components/ReadViewer.vue'
-import { Trash2, Loader, CloudDownload, LucideIcon } from 'lucide-vue-next'
+import { Trash2, Loader } from 'lucide-vue-next'
 
 const props = defineProps<{
   id: number
@@ -14,7 +14,6 @@ const router = useRouter()
 
 type PageMode
   = | { type: 'fetching' }
-    | { type: 'downloading' }
     | { type: 'returned', article: Article }
 
 const mode = ref<PageMode>({ type: 'fetching' })
@@ -39,7 +38,6 @@ async function loadArticle() {
       })
       if (result === null) {
         await new Promise(resolve => setTimeout(resolve, 500))
-        mode.value = { type: 'downloading' }
       }
     }
     mode.value = { type: 'returned', article: result } as PageMode
@@ -60,13 +58,6 @@ async function deleteArticle() {
 onMounted(async () => {
   await loadArticle()
 })
-
-function getProgressInfo(mode: PageMode): { icon: LucideIcon, title: string } {
-  if (mode.type === 'downloading') {
-    return { icon: CloudDownload, title: 'Downloading' }
-  }
-  return { icon: Loader, title: '...' }
-}
 </script>
 
 <template>
@@ -76,11 +67,10 @@ function getProgressInfo(mode: PageMode): { icon: LucideIcon, title: string } {
     style="display: flex; justify-content: center; align-items: center;"
   >
     <article style="width: 100%;">
-      <h2>
-        <component :is="getProgressInfo(mode).icon" />
-        <p>{{ getProgressInfo(mode).title }}</p>
-      </h2>
-      <progress />
+      <h1>
+        <Loader :size="128"/>
+        <progress />
+      </h1>
       <footer dir="rtl">
         <button
           class="secondary"
@@ -93,7 +83,7 @@ function getProgressInfo(mode: PageMode): { icon: LucideIcon, title: string } {
   </main>
 
   <ReadViewer
-    v-else-if="mode.type === 'returned'"
+    v-else
     :article="mode.article"
     @refreshed="loadArticle"
   />
