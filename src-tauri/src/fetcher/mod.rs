@@ -61,6 +61,7 @@ pub async fn fetch_parse_update_article(
 
     let options = readabilityrs::ReadabilityOptions::builder()
         .remove_title_from_content(true)
+        .sanitize_content(true)
         .build();
     let article_data = Readability::new(&html, Some(article_url), Some(options))
         .with_context(|| format!("Failed to create readability for {article_url}"))?
