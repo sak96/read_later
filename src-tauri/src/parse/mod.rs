@@ -534,6 +534,20 @@ fn process_node(node: &NodeRef, current_id: &RefCell<u32>) {
     }
 }
 
+fn has_block_or_code_descendant(node: &NodeRef) -> bool {
+    node.children().any(|child| {
+        if let Some(element) = child.as_element() {
+            let tag_name = element.name.local.as_ref();
+
+            is_block_element(tag_name)
+                || (is_code_tag(tag_name) && is_real_code_block(&child))
+                || has_block_or_code_descendant(&child)
+        } else {
+            false
+        }
+    })
+}
+
 fn process_element_tts(node: &NodeRef, current_id: &RefCell<u32>) {
     if let Some(element) = node.as_element() {
         let tag_name = element.name.local.as_ref();
@@ -543,14 +557,7 @@ fn process_element_tts(node: &NodeRef, current_id: &RefCell<u32>) {
     }
 
     let children: Vec<NodeRef> = node.children().collect();
-    let has_block_or_code_children = children.iter().any(|child| {
-        if let Some(element) = child.as_element() {
-            let tag_name = element.name.local.as_ref();
-            is_block_element(tag_name) || (is_code_tag(tag_name) && is_real_code_block(child))
-        } else {
-            false
-        }
-    });
+    let has_block_or_code_children = has_block_or_code_descendant(node);
 
     if has_block_or_code_children {
         for child in &children {

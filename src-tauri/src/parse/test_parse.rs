@@ -750,3 +750,10 @@ fn test_code_with_newline_and_inline_children_is_code_block() {
     );
     assert_eq!(output, "<div> <pre class=\"tts_code_block\"><span class=\"tts_para_0\">line1\n</span><span class=\"tts_para_1\">line2</span></pre> </div>");
 }
+
+#[test]
+fn test_long_paragraph() {
+    let input = "<main id=\"main\"><heading-anchors><p>First sentence. <code><em>second.</em></code> Third sentence.</p></heading-anchors></main>";
+    let output = process_html_test(input);
+    assert_eq!(output, "<div> <main id=\"main\"><heading-anchors><p><span class=\"tts_para_0\">First sentence.</span><span class=\"tts_para_1\"> <code><em>second.</em></code></span><span class=\"tts_para_2\"> Third sentence.</span></p></heading-anchors></main> </div>");
+}
