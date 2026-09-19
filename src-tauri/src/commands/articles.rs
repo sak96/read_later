@@ -80,7 +80,7 @@ pub async fn get_article(
 
     match db {
         tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            let article = query_as::<_, Article>(
+            let mut article = query_as::<_, Article>(
                 r"
                 SELECT id, title, body, url
                 FROM articles
@@ -89,13 +89,9 @@ pub async fn get_article(
                 ",
             )
             .bind(id)
-            .fetch_optional(pool)
+            .fetch_one(pool)
             .await
             .with_context(|| format!("failed to fetch article with id {id}"))?;
-
-            let Some(mut article) = article else {
-                return Ok(None);
-            };
 
             if article.title.is_empty() {
                 let mode = query_as::<_, (String,)>(
@@ -149,9 +145,34 @@ async fn update_article_in_background(
 
     let tauri_plugin_sql::DbPool::Sqlite(pool) = db;
 
-    let (title, body, text_content) = fetch_parse_update_article(&url, fetcher)
-        .await
-        .with_context(|| format!("failed to fetch and parse article: {url}"))?;
+    let (title, body, text_content) = match fetch_parse_update_article(&url, fetcher).await {
+        Ok(article) => article,
+        Err(fetch_err) => {
+            let mut fetch_err =
+                Err(fetch_err).with_context(|| format!("failed to fetch and parse article: {url}"));
+            if let Err(delete_err) = query(
+                r"
+                UPDATE articles
+                SET
+                    is_deleted = 1,
+                    title = '',
+                    body = '',
+                    text_content = '',
+                    updated_at = datetime('now')
+                WHERE id = ?
+                ",
+            )
+            .bind(id)
+            .execute(pool)
+            .await
+            {
+                fetch_err = fetch_err.with_context(|| {
+                    format!("failed to delete article with id {id}: {delete_err}")
+                });
+            }
+            return fetch_err;
+        }
+    };
 
     query_as::<_, Article>(
         r"
