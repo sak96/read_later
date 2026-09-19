@@ -221,9 +221,8 @@ impl<R: Runtime> ToolbarInjector<R> {
             let running = running.clone();
             thread::spawn(move || {
                 thread::sleep(INJECTOR_INTERVAL / 2);
-                let iframe_html = build_iframe_html();
                 while running.load(Ordering::Relaxed) {
-                    let js = build_toolbar_inject_js(&iframe_html, bottom_inset);
+                    let js = build_toolbar_inject_js(bottom_inset);
                     let _ = webview.eval(&js);
                     thread::sleep(INJECTOR_INTERVAL);
                 }
@@ -291,31 +290,51 @@ const IFRAME_BUTTONS_HTML: &str = r#"
     </div>
 "#;
 
-fn build_iframe_html() -> String {
-    format!(
-        r"<!DOCTYPE html><html><head><style>{IFRAME_STYLE}</style></head><body>{IFRAME_BUTTONS_HTML}<script>
-            document.getElementById('__tauri_cap_ok').onclick = function() {{
-                window.parent.__TAURI__.event.emit('{HTML_CAPTURE_EVENT}', {{
-                    url: window.parent.location.href,
-                    origin: window.parent.location.origin,
-                    path: window.parent.location.pathname,
-                    html: window.parent.document.documentElement?.outerHTML ?? null
-                }});
-            }};
-            document.getElementById('__tauri_cap_cancel').onclick = function() {{
-                window.parent.__TAURI__.event.emit('{HTML_CAPTURE_EVENT}', {{
-                    url: window.parent.location.href,
-                    origin: window.parent.location.origin,
-                    path: window.parent.location.pathname,
-                    html: null
-                }});
-            }};
-        </script></body></html>",
-    )
-}
-
-fn build_toolbar_inject_js(iframe_html: &str, bottom_inset: f64) -> String {
-    let html = serde_json::to_string(iframe_html).unwrap_or_default();
+fn build_toolbar_inject_js(bottom_inset: f64) -> String {
+    let iframe_html = format!(
+        r"<!DOCTYPE html>
+        <html>
+        <head>
+            <style>{IFRAME_STYLE}</style>
+        </head>
+        <body>
+            {IFRAME_BUTTONS_HTML}
+            <script>
+                function updateIframeHeight() {{
+                    const height = Math.max(
+                        document.body.scrollHeight,
+                        document.body.offsetHeight,
+                        document.documentElement.scrollHeight,
+                        document.documentElement.offsetHeight
+                    );
+                    window.parent.postMessage({{
+                        type: '__tauri_capture_toolbar_height',
+                        height: height
+                    }}, '*');
+                }}
+                window.addEventListener('load', updateIframeHeight);
+                requestAnimationFrame(updateIframeHeight);
+                document.getElementById('__tauri_cap_ok').onclick = function() {{
+                    window.parent.__TAURI__.event.emit('{HTML_CAPTURE_EVENT}', {{
+                        url: window.parent.location.href,
+                        origin: window.parent.location.origin,
+                        path: window.parent.location.pathname,
+                        html: window.parent.document.documentElement?.outerHTML ?? null
+                    }});
+                }};
+                document.getElementById('__tauri_cap_cancel').onclick = function() {{
+                    window.parent.__TAURI__.event.emit('{HTML_CAPTURE_EVENT}', {{
+                        url: window.parent.location.href,
+                        origin: window.parent.location.origin,
+                        path: window.parent.location.pathname,
+                        html: null
+                    }});
+                }};
+            </script>
+        </body>
+        </html>",
+    );
+    let html = serde_json::to_string(&iframe_html).unwrap_or_default();
     format!(
         r#"
             if (!document.getElementById("__tauri_capture_toolbar_host")) {{
@@ -327,6 +346,12 @@ fn build_toolbar_inject_js(iframe_html: &str, bottom_inset: f64) -> String {
                 iframe.contentDocument.open();
                 iframe.contentDocument.write({html});
                 iframe.contentDocument.close();
+                window.addEventListener("message", function (event) {{
+                    if (event.data?.type !== "__tauri_capture_toolbar_height") return;
+                    const iframe = document.getElementById("__tauri_capture_toolbar_host");
+                    if (!iframe) return;
+                    iframe.style.height = `${{event.data.height}}px`;
+                }});
             }}
         "#,
     )
