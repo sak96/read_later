@@ -53,7 +53,6 @@ impl<R: Runtime> HtmlJsAuthFetcher<R> {
             webview: self.base.webview.clone(),
             listener_id,
             injector: Some(injector),
-            remove_toolbar: true,
         };
 
         let response = rx.recv().context("failed to receive captured response")?;

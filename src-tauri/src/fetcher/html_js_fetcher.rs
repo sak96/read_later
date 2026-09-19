@@ -54,7 +54,6 @@ impl<R: Runtime> HtmlJsFetcher<R> {
             webview: self.base.webview.clone(),
             listener_id,
             injector: None,
-            remove_toolbar: false,
         };
 
         drop(guard);

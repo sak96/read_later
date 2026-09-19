@@ -255,16 +255,17 @@ pub(crate) struct FetchGuard<R: Runtime> {
     pub webview: WebviewWindow<R>,
     pub listener_id: tauri::EventId,
     pub injector: Option<ToolbarInjector<R>>,
-    pub remove_toolbar: bool,
 }
 
 impl<R: Runtime> Drop for FetchGuard<R> {
     fn drop(&mut self) {
+        let mut remove_toolbar = false;
         if let Some(mut inj) = self.injector.take() {
             inj.stop();
+            remove_toolbar = true;
         }
         self.app.unlisten(self.listener_id);
-        if self.remove_toolbar {
+        if remove_toolbar {
             let _ = self.webview.eval(TOOLBAR_REMOVE_JS);
         }
     }
