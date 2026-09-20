@@ -27,7 +27,7 @@ android {
     }
     namespace = "io.github.sak.read.it.later"
     defaultConfig {
-        manifestPlaceholders["usesCleartextTraffic"] = "false"
+        manifestPlaceholders["usesCleartextTraffic"] = "true"
         applicationId = "io.github.sak.read.it.later"
         minSdk = 28
         targetSdk = 36
