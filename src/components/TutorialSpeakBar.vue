@@ -61,8 +61,12 @@ async function goNext() {
           <small data-i18n="tutorial_pause" />
         </div>
         <div>
-          <ChevronLeft />
-          <small data-i18n="tutorial_expand" />
+          <ReaderSettingIcon />
+          <small data-i18n="tutorial_reader_settings" />
+        </div>
+        <div>
+          <Home />
+          <small data-i18n="tutorial_home" />
         </div>
         <hr>
         <div>
@@ -71,10 +75,6 @@ async function goNext() {
       </template>
       <template v-else>
         <div>
-          <ChevronRight />
-          <small data-i18n="tutorial_collapse" />
-        </div>
-        <div>
           <Globe />
           <small data-i18n="tutorial_browser" />
         </div>
@@ -82,13 +82,9 @@ async function goNext() {
           <Trash2 />
           <small data-i18n="tutorial_delete" />
         </div>
+        <hr>
         <div>
-          <Home />
-          <small data-i18n="tutorial_home" />
-        </div>
-        <div>
-          <ReaderSettingIcon />
-          <small data-i18n="tutorial_reader_settings" />
+          <small data-i18n="tutorial_fetcher_settings" />
         </div>
       </template>
       <footer>
