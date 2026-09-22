@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { getSetting, setSetting } from '../composables/useSettings'
-import { BookHeadphones, ChevronLeft, ArrowRight, ChevronRight, Globe, Trash2, Home, Pause } from 'lucide-vue-next'
+import { BookHeadphones, ArrowRight, Globe, Trash2, Home, Pause } from 'lucide-vue-next'
 import ReaderSettingIcon from './ReaderSettingIcon.vue'
 import ListenResetIcon from './ListenResetIcon.vue'
 import { TUTORIAL_SHOWN } from '../constants'
