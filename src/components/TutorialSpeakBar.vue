@@ -85,6 +85,11 @@ async function goNext() {
         <hr>
         <div>
           <small data-i18n="tutorial_fetcher_settings" />
+          <ul>
+            <li data-i18n="fetcher_html"/>
+            <li data-i18n="fetcher_html_js"/>
+            <li data-i18n="fetcher_html_js_auth"/>
+          </ul>
         </div>
       </template>
       <footer>
