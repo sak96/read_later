@@ -12,28 +12,7 @@
     ]
   },
   "permissions": [
-    {
-      "identifier": "core:event:allow-emit",
-      "allow": [
-        {
-          "url": "https://*:*"
-        },
-        {
-          "url": "http://*:*"
-        }
-      ]
-    },
-    {
-      "identifier": "http:default",
-      "allow": [
-        {
-          "url": "https://*:*"
-        },
-        {
-          "url": "http://*:*"
-        }
-      ]
-    },
+    "core:event:allow-emit",
     "core:webview:default",
     "core:default",
     "clipboard-manager:allow-read-text",
