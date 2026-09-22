@@ -68,7 +68,7 @@ onMounted(async () => {
   >
     <article style="width: 100%;">
       <h1>
-        <Loader :size="128"/>
+        <Loader :size="128" />
         <progress />
       </h1>
       <footer dir="rtl">
