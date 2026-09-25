@@ -123,5 +123,11 @@ pub fn get_migrations() -> Vec<Migration> {
             sql: include_str!("../migrations/2026-07-28-000001_add_is_regex.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 8,
+            description: "set_tutorial_enabled",
+            sql: include_str!("../migrations/2026-09-25-000000_set_tutorial_enabled.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
