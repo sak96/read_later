@@ -18,6 +18,8 @@ import Fab from '../layouts/Fab.vue'
 import HomeButton from './HomeButton.vue'
 import TutorialSpeakBar from './TutorialSpeakBar.vue'
 import FontScale from './FontScale.vue'
+import { getSetting, setSetting } from '../composables/useSettings'
+import { TUTORIAL_SHOWN } from '../constants'
 
 const alertContext = inject<AlertContext | null>('alert')
 
@@ -33,7 +35,7 @@ const emit = defineEmits<{
   refreshed: []
 }>()
 
-const foldBar = ref(true)
+const showTutorial = ref(false)
 const showSettings = ref(false)
 const showDeleteModal = ref(false)
 
@@ -135,7 +137,6 @@ watch(rate, async (val) => {
 })
 
 function openSettings() {
-  foldBar.value = true
   showSettings.value = true
 }
 
@@ -154,12 +155,9 @@ function toggleDeleteModal() {
   showDeleteModal.value = !showDeleteModal.value
 }
 
-function dismissTutorial() {
-  foldBar.value = true
-}
-
-function expandForTutorial() {
-  foldBar.value = false
+async function dismissTutorial() {
+  showTutorial.value = false
+  await setSetting(TUTORIAL_SHOWN, 'true')
 }
 
 function scrollTo(block: 'start' | 'center') {
@@ -220,6 +218,7 @@ async function scrollOnFocus() {
 watch(mode, loadModeClass)
 
 onMounted(async () => {
+  showTutorial.value = await getSetting(TUTORIAL_SHOWN) !== 'true'
   focusUnlistener.value = await listen(
     currentPlatform === 'android' ? 'tauri://focus' : 'new-intent',
     scrollOnFocus,
@@ -244,11 +243,10 @@ onUnmounted(async () => {
 
 <template>
   <TutorialSpeakBar
-    :fold-bar="foldBar"
+    :show-tutorial="showTutorial"
     @dismiss="dismissTutorial"
-    @update-fold-bar="expandForTutorial"
   />
-  <Fab :class="{'transparent': foldBar }">
+  <Fab :class="{'transparent': showTutorial }">
     <template v-if="ttsEnabled">
       <template v-if="mode === 'view'">
         <button

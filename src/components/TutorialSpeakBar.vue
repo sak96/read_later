@@ -1,53 +1,40 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { getSetting, setSetting } from '../composables/useSettings'
-import { BookHeadphones, ArrowRight, Globe, Trash2, Home, Pause } from 'lucide-vue-next'
+import { ref } from 'vue'
+import { BookHeadphones, ArrowLeft, ArrowRight, Globe, Trash2, Home, Pause } from 'lucide-vue-next'
 import ReaderSettingIcon from './ReaderSettingIcon.vue'
 import ListenResetIcon from './ListenResetIcon.vue'
-import { TUTORIAL_SHOWN } from '../constants'
 
 defineProps<{
-  foldBar: boolean
+  showTutorial: boolean
 }>()
 
 const emit = defineEmits<{
   dismiss: []
-  updateFoldBar: []
 }>()
 
-const shownTutorial = ref(false)
 const tutorialStage = ref(0)
 
-onMounted(async () => {
-  const tutorialShown = await getSetting(TUTORIAL_SHOWN)
-  if (tutorialShown !== 'true') {
-    shownTutorial.value = true
-  }
-})
-
-async function dismiss() {
-  await setSetting(TUTORIAL_SHOWN, 'true')
-  shownTutorial.value = false
-  emit('dismiss')
+function goNext() {
+  tutorialStage.value += 1
 }
 
-async function goNext() {
-  tutorialStage.value += 1
-  if (tutorialStage.value > 2) {
-    await dismiss()
-  }
-  emit('updateFoldBar')
+function goBack() {
+  tutorialStage.value = Math.max(0, tutorialStage.value - 1)
+}
+
+function dismiss() {
+  emit('dismiss')
 }
 </script>
 
 <template>
   <dialog
-    v-if="shownTutorial"
+    v-if="showTutorial"
     class="tutorial"
     open
   >
     <article>
-      <template v-if="foldBar">
+      <template v-if="tutorialStage === 0">
         <div>
           <ListenResetIcon />
           <small data-i18n="tutorial_undo" />
@@ -86,13 +73,25 @@ async function goNext() {
         <div>
           <small data-i18n="tutorial_fetcher_settings" />
           <ul>
-            <li data-i18n="fetcher_html"/>
-            <li data-i18n="fetcher_html_js"/>
-            <li data-i18n="fetcher_html_js_auth"/>
+            <li data-i18n="fetcher_html" />
+            <li data-i18n="fetcher_html_js" />
+            <li data-i18n="fetcher_html_js_auth" />
           </ul>
+        </div>
+        <hr>
+        <div>
+          <small data-i18n="tutorial_enable_hint" />
         </div>
       </template>
       <footer>
+        <button
+          v-if="tutorialStage > 0"
+          class="secondary"
+          @click="goBack"
+        >
+          <ArrowLeft />
+          <small data-i18n="tutorial_back" />
+        </button>
         <button
           v-if="tutorialStage < 1"
           class="tutorial-next"
