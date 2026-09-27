@@ -298,37 +298,37 @@ async fn sync_articles_inner(
         path.trim_end_matches('/')
     );
 
-    let instances = db_instances.0.read().await;
-
-    let tauri_plugin_sql::DbPool::Sqlite(pool) =
-        instances.get(DB_URL).context("database is not loaded")?;
-
-    let new_synced_at = Utc::now().timestamp();
-
     let last_synced_at = get_setting("lastSyncedAt".to_string(), db_instances.clone())
         .await
         .unwrap_or_else(|_| "0".to_string())
         .parse::<i64>()
         .context("invalid lastSyncedAt setting")?;
+    let new_synced_at = Utc::now().timestamp();
 
-    let remote_entities = get_remote_entities(&client, &sync_path, last_synced_at)
+    {
+        let instances = db_instances.0.write().await;
+        let tauri_plugin_sql::DbPool::Sqlite(pool) =
+            instances.get(DB_URL).context("database is not loaded")?;
+
+        let remote_entities = get_remote_entities(&client, &sync_path, last_synced_at)
+            .await
+            .context("failed to get remote sync data")?;
+
+        let local_articles = get_local_sync_data(pool, last_synced_at)
+            .await
+            .context("failed to get local sync data")?;
+
+        reconcile_and_process(
+            &client,
+            pool,
+            &sync_path,
+            local_articles,
+            remote_entities,
+            progress_channel,
+        )
         .await
-        .context("failed to get remote sync data")?;
-
-    let local_articles = get_local_sync_data(pool, last_synced_at)
-        .await
-        .context("failed to get local sync data")?;
-
-    reconcile_and_process(
-        &client,
-        pool,
-        &sync_path,
-        local_articles,
-        remote_entities,
-        progress_channel,
-    )
-    .await
-    .context("failed to reconcile articles")?;
+        .context("failed to reconcile articles")?;
+    }
 
     set_setting(
         "lastSyncedAt".to_string(),
@@ -337,6 +337,10 @@ async fn sync_articles_inner(
     )
     .await
     .context("failed to update lastSyncedAt")?;
+
+    let instances = db_instances.0.write().await;
+    let tauri_plugin_sql::DbPool::Sqlite(pool) =
+        instances.get(DB_URL).context("database is not loaded")?;
 
     sqlx::query(
         r"
