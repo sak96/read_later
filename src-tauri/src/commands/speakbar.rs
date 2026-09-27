@@ -166,10 +166,10 @@ async fn init_reading_inner(
             let app = app_.clone();
 
             tauri::async_runtime::spawn(async move {
-                if let Some(state) = app.try_state::<SpeakBarState>() {
-                    if let Err(error) = stop_reading_inner(&app, &state).await {
-                        eprintln!("failed to stop reading after TTS error: {error:#}");
-                    }
+                if let Some(state) = app.try_state::<SpeakBarState>()
+                    && let Err(error) = stop_reading_inner(&app, &state).await
+                {
+                    eprintln!("failed to stop reading after TTS error: {error:#}");
                 }
             });
         })
@@ -182,10 +182,10 @@ async fn init_reading_inner(
             let app = app_.clone();
 
             tauri::async_runtime::spawn(async move {
-                if let Some(state) = app.try_state::<SpeakBarState>() {
-                    if let Err(error) = stop_reading_inner(&app, &state).await {
-                        eprintln!("failed to stop reading after TTS interruption: {error:#}");
-                    }
+                if let Some(state) = app.try_state::<SpeakBarState>()
+                    && let Err(error) = stop_reading_inner(&app, &state).await
+                {
+                    eprintln!("failed to stop reading after TTS interruption: {error:#}");
                 }
             });
         })
@@ -243,6 +243,7 @@ async fn start_reading_inner(
     Ok(())
 }
 
+#[allow(clippy::unused_async)]
 async fn read_next_para(app: &AppHandle, state: &State<'_, SpeakBarState>) -> Result<()> {
     // Keep all RwLock guards inside this scope. Nothing returned from this
     // block contains a lock guard, so no non-Send guard can live across await.
@@ -399,6 +400,7 @@ pub async fn stop_reading(
         .map_err(TauriError::from)
 }
 
+#[allow(clippy::unused_async)]
 async fn stop_reading_inner(app: &AppHandle, state: &State<'_, SpeakBarState>) -> Result<()> {
     app.tts().stop().context("failed to stop TTS")?;
 

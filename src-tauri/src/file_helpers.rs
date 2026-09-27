@@ -10,9 +10,11 @@ pub fn pick_and_read_json<T: DeserializeOwned>(app: &AppHandle) -> Result<T, Err
         return Err(Error::msg("No file selected"));
     };
     let path = file_path.as_path().context("could not get a path")?;
-    let file = File::open(path).with_context(|| format!("Failed to open file {path:?}"))?;
+    let file =
+        File::open(path).with_context(|| format!("Failed to open file {}", path.display()))?;
     let reader = BufReader::new(file);
-    serde_json::from_reader(reader).with_context(|| format!("Failed to parse file: {path:?}"))
+    serde_json::from_reader(reader)
+        .with_context(|| format!("Failed to parse file: {}", path.display()))
 }
 
 pub fn pick_and_write_json<T: Serialize>(
@@ -30,7 +32,9 @@ pub fn pick_and_write_json<T: Serialize>(
         return Err(Error::msg("No save location selected"));
     };
     let path = file_path.as_path().context("could not get a path")?;
-    let file = File::create(path).with_context(|| format!("Could not create file: {path:?}"))?;
+    let file =
+        File::create(path).with_context(|| format!("Could not create file: {}", path.display()))?;
     let writer = BufWriter::new(file);
-    serde_json::to_writer(writer, data).with_context(|| format!("Failed to write file: {path:?}"))
+    serde_json::to_writer(writer, data)
+        .with_context(|| format!("Failed to write file: {}", path.display()))
 }
