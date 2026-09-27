@@ -1,6 +1,7 @@
 pub mod commands;
 pub mod error;
 pub mod fetcher;
+pub mod webdav;
 #[cfg(not(target_os = "android"))]
 pub mod file_helpers;
 #[cfg(target_os = "android")]

@@ -2,12 +2,10 @@ use crate::commands::settings::{get_setting, set_setting};
 use crate::error::TauriError;
 use crate::models::{ArticleSync, DB_URL};
 
+use crate::webdav::WebDav as Client;
 use anyhow::{Context, Result};
 use blake3;
 use chrono::{NaiveDateTime, Utc};
-use reqwest_dav::types::list_cmd::{ListEntity, ListFile};
-use reqwest_dav::types::{Auth, Depth};
-use reqwest_dav::{Client, ClientBuilder};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Runtime, State, ipc::Channel};
 use tauri_plugin_sql::DbInstances;
@@ -23,25 +21,6 @@ fn url_to_path(url: &str) -> String {
     format!("{}.json", hash.to_hex())
 }
 
-fn setup_webdav_client(
-    url: String,
-    username: String,
-    password: String,
-    auth_type: &str,
-) -> Result<Client> {
-    let auth = match auth_type {
-        "basic" => Auth::Basic(username, password),
-        "digest" => Auth::Digest(username, password),
-        _ => Auth::Anonymous,
-    };
-
-    ClientBuilder::new()
-        .set_host(url)
-        .set_auth(auth)
-        .build()
-        .context("failed to build WebDAV client")
-}
-
 fn iso_to_timestamp(iso_str: &str) -> i64 {
     NaiveDateTime::parse_from_str(iso_str, "%Y-%m-%d %H:%M:%S")
         .map_or(0, |naive| naive.and_utc().timestamp())
@@ -51,8 +30,8 @@ async fn get_remote_entities(
     client: &Client,
     sync_path: &str,
     last_synced_at: i64,
-) -> Result<Vec<ListFile>> {
-    if client.list(sync_path, Depth::Number(0)).await.is_err() {
+) -> Result<Vec<String>> {
+    if client.get(sync_path).await.is_err() {
         client
             .mkcol(sync_path)
             .await
@@ -60,17 +39,15 @@ async fn get_remote_entities(
     }
 
     let entities = client
-        .list(sync_path, Depth::Number(1))
+        .list(sync_path)
         .await
         .context("failed to list WebDAV sync directory")?;
 
     Ok(entities
         .into_iter()
         .filter_map(|entity| {
-            if let ListEntity::File(file) = entity
-                && file.last_modified.timestamp() > last_synced_at
-            {
-                Some(file)
+            if entity.is_file() && entity.timestamp() > last_synced_at {
+                Some(entity.path().to_string())
             } else {
                 None
             }
@@ -95,12 +72,13 @@ async fn get_local_sync_data(
     .context("failed to fetch local articles for sync")
 }
 
+#[allow(clippy::too_many_lines)]
 async fn reconcile_and_process(
     client: &Client,
     pool: &sqlx::SqlitePool,
     sync_path: &str,
     local_articles: Vec<ArticleSync>,
-    remote_entities: Vec<ListFile>,
+    remote_entities: Vec<String>,
     progress_channel: Channel<SyncProgress>,
 ) -> Result<()> {
     use std::collections::HashSet;
@@ -112,7 +90,7 @@ async fn reconcile_and_process(
     }
 
     for entity in &remote_entities {
-        if let Some(filename) = entity.href.split('/').next_back() {
+        if let Some(filename) = entity.split('/').next_back() {
             all_hashes.insert(filename.to_string());
         }
     }
@@ -127,14 +105,7 @@ async fn reconcile_and_process(
             .find(|article| &url_to_path(&article.url) == hash);
 
         let remote_article = match client.get(&path).await {
-            Ok(response) => {
-                let content = response
-                    .text()
-                    .await
-                    .with_context(|| format!("failed to read remote article: {path}"))?;
-
-                serde_json::from_str::<ArticleSync>(&content).ok()
-            }
+            Ok(data) => serde_json::from_str::<ArticleSync>(&data).ok(),
             Err(_) => None,
         };
 
@@ -148,7 +119,7 @@ async fn reconcile_and_process(
                         .context("failed to serialize local article")?;
 
                     client
-                        .put(&path, content)
+                        .put(&path, &content)
                         .await
                         .with_context(|| format!("failed to upload local article: {path}"))?;
                 } else if remote_ts > local_ts {
@@ -177,7 +148,7 @@ async fn reconcile_and_process(
                     serde_json::to_string(local).context("failed to serialize local article")?;
 
                 client
-                    .put(&path, content)
+                    .put(&path, &content)
                     .await
                     .with_context(|| format!("failed to upload local article: {path}"))?;
             }
@@ -290,7 +261,7 @@ async fn sync_articles_inner(
         .await
         .unwrap_or_default();
 
-    let client = setup_webdav_client(url, username, password, &auth_type)
+    let client = Client::new(&url, &username, &password, &auth_type)
         .context("failed to initialize WebDAV client")?;
 
     let sync_path = format!(
