@@ -13,6 +13,7 @@ pub mod parse;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    unsafe { std::env::set_var("RUST_BACKTRACE", "full") };
     let mut builder = tauri::Builder::default();
     builder = builder
         .plugin(tauri_plugin_dialog::init())
