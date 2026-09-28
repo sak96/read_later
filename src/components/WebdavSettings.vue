@@ -30,6 +30,9 @@ const showWebdavDialog = ref(false)
 async function onWebdavToggle() {
   webdavEnabled.value = !webdavEnabled.value
   await setSetting(WEBDAV_ENABLED, String(webdavEnabled.value))
+  if (webdavEnabled.value === false) {
+    await setSetting(LAST_SYNCED_AT, String(0))
+  }
 }
 
 function goSync() {
