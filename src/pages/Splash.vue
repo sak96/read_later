@@ -26,10 +26,14 @@ onMounted(async () => {
   try {
     const channel = new Channel<SyncProgress>(onProgress)
     await invokeNoParse('sync_articles', { progressChannel: channel });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (channel as any).cleanupCallback()
     await router.push('/home')
   }
-  catch (e: any) {
+  catch (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    e: any
+  ) {
     alertContext?.updateAlertContext?.('error', e.toString() || 'An unknown error occurred during sync.')
     await router.push('/home')
   }
