@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { Channel } from '@tauri-apps/api/core'
 import { invokeNoParse } from '../composables/useTauri'
 import { CloudSync } from 'lucide-vue-next'
+import type { AlertContext } from '../types'
 
 const router = useRouter()
 const progress = ref(0)
 const total = ref(0)
 const errorMessage = ref('')
+
+const alertContext = inject<AlertContext | null>('alert')
 
 interface SyncProgress {
   count_processed: number
@@ -28,8 +31,7 @@ onMounted(async () => {
     await router.push('/home')
   }
   catch (e: any) {
-    errorMessage.value = e.toString() || 'An unknown error occurred during sync.'
-    console.error('Sync error:', e)
+    alertContext?.updateAlertContext?.('error', e.toString() || 'An unknown error occurred during sync.')
     await router.push('/home')
   }
 })
