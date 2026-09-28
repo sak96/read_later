@@ -80,9 +80,6 @@
       const navIcon = document.getElementById("navIcon");
       const navTitle = document.getElementById("navTitle");
 
-      let storesData = [];
-      fetch("stores.json").then((r) => r.json()).then((d) => { storesData = d; });
-
       const THEME_KEY = "theme";
       const LOCALE_KEY = "locale";
 
@@ -159,7 +156,7 @@
         return html;
       }
 
-      function render(locale, data) {
+      function render(locale, data, stores) {
         const loc = data.locales[locale];
         if (!loc) return;
 
@@ -187,7 +184,7 @@
           )
           .join("\n            ");
 
-        const storeLinks = storesData
+        const storeLinks = (stores || [])
           .map((s) => `<a href="${s.url}"><img src="${s.icon}" alt="${s.name}" /></a>`)
           .join("");
 
@@ -209,9 +206,11 @@
       </article>`;
       }
 
-      fetch("data.json")
-        .then((r) => r.json())
-        .then((data) => {
+      Promise.all([
+        fetch("data.json").then((r) => r.json()),
+        fetch("stores.json").then((r) => r.json()),
+      ])
+        .then(([data, stores]) => {
           const locales = Object.keys(data.locales);
 
           localeList.innerHTML = locales
@@ -224,12 +223,16 @@
           localeList.addEventListener("click", (e) => {
             if (e.target.dataset.locale) {
               e.preventDefault();
-              render(e.target.dataset.locale, data);
+              render(e.target.dataset.locale, data, stores);
             }
           });
 
           const initial = getLocale(data);
-          render(initial, data);
+          render(initial, data, stores);
+        })
+        .catch((e) => {
+          console.error("Failed to load store listing data:", e);
+          app.innerHTML = `<article><p>Sorry, this page failed to load. Please try again.</p></article>`;
         });
     </script>
   </body>
