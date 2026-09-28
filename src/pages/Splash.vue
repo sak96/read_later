@@ -9,7 +9,6 @@ import type { AlertContext } from '../types'
 const router = useRouter()
 const progress = ref(0)
 const total = ref(0)
-const errorMessage = ref('')
 
 const alertContext = inject<AlertContext | null>('alert')
 
@@ -57,12 +56,6 @@ onMounted(async () => {
       />
       <p v-if="total > 0">
         {{ progress }} / {{ total }}
-      </p>
-      <p
-        v-if="errorMessage"
-        style="color: var(--pico-del-color);"
-      >
-        {{ errorMessage }}
       </p>
     </article>
   </main>
