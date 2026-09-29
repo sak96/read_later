@@ -23,6 +23,31 @@ fn url_to_path(url: &str) -> String {
     format!("{}.json", hash.to_hex())
 }
 
+async fn mkdir(client: &Client, path: &str) -> Result<()> {
+    let mut current = String::new();
+
+    for component in path.trim_matches('/').split('/') {
+        if component.is_empty() {
+            continue;
+        }
+        current.push('/');
+        current.push_str(component);
+
+        // Check if already exists.
+        if client.list(&current, Depth::Number(0)).await.is_err() {
+            client
+                .mkcol(&current)
+                .await
+                .context(format!("failed to create {current} part of {path}"))?;
+        }
+    }
+    client
+        .get(path)
+        .await
+        .context(format!("failed to create path {path}"))?;
+    Ok(())
+}
+
 fn setup_webdav_client(
     url: String,
     username: String,
@@ -53,8 +78,7 @@ async fn get_remote_entities(
     last_synced_at: i64,
 ) -> Result<Vec<ListFile>> {
     if client.list(sync_path, Depth::Number(0)).await.is_err() {
-        client
-            .mkcol(sync_path)
+        mkdir(client, sync_path)
             .await
             .context("failed to create WebDAV sync directory")?;
     }
