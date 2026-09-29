@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { ref, provide, computed } from 'vue'
+import { ref, provide, computed, onMounted } from 'vue'
 import { writeText } from '@tauri-apps/plugin-clipboard-manager'
+import { getSetting, setSetting } from '../composables/useSettings'
+import { FULL_ERROR } from '../constants'
 import type { AlertContext, AlertStatus } from '../types'
 import { ALERT_DURATION_MS } from '../constants'
 
 const message = ref<string | null>(null)
 const status = ref<AlertStatus>('info')
 const alertTimeout = ref<ReturnType<typeof setTimeout> | undefined>()
+const showErrorTrace = ref(false)
 
 function clearAlertTimeout() {
   if (alertTimeout.value) {
@@ -18,10 +21,18 @@ function clearAlertTimeout() {
 function updateAlertContext(newStatus: AlertStatus, newMessage: string) {
   clearAlertTimeout()
   status.value = newStatus
+  if (status.value === 'error' && !showErrorTrace.value) {
+    newMessage = newMessage.split('Caused by:')[0].trim()
+  }
   message.value = newMessage
   alertTimeout.value = setTimeout(() => {
     message.value = null
   }, ALERT_DURATION_MS)
+}
+
+async function setShowErrorTrace(value: boolean) {
+  await setSetting(FULL_ERROR, value ? 'true' : 'false')
+  showErrorTrace.value = value
 }
 
 async function click() {
@@ -35,6 +46,12 @@ async function click() {
 
 provide<AlertContext>('alert', {
   updateAlertContext,
+  showErrorTrace,
+  setShowErrorTrace,
+})
+
+onMounted(async () => {
+  showErrorTrace.value = (await getSetting(FULL_ERROR)) === 'true'
 })
 
 const alertStyle = computed(() => {
@@ -44,7 +61,7 @@ const alertStyle = computed(() => {
     success: { bgcolor: '#39F1A6', color: '#00895A' },
   }[status.value]
 
-  return `position: fixed; bottom: var(--safe-area-inset-bottom, 0); z-index: 1000; background-color: ${bgcolor}; color: ${color}`
+  return `position: fixed; bottom: var(--safe-area-inset-bottom, 0); z-index: 1000; white-space: pre; background-color: ${bgcolor}; color: ${color}`
 })
 </script>
 

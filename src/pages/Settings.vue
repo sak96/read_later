@@ -4,6 +4,7 @@ import { getSetting, setSetting } from '../composables/useSettings'
 import { getVersion } from '@tauri-apps/api/app'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import HomeButton from '../components/HomeButton.vue'
+import type { AlertContext } from '../types'
 import DataTransferButton from '../components/DataTransferButton.vue'
 import SpeakRate from '../components/SpeakRate.vue'
 import FetcherMode from '../components/FetcherMode.vue'
@@ -21,6 +22,7 @@ import { MonitorCog, Sun, Moon, CodeXml, Bug, Palette, Speech, Archive, Info } f
 type Theme = 'light' | 'dark' | 'system'
 
 const themeContext = inject<{ mode: Ref<Theme>, setMode: (mode: Theme) => void }>('theme')
+const alertContext = inject<AlertContext | null>('alert')
 
 const appVersion = ref('N/A')
 const ttsEnabled = ref(true)
@@ -54,6 +56,10 @@ async function onTutorialToggle() {
   const newState = !tutorialEnabled.value
   tutorialEnabled.value = newState
   await setSetting(TUTORIAL_SHOWN, newState ? 'false' : 'true')
+}
+
+async function onFullErrorToggle() {
+  await alertContext?.setShowErrorTrace(!alertContext.showErrorTrace.value)
 }
 
 onMounted(async () => {
@@ -116,6 +122,18 @@ onMounted(async () => {
                     role="switch"
                     :checked="tutorialEnabled"
                     @change="onTutorialToggle"
+                  >
+                </td>
+              </tr>
+              <tr>
+                <th data-i18n="full_error" />
+                <td>
+                  <input
+                    name="full_error"
+                    type="checkbox"
+                    role="switch"
+                    :checked="alertContext?.showErrorTrace.value ?? false"
+                    @change="onFullErrorToggle"
                   >
                 </td>
               </tr>

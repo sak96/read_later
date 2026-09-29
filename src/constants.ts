@@ -21,6 +21,8 @@ export const RATE = 'rate'
 
 export const FONT_SCALE = 'fontScale'
 
+export const FULL_ERROR = 'fullError'
+
 // Webdav settings
 export const WEBDAV_ENABLED = 'webdavEnabled'
 export const WEBDAV_URL = 'webdavUrl'

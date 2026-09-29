@@ -43,6 +43,8 @@ export type AlertStatus = 'success' | 'info' | 'error'
 
 export interface AlertContext {
   updateAlertContext: (status: AlertStatus, message: string) => void
+  showErrorTrace: Ref<boolean>
+  setShowErrorTrace: (value: boolean) => Promise<void>
 }
 
 export interface LocaleContext {

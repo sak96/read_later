@@ -11,6 +11,16 @@ impl serde::Serialize for TauriError {
     where
         S: serde::ser::Serializer,
     {
-        serializer.serialize_str(self.to_string().as_ref())
+        match self {
+            TauriError::Anyhow(error) => {
+                let trace = error
+                    .chain()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join("\nCaused by: ");
+                eprintln!("Tauri command failed with trace back: \n{trace}");
+                serializer.serialize_str(&trace)
+            }
+        }
     }
 }
