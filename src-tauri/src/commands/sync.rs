@@ -119,6 +119,7 @@ async fn get_local_sync_data(
     .context("failed to fetch local articles for sync")
 }
 
+#[allow(clippy::too_many_lines)]
 async fn reconcile_and_process(
     client: &Client,
     pool: &sqlx::SqlitePool,
