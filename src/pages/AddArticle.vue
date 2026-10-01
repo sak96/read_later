@@ -75,6 +75,7 @@ onMounted(() => {
       <input
         v-model="urlInput"
         type="url"
+        autocomplete="off"
         :placeholder="urlInputPlaceholder"
         required
       >

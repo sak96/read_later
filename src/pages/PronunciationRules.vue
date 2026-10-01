@@ -138,6 +138,7 @@ onMounted(loadRules)
         <span data-i18n="match_pattern" />
         <input
           v-model="editingRule.match_pattern"
+          autocomplete="off"
           type="text"
           :disabled="!isNewRule"
         >
@@ -146,6 +147,7 @@ onMounted(loadRules)
         <span data-i18n="replacement" />
         <input
           v-model="editingRule.replacement"
+          autocomplete="off"
           type="text"
         >
       </label>
