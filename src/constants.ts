@@ -11,6 +11,12 @@ export const TUTORIAL_SHOWN = 'tutorial_speak_bar_shown'
 
 export const FETCHER_MODE = 'fetcher_mode'
 
+export const FETCHER_MODES = [
+  { value: 'html', label: 'fetcher_html' },
+  { value: 'html_js', label: 'fetcher_html_js' },
+  { value: 'html_js_auth', label: 'fetcher_html_js_auth' },
+]
+
 export const TTS_ENABLED = 'tts'
 
 export const THEME = 'theme'

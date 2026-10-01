@@ -3,10 +3,19 @@ use crate::fetcher::{FetcherMode, fetch_parse_update_article, new_fetcher};
 use crate::models::{Article, ArticleEntry, ArticleEntryRow, DB_URL};
 use crate::parse::{build_snippet, process_html};
 
-use anyhow::{Context, Error, Result};
-use sqlx::{query, query_as, query_scalar};
-use tauri::{Manager, State};
+use anyhow::{Context, Result};
+use serde::Serialize;
+use sqlx::{SqlitePool, query, query_as, query_scalar};
+use tauri::State;
 use tauri_plugin_sql::DbInstances;
+
+#[derive(Clone, Serialize)]
+#[serde(tag = "status", rename_all = "snake_case")]
+pub enum ArticleResponse {
+    Ok { article: Article },
+    Chooser,
+    DbLocked,
+}
 
 #[tauri::command]
 pub async fn get_articles(
@@ -36,8 +45,13 @@ pub async fn get_articles(
                 FROM articles
                 WHERE (
                     ?1 IS NULL
-                    OR LOWER(title) LIKE '%' || LOWER(?1) || '%'
-                    OR LOWER(text_content) LIKE '%' || LOWER(?1) || '%'
+                    OR (
+                        title != ''
+                        AND (
+                            LOWER(title) LIKE '%' || LOWER(?1) || '%'
+                            OR LOWER(text_content) LIKE '%' || LOWER(?1) || '%'
+                        )
+                    )
                 )
                 AND is_deleted = 0
                 ORDER BY created_at DESC
@@ -69,133 +83,133 @@ pub async fn get_articles(
 #[tauri::command]
 pub async fn get_article(
     id: i32,
+    fetcher_mode: String,
+    trigger: bool,
     db_instances: State<'_, DbInstances>,
     app: tauri::AppHandle,
-) -> Result<Option<Article>, TauriError> {
-    let instances = db_instances.0.read().await;
+) -> Result<ArticleResponse, TauriError> {
+    // Phase 1 — fast-fail read: ready-article fast path, never waits on a lock.
+    if let Some(response) = try_ready_article(&db_instances, id).await? {
+        return Ok(response);
+    }
+
+    // Phase 2 — fast-fail write: classify and fetch while holding the guard.
+    let Ok(instances) = db_instances.0.try_write() else {
+        return Ok(ArticleResponse::DbLocked);
+    };
 
     let db = instances
         .get(DB_URL)
         .context("failed to get database instance")?;
 
-    match db {
-        tauri_plugin_sql::DbPool::Sqlite(pool) => {
-            let mut article = query_as::<_, Article>(
-                r"
-                SELECT id, title, body, url
-                FROM articles
-                WHERE is_deleted = 0
-                  AND id = ?
-                ",
-            )
-            .bind(id)
-            .fetch_one(pool)
-            .await
-            .with_context(|| format!("failed to fetch article with id {id}"))?;
+    let tauri_plugin_sql::DbPool::Sqlite(pool) = db;
 
-            if article.title.is_empty() {
-                let mode = query_as::<_, (String,)>(
-                    "SELECT value FROM settings WHERE name = 'fetcher_mode'",
-                )
-                .fetch_one(pool)
-                .await
-                .context("failed to read fetcher mode from settings")
-                .ok()
-                .and_then(|row| row.0.parse::<FetcherMode>().ok())
-                .unwrap_or_default();
-
-                let mut fetcher = new_fetcher(&app, &article.url, mode)
-                    .context("failed to create article fetcher")?;
-
-                let article_url = article.url.clone();
-                let article_id = article.id;
-
-                tauri::async_runtime::spawn(async move {
-                    if let Err(error) =
-                        update_article_in_background(app, article_id, article_url, &mut *fetcher)
-                            .await
-                    {
-                        eprintln!("failed to update article in background: {error:#}");
-                    }
-                });
-
-                return Ok(None);
-            }
-
-            article.body = process_html(&article.body, &article.url);
-
-            Ok(Some(article))
-        }
-    }
+    handle_pending_article(pool, id, trigger, &fetcher_mode, &app).await
 }
 
-async fn update_article_in_background(
-    app: tauri::AppHandle,
+async fn try_ready_article(
+    db_instances: &DbInstances,
     id: i32,
-    url: String,
-    fetcher: &mut dyn crate::fetcher::Fetcher,
-) -> Result<(), Error> {
-    let db_instances = app.state::<DbInstances>();
-
-    let instances = db_instances.0.write().await;
+) -> Result<Option<ArticleResponse>, TauriError> {
+    let Ok(instances) = db_instances.0.try_read() else {
+        return Ok(Some(ArticleResponse::DbLocked));
+    };
 
     let db = instances
         .get(DB_URL)
-        .context("failed to get database instance for background article update")?;
+        .context("failed to get database instance")?;
 
     let tauri_plugin_sql::DbPool::Sqlite(pool) = db;
 
-    let (title, body, text_content) = match fetch_parse_update_article(&url, fetcher).await {
-        Ok(article) => article,
-        Err(fetch_err) => {
-            let mut fetch_err =
-                Err(fetch_err).with_context(|| format!("failed to fetch and parse article: {url}"));
-            if let Err(delete_err) = query(
-                r"
-                UPDATE articles
-                SET
-                    is_deleted = 1,
-                    title = '',
-                    body = '',
-                    text_content = '',
-                    updated_at = datetime('now')
-                WHERE id = ?
-                ",
-            )
-            .bind(id)
-            .execute(pool)
-            .await
-            {
-                fetch_err = fetch_err.with_context(|| {
-                    format!("failed to delete article with id {id}: {delete_err}")
-                });
-            }
-            return fetch_err;
-        }
-    };
+    let article = select_article(pool, id).await?;
+    if article.title.is_empty() {
+        return Ok(None);
+    }
 
-    query_as::<_, Article>(
+    Ok(Some(ready_response(article)))
+}
+
+async fn handle_pending_article(
+    pool: &SqlitePool,
+    id: i32,
+    trigger: bool,
+    fetcher_mode: &str,
+    app: &tauri::AppHandle,
+) -> Result<ArticleResponse, TauriError> {
+    let article = select_article(pool, id).await?;
+
+    if !article.title.is_empty() {
+        return Ok(ready_response(article));
+    }
+
+    if !article.body.is_empty() && !trigger {
+        return Ok(ArticleResponse::Chooser);
+    }
+
+    let url = article.url;
+
+    query(
+        r"
+        UPDATE articles
+        SET
+            body = 'fetching',
+            text_content = ''
+        WHERE id = ?
+        ",
+    )
+    .bind(id)
+    .execute(pool)
+    .await
+    .context("failed to mark article as fetching")?;
+
+    let mode = fetcher_mode.parse::<FetcherMode>().unwrap_or_default();
+
+    let mut fetcher = new_fetcher(app, &url, mode).context("failed to create article fetcher")?;
+
+    let (title, body, text_content) = fetch_parse_update_article(&url, &mut *fetcher)
+        .await
+        .with_context(|| format!("failed to fetch and parse article: {url}"))?;
+
+    let article = query_as::<_, Article>(
         r"
         UPDATE articles
         SET
             title = $2,
             body = $3,
-            url = $4,
-            text_content = $5
+            text_content = $4
         WHERE id = $1
-        RETURNING id, title, body, created_at, url
+        RETURNING id, title, body, url
         ",
     )
     .bind(id)
     .bind(title)
-    .bind(body)
-    .bind(&url)
+    .bind(&body)
     .bind(text_content)
     .fetch_one(pool)
     .await
-    .with_context(|| format!("failed to save fetched article with id {id}"))?;
+    .context("failed to save fetched article")?;
 
-    Ok(())
+    Ok(ready_response(article))
+}
+
+async fn select_article(pool: &SqlitePool, id: i32) -> Result<Article> {
+    query_as::<_, Article>(
+        r"
+        SELECT id, title, body, url
+        FROM articles
+        WHERE is_deleted = 0
+          AND id = ?
+        ",
+    )
+    .bind(id)
+    .fetch_one(pool)
+    .await
+    .with_context(|| format!("failed to fetch article with id {id}"))
+}
+
+fn ready_response(mut article: Article) -> ArticleResponse {
+    article.body = process_html(&article.body, &article.url);
+    ArticleResponse::Ok { article }
 }
 
 #[tauri::command]
@@ -275,9 +289,8 @@ pub async fn refresh_article(
                 UPDATE articles
                 SET
                     title = '',
-                    body = '',
-                    text_content = '',
-                    updated_at = datetime('now')
+                    body = 'reload',
+                    text_content = ''
                 WHERE id = ?
                 ",
             )

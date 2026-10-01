@@ -10,6 +10,11 @@ export interface Article {
   url: string
 }
 
+export type ArticleResponse
+  = | { status: 'ok', article: Article }
+    | { status: 'chooser' }
+    | { status: 'db_locked' }
+
 export interface Snippet {
   prefix: string
   match_text: string | null
