@@ -37,19 +37,19 @@ body:
     validations:
       required: false
 
-  - type: dropdown
+  - type: checkboxes
     id: fetcher_mode
     attributes:
       label: Fetcher Mode
       description: |
-        Which fetcher mode were you using when the issue occurred?
-        - **Simple HTML** — Default mode for standard static articles.
-        - **(Beta) Dynamic sites** — Use for JavaScript-heavy sites that fail to load with Simple HTML.
-        - **(Beta) Sites requiring sign in** — Use for articles that require authentication.
+        Please test the issue with all three fetcher modes below.
       options:
-        - Simple HTML (default)
-        - "(Beta) Dynamic sites"
-        - "(Beta) Sites requiring sign in"
+        - label: Simple HTML (default)
+          required: true
+        - label: "(Beta) Dynamic sites"
+          required: true
+        - label: "(Beta) Sites requiring sign in"
+          required: true
     validations:
       required: true
 
@@ -91,6 +91,19 @@ body:
       label: Actual Behavior
       description: What actually happened?
       placeholder: Describe actual outcome
+    validations:
+      required: false
+
+  - type: textarea
+    id: error_details
+    attributes:
+      label: Error Details
+      description: |
+        If an error appears in a red alert toast:
+        1. Enable "Show full trace" in settings page.
+        2. Click on the error toast to copy the error details.
+        3. Paste the copied error details here.
+      placeholder: Paste the full error details here
     validations:
       required: false
 
