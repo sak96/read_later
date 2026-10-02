@@ -19,6 +19,20 @@ body:
     validations:
       required: true
 
+  - type: checkboxes
+    id: skip_feature_check
+    attributes:
+      label: Skip Feature Check
+      description: |
+        Please check the screenshot below before submitting your request.
+
+        ![Skip feature](https://github.com/sak96/read_later/blob/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3_tts.png?raw=true)
+
+        Confirm that your request is not already covered by the **Skip** feature.
+      options:
+        - label: I have checked the screenshot and confirmed that my request is not already covered by the Skip feature.
+          required: true
+
   - type: textarea
     id: feature_description
     attributes:
