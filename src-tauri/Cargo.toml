@@ -34,7 +34,7 @@ url = "2.5"
 tauri-plugin-mobile-sharetarget = "2.0"
 tauri-plugin-safe-area-insets-css = "0.2"
 tauri-plugin-android-fs = "29.0"
-tauri-plugin-media-session = { git = "https://github.com/sak96/tauri-plugin-media-session", rev = "6132ca7c6875644a1e5da22062a289d056603c5f" }
+tauri-plugin-media-session = { git = "https://github.com/sak96/tauri-plugin-media-session", rev = "906d3e7bbd41c8b137581a19adcf84865778ba4a" }
 
 [lib]
 name = "article_manager_lib"
