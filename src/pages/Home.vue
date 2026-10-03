@@ -90,7 +90,7 @@ onBeforeUnmount(() => {
     <input
       v-model="search"
       type="search"
-       autocomplete="off"
+      autocomplete="off"
       :placeholder="searchPlaceholder"
     >
     <div class="container">
