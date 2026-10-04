@@ -17,11 +17,16 @@ Read it later app done using Tauri. Mainly for android.
 
 ## Stats
 
-[![GitHub stars](https://img.shields.io/github/stars/sak96/read_later)](https://github.com/sak96/read_later/stargazers)
 
-[![IzzyOnDroid Monthly Downloads](https://img.shields.io/badge/dynamic/json?url=https://dlstats.izzyondroid.org/iod-stats-collector/stats/basic/monthly/rolling.json&query=$.['io.github.sak.read.it.later']&label=IzzyOnDroid%20monthly%20downloads)](https://apt.izzysoft.de/fdroid/index/apk/io.github.sak.read.it.later)
+[![GitHub stars](https://img.shields.io/github/stars/sak96/read_later?style=for-the-badge&logo=github&logoSize=auto&label=github%20stars)](https://github.com/sak96/read_later/releases/latest)
+[![GitHub](https://img.shields.io/github/v/release/sak96/read_later?style=for-the-badge&logo=github&logoSize=auto&label=GitHub%20release)](https://github.com/sak96/read_later/releases/latest)
 
-[![RB Status](https://shields.rbtlog.dev/simple/io.github.sak.read.it.later?style=for-the-badge)](https://shields.rbtlog.dev/io.github.sak.read.it.later)
+[![IzzyOnDroid Monthly Downloads](https://img.shields.io/badge/dynamic/json?url=https://dlstats.izzyondroid.org/iod-stats-collector/stats/basic/monthly/rolling.json&query=$.['io.github.sak.read.it.later']&label=IzzyOnDroid%20monthly%20downloads&logo=android&logoColor=white&style=for-the-badge)](https://apt.izzysoft.de/packages/io.github.sak.read.it.later)
+[![IzzyOnDroid](https://img.shields.io/endpoint?url=https://apt.izzysoft.de/fdroid/api/v1/shield/io.github.sak.read.it.later&label=IzzyOnDroid&logo=android&logoColor=white&style=for-the-badge)](https://apt.izzysoft.de/packages/io.github.sak.read.it.later)
+
+[![F-Droid Monthly Downloads](https://img.shields.io/badge/dynamic/json?url=https://github.com/kitswas/fdroid-metrics-dashboard/raw/refs/heads/main/processed/monthly/io.github.sak.read.it.later.json&query=$.total_downloads&label=F-Droid%20monthly%20downloads&logo=fdroid&logoColor=white&style=for-the-badge)](https://f-droid.org/packages/io.github.sak.read.it.later/)
+[![F-Droid](https://img.shields.io/badge/dynamic/json?url=https://f-droid.org/api/v1/packages/io.github.sak.read.it.later&query=$.packages[0].versionName&label=F-Droid&logo=fdroid&logoColor=white&style=for-the-badge)](https://f-droid.org/packages/io.github.sak.read.it.later/)
+
 
 ## Setup
 
