@@ -1,6 +1,5 @@
 theme = "Theme"
 locale = "Locale"
-speech = "Speech"
 restore = "Backup & Restore"
 about = "About"
 version = "Version"
@@ -52,3 +51,5 @@ tutorial_fetcher_settings="Some articles may require JavaScript or authenticatio
 tutorial_back = "Back"
 tutorial_enable_hint="You can turn this tutorial on or off at any time from Settings → Speech → Tutorial."
 full_error = "Show error trace"
+data_management = "Data Management"
+app_settings = "App Settings"

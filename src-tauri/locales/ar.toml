@@ -1,6 +1,5 @@
 theme = "الموضوع"
 locale = "المكان"
-speech = "خطاب"
 restore = "النسخ الاحتياطي والاستعادة"
 about = "حول"
 version = "الإصدار"
@@ -52,3 +51,5 @@ tutorial_fetcher_settings="قد تتطلب بعض المقالات JavaScript أ
 tutorial_back = "رجوع"
 tutorial_enable_hint="يمكنك تشغيل هذا البرنامج التعليمي أو إيقاف تشغيله في أي وقت من الإعدادات ← الكلام ← البرنامج التعليمي."
 full_error = "إظهار تتبع الخطأ"
+data_management = "إدارة البيانات"
+app_settings = "إعدادات التطبيق"

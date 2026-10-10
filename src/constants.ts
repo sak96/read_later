@@ -25,6 +25,8 @@ export const LOCALE = 'locale'
 
 export const RATE = 'rate'
 
+export const OPEN_COUNT = 'openCount'
+
 export const FONT_SCALE = 'fontScale'
 
 export const FULL_ERROR = 'fullError'

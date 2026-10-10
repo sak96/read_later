@@ -6,8 +6,9 @@ import { openUrl } from '@tauri-apps/plugin-opener'
 import HomeButton from '../components/HomeButton.vue'
 import type { AlertContext } from '../types'
 import DataTransferButton from '../components/DataTransferButton.vue'
-import SpeakRate from '../components/SpeakRate.vue'
 import FetcherMode from '../components/FetcherMode.vue'
+import ReaderSettingIcon from '../components/ReaderSettingIcon.vue'
+import SpeakRate from '../components/SpeakRate.vue'
 import LanguageSelect from '../components/LanguageSelect.vue'
 import FontScale from '../components/FontScale.vue'
 import LocaleBar from '../components/LocaleBar.vue'
@@ -16,8 +17,8 @@ import PronunciationSettings from '../components/PronunciationSettings.vue'
 import { Fab } from '../layouts'
 import { loadTtsSetting } from '../composables/useTTS'
 import { invokeParseLogError } from '../composables/useTauri'
-import { TUTORIAL_SHOWN, TTS_ENABLED, THEME } from '../constants'
-import { MonitorCog, Sun, Moon, CodeXml, Bug, Palette, Speech, Archive, Info } from 'lucide-vue-next'
+import { TUTORIAL_SHOWN, TTS_ENABLED, THEME, OPEN_COUNT } from '../constants'
+import { MonitorCog, Sun, Moon, CodeXml, Bug, CloudSync, Info, Settings } from 'lucide-vue-next'
 
 type Theme = 'light' | 'dark' | 'system'
 
@@ -77,9 +78,10 @@ onMounted(async () => {
       <form>
         <fieldset>
           <h4>
-            <Palette style="margin-right: 1em" />
-            <span data-i18n="theme" />
+            <Settings style="margin-right: 1em" />
+            <span data-i18n="app_settings" />
           </h4>
+          <label data-i18n="theme" />
           <div role="group">
             <button
               v-for="themeOption in themes"
@@ -90,29 +92,9 @@ onMounted(async () => {
               <component :is="themeOption.icon" />
             </button>
           </div>
-        </fieldset>
-        <hr>
-        <LocaleBar />
-        <hr>
-        <fieldset>
-          <h4>
-            <Speech style="margin-right: 1em" />
-            <span data-i18n="speech" />
-          </h4>
+          <LocaleBar />
           <table>
             <tbody>
-              <tr>
-                <th data-i18n="speech_enabled" />
-                <td>
-                  <input
-                    name="terms"
-                    type="checkbox"
-                    role="switch"
-                    :checked="ttsEnabled"
-                    @change="onTtsToggle"
-                  >
-                </td>
-              </tr>
               <tr>
                 <th data-i18n="tutorial_enabled" />
                 <td>
@@ -139,6 +121,29 @@ onMounted(async () => {
               </tr>
             </tbody>
           </table>
+        </fieldset>
+        <hr>
+        <fieldset>
+          <h4>
+            <ReaderSettingIcon style="margin-right: 1em" />
+            <span data-i18n="tutorial_reader_settings" />
+          </h4>
+          <table>
+            <tbody>
+              <tr>
+                <th data-i18n="speech_enabled" />
+                <td>
+                  <input
+                    name="terms"
+                    type="checkbox"
+                    role="switch"
+                    :checked="ttsEnabled"
+                    @change="onTtsToggle"
+                  >
+                </td>
+              </tr>
+            </tbody>
+          </table>
           <SpeakRate
             :model-value="1"
             @update:model-value="() => {}"
@@ -150,19 +155,16 @@ onMounted(async () => {
         </fieldset>
         <hr>
 
-        <WebdavSettings />
-        <hr>
-
         <fieldset>
+          <h4>
+            <CloudSync style="margin-right: 1em" />
+            <span data-i18n="data_management" />
+          </h4>
+          <WebdavSettings />
+          <hr>
           <label>
-            <h4>
-              <Archive style="margin-right: 1em" />
-              <span
-                data-i18n="restore"
-                style="margin-right: 1em"
-              />
-              <mark>({{ articleCount.toString() }})</mark>
-            </h4>
+            <span data-i18n="restore" style="margin-right: 1em"/>
+            <mark>({{ articleCount.toString() }})</mark>
           </label>
           <div role="group">
             <DataTransferButton type="import" />

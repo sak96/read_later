@@ -1,6 +1,5 @@
 theme = "Thème"
 locale = "Environnement"
-speech = "Discours"
 restore = "Sauvegarde et restauration"
 about = "À propos"
 version = "Version"
@@ -52,3 +51,5 @@ tutorial_fetcher_settings="Certains articles peuvent nécessiter JavaScript ou u
 tutorial_back = "Retour"
 tutorial_enable_hint="Vous pouvez activer ou désactiver ce tutoriel à tout moment depuis Réglages → Parole → Tutoriel."
 full_error = "Afficher la trace de l’erreur"
+data_management = "Gestion des données"
+app_settings = "Paramètres de l’application"

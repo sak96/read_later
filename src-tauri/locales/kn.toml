@@ -1,6 +1,5 @@
 theme = "ಥೀಮ್"
 locale = "ಲೋಕಲ್"
-speech = "ಭಾಷಣ"
 restore = "ಬ್ಯಾಕಪ್ ಮತ್ತು ಮರುಸ್ಥಾಪನೆ"
 about = "ಬಗ್ಗೆ"
 version = "ಆವೃತ್ತಿ"
@@ -52,3 +51,5 @@ tutorial_fetcher_settings="ಕೆಲವು ಲೇಖನಗಳನ್ನು ಸರ
 tutorial_back = "ಹಿಂದೆ"
 tutorial_enable_hint="ಸೆಟ್ಟಿಂಗ್‌ಗಳು → ಮಾತು → ಟ್ಯುಟೋರಿಯಲ್‌ನಿಂದ ನೀವು ಈ ಟ್ಯುಟೋರಿಯಲ್ ಅನ್ನು ಯಾವಾಗ ಬೇಕಾದರೂ ಆನ್ ಅಥವಾ ಆಫ್ ಮಾಡಬಹುದು."
 full_error = "ದೋಷದ ಟ್ರೇಸ್ ತೋರಿಸಿ"
+data_management = "ಡೇಟಾ ನಿರ್ವಹಣೆ"
+app_settings = "ಆ್ಯಪ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳು"

@@ -1,6 +1,5 @@
 theme = "主题"
 locale = "地区"
-speech = "演讲"
 restore = "备份与恢复"
 about = "关于"
 version = "版本"
@@ -52,3 +51,5 @@ tutorial_fetcher_settings="某些文章可能需要 JavaScript 或身份验证�
 tutorial_back = "返回"
 tutorial_enable_hint="您可以随时通过设置 → 语音 → 教程开启或关闭此教程。"
 full_error = "显示错误追踪"
+data_management = "数据管理"
+app_settings = "应用设置"

@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getSetting, setSetting } from '../composables/useSettings'
-import { BadgeAlert, RectangleEllipsis, Server, User, KeyRound, FolderRoot, X, Check, CloudSync, Pencil } from 'lucide-vue-next'
+import { RectangleEllipsis, Server, User, KeyRound, FolderRoot, X, Check, CloudSync, Pencil } from 'lucide-vue-next'
 import {
   WEBDAV_ENABLED,
   WEBDAV_URL,
@@ -72,12 +72,16 @@ onMounted(async () => {
 </script>
 
 <template>
-  <fieldset>
-    <h4>
-      <CloudSync style="margin-right: 1em" />
-      <span data-i18n="webdav" />
-    </h4>
-
+  <label>
+    <span
+      data-i18n="webdav"
+      style="margin-right: 1em"
+    />
+    <sub>
+      (<span data-i18n="webdav_sync_instruction" />)
+    </sub>
+  </label>
+  <div>
     <table>
       <tbody>
         <tr>
@@ -111,11 +115,7 @@ onMounted(async () => {
         <CloudSync />
       </button>
     </div>
-    <small>
-      <BadgeAlert />
-      <span data-i18n="webdav_sync_instruction" />
-    </small>
-  </fieldset>
+  </div>
   <dialog :open="showWebdavDialog">
     <article>
       <header>

@@ -1,6 +1,5 @@
 theme = "Tema"
 locale = "Local"
-speech = "Discurso"
 restore = "Cópia de segurança e restauração"
 about = "Sobre"
 version = "Versão"
@@ -52,3 +51,5 @@ tutorial_fetcher_settings="Alguns artigos podem exigir JavaScript ou autenticaç
 tutorial_back = "Voltar"
 tutorial_enable_hint="Você pode ativar ou desativar este tutorial a qualquer momentо em Configurações → Fala → Tutorial."
 full_error = "Mostrar rastreamento do erro"
+data_management = "Gerenciamento de dados"
+app_settings = "Configurações do aplicativo"

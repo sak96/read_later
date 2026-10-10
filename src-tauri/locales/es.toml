@@ -1,6 +1,5 @@
 theme = "Tema"
 locale = "Entorno"
-speech = "Discurso"
 restore = "Copia de seguridad y restauración"
 about = "Acerca de"
 version = "Versión"
@@ -52,3 +51,5 @@ tutorial_fetcher_settings="Es posible que algunos artículos requieran JavaScrip
 tutorial_back = "Atrás"
 tutorial_enable_hint="Puedes activar o desactivar este tutorial en cualquier momento desde Configuración → Voz → Tutorial."
 full_error = "Mostrar traza del error"
+data_management = "Gestión de datos"
+app_settings = "Configuración de la aplicación"
