@@ -31,6 +31,8 @@ export const FONT_SCALE = 'fontScale'
 
 export const FULL_ERROR = 'fullError'
 
+export const FEEDBACK_ENABLED = 'feedbackEnabled'
+
 // Webdav settings
 export const WEBDAV_ENABLED = 'webdavEnabled'
 export const WEBDAV_URL = 'webdavUrl'

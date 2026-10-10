@@ -28,6 +28,7 @@ const alertContext = inject<AlertContext | null>('alert')
 const appVersion = ref('N/A')
 const ttsEnabled = ref(true)
 const tutorialEnabled = ref(true)
+const feedbackEnabled = ref(true)
 const articleCount = ref(0)
 const themes = [
   { value: 'light' as Theme, icon: Sun },
@@ -59,6 +60,12 @@ async function onTutorialToggle() {
   await setSetting(TUTORIAL_SHOWN, newState ? 'false' : 'true')
 }
 
+async function onFeedbackToggle() {
+  const newState = !feedbackEnabled.value
+  feedbackEnabled.value = newState
+  await setSetting(OPEN_COUNT, newState ? '1' : '0')
+}
+
 async function onFullErrorToggle() {
   await alertContext?.setShowErrorTrace(!alertContext.showErrorTrace.value)
 }
@@ -69,6 +76,8 @@ onMounted(async () => {
   ttsEnabled.value = await loadTtsSetting()
   const tutorialSetting = await getSetting(TUTORIAL_SHOWN)
   tutorialEnabled.value = tutorialSetting !== 'true'
+  const feedbackSetting = await getSetting(OPEN_COUNT)
+  feedbackEnabled.value = feedbackSetting == null ? true : feedbackSetting !== '0'
 })
 </script>
 
@@ -104,6 +113,18 @@ onMounted(async () => {
                     role="switch"
                     :checked="tutorialEnabled"
                     @change="onTutorialToggle"
+                  >
+                </td>
+              </tr>
+              <tr>
+                <th data-i18n="feedback_enabled" />
+                <td>
+                  <input
+                    name="feedback"
+                    type="checkbox"
+                    role="switch"
+                    :checked="feedbackEnabled"
+                    @change="onFeedbackToggle"
                   >
                 </td>
               </tr>
@@ -163,7 +184,10 @@ onMounted(async () => {
           <WebdavSettings />
           <hr>
           <label>
-            <span data-i18n="restore" style="margin-right: 1em"/>
+            <span
+              data-i18n="restore"
+              style="margin-right: 1em"
+            />
             <mark>({{ articleCount.toString() }})</mark>
           </label>
           <div role="group">
