@@ -57,8 +57,8 @@ watch(() => props.modelValue, (val) => {
       <b>{{ rate.toFixed(1) }}x</b>
       <input
         type="range"
-        min="0.5"
-        step="0.5"
+        min="0.1"
+        step="0.1"
         max="2"
         :value="rate"
         @change="onChange"
