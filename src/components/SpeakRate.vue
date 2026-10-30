@@ -11,28 +11,28 @@ const emit = defineEmits<{
   'update:modelValue': [value: number]
 }>()
 
-const RATES = [0.5, 1.0, 1.5, 2.0]
 const rate = ref(1.0)
+
+function normalize(value: number): number {
+  if (!Number.isFinite(value))
+    return 1.0
+  // Clamp to [0.1, 2.0] and round to the nearest 0.1
+  return Math.min(2.0, Math.max(0.1, Math.round(value * 10) / 10))
+}
 
 async function loadRate() {
   const value = await getSetting(RATE)
-  if (value !== null) {
-    const parsed = parseFloat(value)
-    if (RATES.includes(parsed)) {
-      rate.value = parsed
-      emit('update:modelValue', parsed)
-    }
-  }
-  else {
-    await setSetting(RATE, '1.0')
-    rate.value = 1.0
-    emit('update:modelValue', 1.0)
-  }
+  const raw = value !== null ? parseFloat(value) : Number.NaN
+  const parsed = normalize(raw)
+  if (!Number.isFinite(raw) || raw !== parsed)
+    await setSetting(RATE, parsed.toFixed(1))
+  rate.value = parsed
+  emit('update:modelValue', parsed)
 }
 
-async function onChange(event: Event) {
+async function onInput(event: Event) {
   const target = event.target as HTMLInputElement
-  const newRate = parseFloat(target.value)
+  const newRate = normalize(parseFloat(target.value))
   rate.value = newRate
   await setSetting(RATE, newRate.toFixed(1))
   emit('update:modelValue', newRate)
@@ -61,7 +61,7 @@ watch(() => props.modelValue, (val) => {
         step="0.1"
         max="2"
         :value="rate"
-        @change="onChange"
+        @input="onInput"
       >
     </label>
   </div>
