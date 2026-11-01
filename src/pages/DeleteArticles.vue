@@ -96,7 +96,7 @@ function toggle(index: number) {
 
 function selectAll() {
   selected.value = new Set(articles.value.map(article => article.id))
-  selectBelow.value = articles.value.at(-1)?.id ?? null
+  selectBelow.value = articles.value[articles.value.length - 1]?.id ?? null
   selectFuture.value = true
 }
 
@@ -115,7 +115,7 @@ function selectBelowRange() {
     selected.value.add(articles.value[i].id)
   }
 
-  selectBelow.value = articles.value.at(-1)?.id ?? null
+  selectBelow.value = articles.value[articles.value.length - 1]?.id ?? null
   selectFuture.value = true
 }
 
