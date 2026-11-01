@@ -152,21 +152,30 @@ onMounted(fetchArticles)
 </script>
 
 <template>
-  <main class="container page" @scroll="onScroll">
+  <main
+    class="container page"
+    @scroll="onScroll"
+  >
     <h3>
       <span data-i18n="delete_articles" /> ({{ selectedCount }})
     </h3>
     <span data-i18n="delete_single_article" />
 
     <div class="container">
-      <article v-for="(article, index) in articles" :key="article.id">
+      <article
+        v-for="(article, index) in articles"
+        :key="article.id"
+      >
         <label>
           <input
             type="checkbox"
             :checked="selected.has(article.id)"
             @change="toggle(index)"
           >
-          <Anchor v-if="anchorIndex === index" title="Anchor row for ranges" />
+          <Anchor
+            v-if="anchorIndex === index"
+            title="Anchor row for ranges"
+          />
           {{ titleOf(article) }}
         </label>
       </article>
@@ -178,12 +187,18 @@ onMounted(fetchArticles)
       />
     </div>
 
-    <article v-if="error" class="error">
+    <article
+      v-if="error"
+      class="error"
+    >
       {{ error }}
     </article>
   </main>
 
-  <article v-if="loading" aria-busy="true" />
+  <article
+    v-if="loading"
+    aria-busy="true"
+  />
 
   <dialog :open="showMenu">
     <article>
@@ -196,8 +211,15 @@ onMounted(fetchArticles)
         <strong data-i18n="delete_articles" />
       </header>
 
-      <div class="grid" style="grid-template-columns: 1fr">
-        <div role="button" data-i18n="select_all" @click="selectAction(selectAll)" />
+      <div
+        class="grid"
+        style="grid-template-columns: 1fr"
+      >
+        <div
+          role="button"
+          data-i18n="select_all"
+          @click="selectAction(selectAll)"
+        />
 
         <div
           role="button"
