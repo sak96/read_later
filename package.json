@@ -1,7 +1,7 @@
 {
   "name": "read-later",
   "private": true,
-  "version": "0.1.102",
+  "version": "0.1.103",
   "type": "module",
   "scripts": {
     "dev": "vite",
