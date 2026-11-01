@@ -71,8 +71,8 @@ async function onFullErrorToggle() {
 }
 
 async function refreshArticleCount() {
-  articleCount.value =
-    await invokeParseLogError<number>('get_article_count') || 0
+  articleCount.value
+    = await invokeParseLogError<number>('get_article_count') || 0
 }
 
 onMounted(async () => {
@@ -196,7 +196,10 @@ onMounted(async () => {
             <mark>({{ articleCount.toString() }})</mark>
           </label>
           <div role="group">
-            <DataTransferButton type="import" @completed="refreshArticleCount" />
+            <DataTransferButton
+              type="import"
+              @completed="refreshArticleCount"
+            />
             <DataTransferButton type="export" />
           </div>
         </fieldset>
