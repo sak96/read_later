@@ -7,13 +7,22 @@ const props = defineProps<{
   type: 'import' | 'export'
 }>()
 
+const emit = defineEmits<{
+  completed: [type: 'import' | 'export']
+}>()
+
 const isLoading = ref(false)
 
 async function handleClick() {
   isLoading.value = true
-  const command = props.type === 'import' ? 'pick_import_file' : 'pick_export_file'
-  await invokeNoParseLogError(command, {})
-  isLoading.value = false
+  try {
+    const command = props.type === 'import' ? 'pick_import_file' : 'pick_export_file'
+    await invokeNoParseLogError(command, {})
+    emit('completed', props.type)
+  }
+  finally {
+    isLoading.value = false
+  }
 }
 </script>
 
