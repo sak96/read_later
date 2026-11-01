@@ -8,7 +8,7 @@ import SettingsButton from '../components/SettingsButton.vue'
 import Feedback from '../components/Feedback.vue'
 import I18n from '@razein97/tauri-plugin-i18n'
 import { Fab } from '../layouts'
-import { BookmarkPlus } from 'lucide-vue-next'
+import { BookmarkPlus, Trash2 } from 'lucide-vue-next'
 import { SCROLL_THRESHOLD, SEARCH_DEBOUNCE_MS, MIN_SEARCH_LENGTH } from '../constants'
 
 const router = useRouter()
@@ -55,6 +55,10 @@ function onScroll(e: Event) {
 
 function goToAddArticle() {
   router.push({ name: 'addArticle' })
+}
+
+function goToDeleteArticles() {
+  router.push({ name: 'deleteArticles' })
 }
 
 const query = computed(() => {
@@ -123,6 +127,12 @@ onBeforeUnmount(() => {
   <Fab>
     <button @click="goToAddArticle">
       <BookmarkPlus />
+    </button>
+    <button
+      title="Delete articles"
+      @click="goToDeleteArticles"
+    >
+      <Trash2 />
     </button>
     <div>
       <SettingsButton />

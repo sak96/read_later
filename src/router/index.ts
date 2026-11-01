@@ -5,6 +5,7 @@ const ArticleDetail = () => import('../pages/ArticleDetail.vue')
 const Settings = () => import('../pages/Settings.vue')
 const AddArticle = () => import('../pages/AddArticle.vue')
 const PronunciationRules = () => import('../pages/PronunciationRules.vue')
+const DeleteArticles = () => import('../pages/DeleteArticles.vue')
 
 const routes = [
   {
@@ -39,6 +40,11 @@ const routes = [
     path: '/pronunciation-rules',
     name: 'pronunciationRules',
     component: PronunciationRules,
+  },
+  {
+    path: '/delete-articles',
+    name: 'deleteArticles',
+    component: DeleteArticles,
   },
 ]
 

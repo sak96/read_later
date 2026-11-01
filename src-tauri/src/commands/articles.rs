@@ -54,7 +54,7 @@ pub async fn get_articles(
                     )
                 )
                 AND is_deleted = 0
-                ORDER BY created_at DESC
+                ORDER BY created_at DESC, id DESC
                 LIMIT 100 OFFSET ?2
                 ",
             )
@@ -336,6 +336,103 @@ pub async fn delete_article(
             .with_context(|| format!("failed to delete article with id {id}"))?;
 
             Ok(result.rows_affected())
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn delete_articles(
+    db_instances: State<'_, DbInstances>,
+    ids: Vec<i32>,
+    select_below: Option<i32>,
+) -> Result<u64, TauriError> {
+    const BATCH_SIZE: usize = 900;
+
+    let instances = db_instances.0.write().await;
+
+    let db = instances
+        .get(DB_URL)
+        .context("failed to get database instance")?;
+
+    match db {
+        tauri_plugin_sql::DbPool::Sqlite(pool) => {
+            if ids.is_empty() && select_below.is_none() {
+                return Ok(0);
+            }
+
+            let mut tx = pool
+                .begin()
+                .await
+                .context("failed to begin delete transaction")?;
+
+            let mut total = 0u64;
+
+            if let Some(boundary_id) = select_below {
+                let result = sqlx::query(
+                    r"
+                    UPDATE articles
+                    SET
+                        is_deleted = 1,
+                        title = '',
+                        body = '',
+                        text_content = '',
+                        updated_at = datetime('now')
+                    WHERE is_deleted = 0
+                      AND (created_at, id) < (
+                          SELECT created_at, id
+                          FROM articles
+                          WHERE id = ?
+                            AND is_deleted = 0
+                      )
+                    ",
+                )
+                .bind(boundary_id)
+                .execute(&mut *tx)
+                .await
+                .context("failed to delete articles below boundary")?;
+
+                total += result.rows_affected();
+            }
+
+            for batch in ids.chunks(BATCH_SIZE) {
+                let placeholders = std::iter::repeat_n("?", batch.len())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+
+                let sql = format!(
+                    r"
+                    UPDATE articles
+                    SET
+                        is_deleted = 1,
+                        title = '',
+                        body = '',
+                        text_content = '',
+                        updated_at = datetime('now')
+                    WHERE is_deleted = 0
+                      AND id IN ({placeholders})
+                    "
+                );
+
+                let mut query = sqlx::query(&sql);
+
+                for id in batch {
+                    query = query.bind(id);
+                }
+
+                let result = query
+                    .execute(&mut *tx)
+                    .await
+                    .context("failed to delete selected articles")?;
+
+                total += result.rows_affected();
+            }
+
+
+            tx.commit()
+                .await
+                .context("failed to commit article deletion")?;
+
+            Ok(total)
         }
     }
 }
