@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, watch, inject, onMounted, onUnmounted, nextTick } from 'vue'
-import type { PluginListener } from '@tauri-apps/api/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { invokeNoParseLogError, invokeParseLogError } from '../composables/useTauri'
 import type { AlertContext } from '../types'
@@ -45,7 +44,7 @@ const mode = ref<ViewMode>('view')
 const rate = ref(1.0)
 const ttsEnabled = ref(true)
 const stateHandler = ref<UnlistenFn | null>()
-const notificationListener = ref<PluginListener | null>()
+const notificationListener = ref<UnlistenFn | null>()
 const currentPlatform: string = platform()
 const focusUnlistener = ref<UnlistenFn | null>(null)
 
@@ -80,7 +79,6 @@ async function loadNotificationHandlers() {
         case 'pause':
         case 'stop':
           mode.value = 'view'
-          stop()
           break
         default:
           console.error('Unhandled media session action:', event.action)
@@ -234,7 +232,7 @@ onMounted(async () => {
 })
 
 onUnmounted(async () => {
-  await notificationListener.value?.unregister()
+  notificationListener.value?.()
   stateHandler.value?.()
   await invokeNoParseLogError('cleanup_reading')
 })

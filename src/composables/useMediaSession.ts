@@ -1,4 +1,4 @@
-import { addPluginListener, PluginListener } from '@tauri-apps/api/core'
+import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { platform } from '@tauri-apps/plugin-os'
 
 /*
@@ -15,13 +15,9 @@ export interface MediaActionEvent {
 
 export async function onAction(
   handler: (event: MediaActionEvent) => void,
-): Promise<PluginListener | null> {
+): Promise<UnlistenFn | null> {
   if (currentPlatform === 'android' || currentPlatform == 'ios') {
-    return addPluginListener<MediaActionEvent>(
-      'media-session',
-      'media_action',
-      handler,
-    )
+    return listen<MediaActionEvent>('media_action', event => handler(event.payload))
   }
   return null
 }
